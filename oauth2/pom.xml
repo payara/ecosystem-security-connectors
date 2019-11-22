@@ -42,80 +42,87 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>fish.payara.security.connectors</groupId>
-    <artifactId>security-connectors-parent</artifactId>
-    <version>1.0-SNAPSHOT</version>
-    <packaging>pom</packaging>
-    <name>Payara Security Connectors</name>
+    <parent>
+        <groupId>fish.payara.security.connectors</groupId>
+        <artifactId>security-connectors-parent</artifactId>
+        <version>1.0-SNAPSHOT</version>
+    </parent>
 
-    <description>Payara Security modules provides implementation of various security standard and specs.</description>
-    
-    <modules>
-        <module>openid</module>
-        <module>oauth2</module>
-    </modules>
+    <groupId>fish.payara.security.connectors</groupId>
+    <artifactId>security-connector-oauth2-client</artifactId>
+    <name>Security Connector - OAuth2 Client</name>
+    <description>Implementation of OAuth2 client</description>
+    <packaging>bundle</packaging>
+
+    <developers>
+        <developer>
+            <name>Jonathan Coustick</name>
+            <url>http://www.payara.fish</url>
+            <organization>Payara</organization>
+            <roles>
+                <role>developer</role>
+            </roles>
+        </developer>
+    </developers>
     
     <properties>
-        <javase.version>1.8</javase.version>
-        <jakartaee.api.version>8.0.0</jakartaee.api.version>
-        <javax.security.enterprise.version>1.1-b01.payara-p3</javax.security.enterprise.version>
+        <nimbus-jose-jwt.version>5.4</nimbus-jose-jwt.version>
+        <accessors-smart.version>1.2.payara-p2</accessors-smart.version>
     </properties>
-    
-    <dependencyManagement>
-        <dependencies>
-            <dependency>
-                <groupId>org.eclipse.microprofile</groupId>
-                <artifactId>microprofile</artifactId>
-                <version>3.0</version>
-                <type>pom</type>
-                <scope>provided</scope>
-            </dependency>
-            <dependency>
-                <groupId>jakarta.platform</groupId>
-                <artifactId>jakarta.jakartaee-api</artifactId>
-                <version>${jakartaee.api.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.glassfish.soteria</groupId>
-                <artifactId>javax.security.enterprise</artifactId>
-                <version>${javax.security.enterprise.version}</version>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>
     
     <dependencies>
         <dependency>
-            <groupId>jakarta.platform</groupId>
-            <artifactId>jakarta.jakartaee-api</artifactId>
+            <groupId>org.eclipse.microprofile</groupId>
+            <artifactId>microprofile</artifactId>
+            <type>pom</type>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.soteria</groupId>
+            <artifactId>javax.security.enterprise</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.nimbusds</groupId>
+            <artifactId>nimbus-jose-jwt</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>net.minidev</groupId>
+            <artifactId>accessors-smart</artifactId>
         </dependency>
     </dependencies>
-            
-    <build>    
+        
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>com.nimbusds</groupId>
+                <artifactId>nimbus-jose-jwt</artifactId>
+                <version>${nimbus-jose-jwt.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>net.minidev</groupId>
+                <artifactId>accessors-smart</artifactId>
+                <version>${accessors-smart.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <build>
         <plugins>
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+                <version>4.2.1</version>
+                <extensions>true</extensions>
                 <configuration>
-                    <source>${javase.version}</source>
-                    <target>${javase.version}</target>
+                    <instructions>
+                        <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
+                        <Bundle-Version>${project.version}</Bundle-Version>
+                        <Export-Package>
+                            fish.payara.security.annotations,
+                            fish.payara.security.oauth2.api
+                        </Export-Package>
+                    </instructions>
                 </configuration>
-                <version>3.8.1</version>
             </plugin>
         </plugins>
     </build>
-
-    <repositories>
-        <repository>
-            <id>payara-patched-externals</id>
-            <name>Payara Patched Externals</name>
-            <url>https://raw.github.com/payara/Payara_PatchedProjects/master</url>
-            <!--<url>file:///opt/PayaraDev/Payara_PatchedProjects</url>-->
-            <releases>
-                <enabled>true</enabled>
-            </releases>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
-        </repository>
-    </repositories>
 </project>
