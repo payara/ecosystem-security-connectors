@@ -63,7 +63,7 @@ import javax.security.enterprise.identitystore.IdentityStore;
 import net.minidev.json.JSONArray;
 
 /**
- * Identity store validates the identity token & access toekn and returns the
+ * Identity store validates the identity token and access toekn and returns the
  * validation result with the caller name and groups.
  *
  * @author Gaurav Gupta
