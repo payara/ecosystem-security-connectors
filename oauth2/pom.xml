@@ -64,12 +64,7 @@
             </roles>
         </developer>
     </developers>
-    
-    <properties>
-        <nimbus-jose-jwt.version>5.4</nimbus-jose-jwt.version>
-        <accessors-smart.version>1.2.payara-p2</accessors-smart.version>
-    </properties>
-    
+
     <dependencies>
         <dependency>
             <groupId>org.eclipse.microprofile</groupId>
@@ -89,29 +84,12 @@
             <artifactId>accessors-smart</artifactId>
         </dependency>
     </dependencies>
-        
-    <dependencyManagement>
-        <dependencies>
-            <dependency>
-                <groupId>com.nimbusds</groupId>
-                <artifactId>nimbus-jose-jwt</artifactId>
-                <version>${nimbus-jose-jwt.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>net.minidev</groupId>
-                <artifactId>accessors-smart</artifactId>
-                <version>${accessors-smart.version}</version>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>
 
     <build>
         <plugins>
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
-                <version>4.2.1</version>
-                <extensions>true</extensions>
                 <configuration>
                     <instructions>
                         <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
