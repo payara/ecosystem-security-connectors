@@ -109,7 +109,7 @@ public class OAuth2AuthenticationMechanism implements HttpAuthenticationMechanis
     /**
      * Creates an OAuth2AuthenticationMechanism.
      * <p>
-     * If this constructor is used then {@link #setDefinition(OAuth2AuthenticationDefinition) must be
+     * If this constructor is used then {@link #setDefinition(OAuth2AuthenticationDefinition)} must be
      * called before any requests are validated.
      */
     public OAuth2AuthenticationMechanism() {

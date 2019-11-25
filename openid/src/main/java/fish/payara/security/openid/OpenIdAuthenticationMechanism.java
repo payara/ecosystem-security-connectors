@@ -91,7 +91,7 @@ import javax.ws.rs.core.Response.Status;
 /**
  * The AuthenticationMechanism used to authenticate users using the OpenId
  * Connect protocol
- * <br/>
+ * <br>
  * Specification Implemented :
  * http://openid.net/specs/openid-connect-core-1_0.html
  *
@@ -150,7 +150,7 @@ public class OpenIdAuthenticationMechanism implements HttpAuthenticationMechanis
     /**
      * Creates an {@link OpenIdAuthenticationMechanism}.
      * <p>
-     * If this constructor is used then {@link #setConfiguration(OpenIdAuthenticationDefinition) must be
+     * If this constructor is used then {@link #setConfiguration(OpenIdAuthenticationDefinition)} must be
      * called before any requests are validated.
      */
     public OpenIdAuthenticationMechanism() {
@@ -252,7 +252,7 @@ public class OpenIdAuthenticationMechanism implements HttpAuthenticationMechanis
     }
 
     /**
-     * (3) & (4-6) An Authorization Code returned to Client (RP) via
+     * (3) and (4-6) An Authorization Code returned to Client (RP) via
      * Authorization Code Flow must be validated and exchanged for an ID Token,
      * an Access Token and optionally a Refresh Token directly.
      *

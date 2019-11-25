@@ -54,10 +54,10 @@ import static javax.security.enterprise.identitystore.IdentityStore.ValidationTy
  * credential upon creation is a valid one and does no further validation. If further validation is required
  * then it may be useful to send a JAX-RS request to the OAuth provider.
  * <p>
- * If an {@link fish.payara.security.oauth2.annotation.OAuth2AuthenticationDefinition} is declared and their are
+ * If an {@link fish.payara.security.annotations.OAuth2AuthenticationDefinition} is declared and their are
  * no other {@link IdentityStore} definitions implemented then this will be used as a fall-back.
  * If other {@link IdentityStore} definitions are available but none validate {@link RememberMeCredential} then 
- * {@link CredentialValidationResult.NOT_VALIDATED_RESULT} will be returned to the authentication mechanism.
+ * {@link CredentialValidationResult#NOT_VALIDATED_RESULT} will be returned to the authentication mechanism.
  * 
  * @author jonathan coustick
  * @since 4.1.2.182
@@ -71,7 +71,7 @@ public class OAuthIdentityStore implements IdentityStore {
      * or alternative {@link IdentityStore}. Calling {@link RememberMeCredential#getToken()}
      * on the credential passed in will get the authorisation token which can be used to get
      * more information about the user from the OAuth provider by sending a GET request to
-     * an endpoint i.e. https://oauthprovider/user&token=exampletoken.
+     * an endpoint i.e. https://oauthprovider/user&#38;token=exampletoken.
      * @param credential
      * @return 
      */
