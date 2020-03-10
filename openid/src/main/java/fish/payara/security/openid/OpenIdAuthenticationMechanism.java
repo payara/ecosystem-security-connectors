@@ -75,6 +75,7 @@ import javax.security.auth.callback.UnsupportedCallbackException;
 import javax.security.auth.message.callback.CallerPrincipalCallback;
 import javax.security.enterprise.AuthenticationException;
 import javax.security.enterprise.AuthenticationStatus;
+import static javax.security.enterprise.AuthenticationStatus.SEND_FAILURE;
 import static javax.security.enterprise.AuthenticationStatus.SUCCESS;
 import javax.security.enterprise.authentication.mechanism.http.HttpAuthenticationMechanism;
 import javax.security.enterprise.authentication.mechanism.http.HttpMessageContext;
@@ -211,9 +212,15 @@ public class OpenIdAuthenticationMechanism implements HttpAuthenticationMechanis
                 throw new AuthenticationException("Failed to register CallerPrincipalCallback.", ex);
             }
 
-            if (configuration.isTokenAutoRefresh()) {
-                LOGGER.log(Level.FINE, "UserPrincipal is set, check if Access Token is valid.");
-                return this.reAuthenticate(request, response, httpContext);
+            LOGGER.log(Level.FINE, "UserPrincipal is set, check if Access Token is valid.");
+            if (this.context.getAccessToken().isExpired()) {
+                // Access Token expired
+                if (configuration.isTokenAutoRefresh()) {
+                    LOGGER.fine("Access Token is expired. Request new Access Token with Refresh Token.");
+                    return this.reAuthenticate(request, response, httpContext);
+                } else {
+                    return SEND_FAILURE;
+                }
             } else {
                 return SUCCESS;
             }
@@ -298,28 +305,22 @@ public class OpenIdAuthenticationMechanism implements HttpAuthenticationMechanis
             HttpServletResponse response,
             HttpMessageContext httpContext) throws AuthenticationException {
 
-        if (this.context.getAccessToken().isExpired()) {
-            // Access Token expired
-            LOGGER.fine("Access Token is expired. Request new Access Token with Refresh Token.");
+        AuthenticationStatus refreshStatus = this.context.getRefreshToken()
+                .map(rt -> this.refreshTokens(httpContext, rt))
+                .orElse(AuthenticationStatus.SEND_FAILURE);
 
-            AuthenticationStatus refreshStatus = this.context.getRefreshToken()
-                    .map(rt -> this.refreshTokens(httpContext, rt))
-                    .orElse(AuthenticationStatus.SEND_FAILURE);
-
-            if (refreshStatus != AuthenticationStatus.SUCCESS) {
-                LOGGER.log(Level.FINE, "Failed to refresh Access Token (Refresh Token might be invalid).");
-                try {
-                    request.logout();
-                } catch (ServletException ex) {
-                    LOGGER.log(WARNING, "Failed to logout user after failing to refresh token.", ex);
-                }
-                // Redirect user to OpenID connect provider for re-authentication
-                return authenticationController.authenticateUser(configuration, httpContext);
+        if (refreshStatus != AuthenticationStatus.SUCCESS) {
+            LOGGER.log(Level.FINE, "Failed to refresh Access Token (Refresh Token might be invalid).");
+            try {
+                request.logout();
+            } catch (ServletException ex) {
+                LOGGER.log(WARNING, "Failed to logout user after failing to refresh token.", ex);
             }
+            // Redirect user to OpenID connect provider for re-authentication
+            return authenticationController.authenticateUser(configuration, httpContext);
         }
 
         return SUCCESS;
-
     }
 
     private AuthenticationStatus refreshTokens(HttpMessageContext httpContext, RefreshToken refreshToken) {
