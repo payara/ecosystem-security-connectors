@@ -68,6 +68,7 @@ import java.util.logging.Logger;
 import javax.enterprise.inject.Typed;
 import javax.inject.Inject;
 import javax.json.Json;
+import javax.json.JsonNumber;
 import javax.json.JsonObject;
 import javax.json.JsonReader;
 import javax.security.auth.callback.Callback;
@@ -358,9 +359,9 @@ public class OpenIdAuthenticationMechanism implements HttpAuthenticationMechanis
         if (nonNull(refreshToken)) {
             context.setRefreshToken(new RefreshTokenImpl(refreshToken));
         }
-        String expiresIn = tokensObject.getString(EXPIRES_IN, null);
+        JsonNumber expiresIn = tokensObject.getJsonNumber(EXPIRES_IN);
         if (nonNull(expiresIn)) {
-            context.setExpiresIn(Integer.parseInt(expiresIn));
+            context.setExpiresIn(expiresIn.longValue());
         }
     }
 
