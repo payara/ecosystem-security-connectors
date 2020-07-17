@@ -1,7 +1,7 @@
 /*
  *  DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- *  Copyright (c) [2018-2019] Payara Foundation and/or its affiliates. All rights reserved.
+ *  Copyright (c) [2018-2020] Payara Foundation and/or its affiliates. All rights reserved.
  *
  *  The contents of this file are subject to the terms of either the GNU
  *  General Public License Version 2 only ("GPL") or the Common Development
@@ -43,12 +43,12 @@ import com.nimbusds.jwt.EncryptedJWT;
 import com.nimbusds.jwt.JWT;
 import com.nimbusds.jwt.JWTParser;
 import fish.payara.security.openid.api.AccessToken;
-import static fish.payara.security.openid.api.OpenIdConstant.EXPIRATION_IDENTIFIER;
-import fish.payara.security.openid.api.Scope;
 import java.text.ParseException;
 import static java.util.Collections.emptyMap;
-import java.util.Date;
 import java.util.Map;
+import fish.payara.security.openid.api.Scope;
+import static fish.payara.security.openid.api.OpenIdConstant.EXPIRATION_IDENTIFIER;
+import java.util.Date;
 import static java.util.Objects.nonNull;
 
 /**
@@ -59,17 +59,17 @@ public class AccessTokenImpl implements AccessToken {
 
     private final String token;
 
-    private AccessToken.Type type;
+    private final AccessToken.Type type;
 
     private JWT tokenJWT;
 
     private Map<String, Object> claims;
 
-    private Long expiresIn;
+    private final Long expiresIn;
 
-    private Scope scope;
+    private final Scope scope;
 
-    private long createdAt;
+    private final long createdAt;
 
     private OpenIdConfiguration configuration;
 
@@ -95,10 +95,12 @@ public class AccessTokenImpl implements AccessToken {
     public boolean isExpired() {
         boolean expired = true;
         Date exp;
-        if (nonNull(expiresIn)) {
+         if (nonNull(expiresIn)) {
             expired = System.currentTimeMillis() + configuration.getTokenMinValidity() > createdAt + (expiresIn * 1000);
-        } else if (nonNull(exp = (Date) this.getClaim(EXPIRATION_IDENTIFIER))) {
+        } else if(nonNull(exp = (Date) this.getClaim(EXPIRATION_IDENTIFIER))) {
             expired = System.currentTimeMillis() + configuration.getTokenMinValidity() > exp.getTime();
+        } else {
+            throw new IllegalStateException("Missing expiration time (exp) claim in access token");
         }
         return expired;
     }

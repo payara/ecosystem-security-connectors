@@ -1,7 +1,7 @@
 /*
  *  DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- *  Copyright (c) [2018-2019] Payara Foundation and/or its affiliates. All rights reserved.
+ *  Copyright (c) [2018-2020] Payara Foundation and/or its affiliates. All rights reserved.
  *
  *  The contents of this file are subject to the terms of either the GNU
  *  General Public License Version 2 only ("GPL") or the Common Development
@@ -88,6 +88,7 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.security.enterprise.authentication.mechanism.http.HttpMessageContext;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
@@ -111,7 +112,7 @@ public class TokenController {
      * (4) A Client makes a token request to the token endpoint and the OpenId
      * Provider responds with an ID Token and an Access Token.
      *
-     * @param configuration
+     * @param configuration the OpenId Connect client configuration configuration
      * @param request
      * @return a JSON object representation of OpenID Connect token response
      * from the Token endpoint.
@@ -126,7 +127,7 @@ public class TokenController {
          * The Client sends the parameters to the Token Endpoint using the Form
          * Serialization with all parameters to :
          *
-         * 1. Authenticate client using CLIENT_ID and CLIENT_SECRET <br>
+         * 1. Authenticate client using CLIENT_ID & CLIENT_SECRET <br>
          * 2. Verify that the Authorization Code is valid <br>
          * 3. Ensure that the redirect_uri parameter value is identical to the
          * initial authorization request's redirect_uri parameter value.
@@ -151,11 +152,13 @@ public class TokenController {
      *
      * @param idToken
      * @param httpContext
-     * @param configuration
+     * @param configuration the OpenId Connect client configuration configuration
      * @return JWT Claims
      */
     public Map<String, Object> validateIdToken(IdentityTokenImpl idToken, HttpMessageContext httpContext, OpenIdConfiguration configuration) {
         JWTClaimsSet claimsSet;
+        HttpServletRequest request = httpContext.getRequest();
+        HttpServletResponse response = httpContext.getResponse();
 
         /**
          * The nonce in the returned ID Token is compared to the hash of the
@@ -163,7 +166,7 @@ public class TokenController {
          */
         String expectedNonceHash = null;
         if (configuration.isUseNonce()) {
-            OpenIdNonce expectedNonce = nonceController.get(configuration, httpContext);
+            OpenIdNonce expectedNonce = nonceController.get(configuration, request, response);
             expectedNonceHash = nonceController.getNonceHash(expectedNonce);
         }
 
@@ -171,7 +174,7 @@ public class TokenController {
             JWTClaimsSetVerifier jwtVerifier = new IdTokenClaimsSetVerifier(expectedNonceHash, configuration);
             claimsSet = validateBearerToken(idToken.getTokenJWT(), jwtVerifier, configuration);
         } finally {
-            nonceController.remove(configuration, httpContext);
+            nonceController.remove(configuration, request, response);
         }
 
         return claimsSet.getClaims();
@@ -183,7 +186,7 @@ public class TokenController {
      * @param previousIdToken
      * @param newIdToken
      * @param httpContext
-     * @param configuration
+     * @param configuration the OpenId Connect client configuration configuration
      * @return JWT Claims
      */
     public Map<String, Object> validateRefreshedIdToken(IdentityToken previousIdToken, IdentityTokenImpl newIdToken, HttpMessageContext httpContext, OpenIdConfiguration configuration) {
@@ -193,12 +196,12 @@ public class TokenController {
     }
 
     /**
-     * (5.2) Validate the Access Token and it's claims and verify the signature.
+     * (5.2) Validate the Access Token & it's claims and verify the signature.
      *
      * @param accessToken
      * @param idTokenAlgorithm
      * @param idTokenClaims
-     * @param configuration
+     * @param configuration the OpenId Connect client configuration configuration
      * @return JWT Claims
      */
     public Map<String, Object> validateAccessToken(AccessTokenImpl accessToken, Algorithm idTokenAlgorithm, Map<String, Object> idTokenClaims, OpenIdConfiguration configuration) {
@@ -216,7 +219,7 @@ public class TokenController {
 //            JWTClaimsSet claimsSet = validateBearerToken(accessToken.getTokenJWT(), jwtVerifier, configuration);
 //            claims = claimsSet.getClaims();
 //        } else {
-        jwtVerifier.validateAccessToken();
+            jwtVerifier.validateAccessToken();
 //        }
 
         return claims;
@@ -226,7 +229,7 @@ public class TokenController {
      * Makes a refresh request to the token endpoint and the OpenId Provider
      * responds with a new (updated) Access Token and Refreshs Token.
      *
-     * @param configuration
+     * @param configuration the OpenId Connect client configuration configuration
      * @param refreshToken Refresh Token received from previous token request.
      * @return a JSON object representation of OpenID Connect token response
      * from the Token endpoint.
@@ -290,12 +293,13 @@ public class TokenController {
         return claimsSet;
     }
 
+
     /**
      * JWSKeySelector finds the JSON Web Key Set (JWKS) from jwks_uri endpoint
      * and filter for potential signing keys in the JWKS with a matching kid
      * property.
      *
-     * @param configuration
+     * @param configuration the OpenId Connect client configuration configuration
      * @param alg the algorithm for the key
      * @param kid the unique identifier for the key
      * @return the JSON Web Signing (JWS) key selector
@@ -329,7 +333,7 @@ public class TokenController {
      * JWEKeySelector selects the key to decrypt JSON Web Encryption (JWE) and
      * validate encrypted JWT.
      *
-     * @param configuration
+     * @param configuration the OpenId Connect client configuration configuration
      * @return the JSON Web Encryption (JWE) key selector
      */
     private JWEKeySelector getJWEKeySelector(OpenIdConfiguration configuration) {

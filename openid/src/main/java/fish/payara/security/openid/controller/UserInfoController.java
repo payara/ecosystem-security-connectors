@@ -43,13 +43,11 @@ import fish.payara.security.openid.api.AccessToken;
 import static fish.payara.security.openid.api.OpenIdConstant.ERROR_DESCRIPTION_PARAM;
 import static fish.payara.security.openid.api.OpenIdConstant.ERROR_PARAM;
 import static fish.payara.security.openid.api.OpenIdConstant.SUBJECT_IDENTIFIER;
-import fish.payara.security.openid.api.OpenIdContext;
 import fish.payara.security.openid.domain.OpenIdConfiguration;
 import java.io.StringReader;
 import static java.util.Objects.nonNull;
 import static java.util.logging.Level.WARNING;
 import java.util.logging.Logger;
-import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
 import javax.json.Json;
 import javax.json.JsonObject;
@@ -61,6 +59,8 @@ import static javax.ws.rs.core.HttpHeaders.CONTENT_TYPE;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
+import fish.payara.security.openid.api.OpenIdContext;
+import javax.enterprise.context.RequestScoped;
 
 /**
  * Controller for Token endpoint
@@ -83,7 +83,7 @@ public class UserInfoController {
      * (6) The RP send a request with the Access Token to the UserInfo Endpoint
      * and requests the claims about the End-User.
      *
-     * @param configuration
+     * @param configuration the OpenId Connect client configuration configuration
      * @param accessToken
      * @return the claims json object
      */

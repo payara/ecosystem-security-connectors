@@ -39,11 +39,11 @@
  */
 package fish.payara.security.openid;
 
+import static fish.payara.security.openid.api.OpenIdConstant.ACCESS_TOKEN;
+import static fish.payara.security.openid.api.OpenIdConstant.IDENTITY_TOKEN;
 import fish.payara.security.openid.api.AccessToken;
 import fish.payara.security.openid.api.IdentityToken;
-import static fish.payara.security.openid.api.OpenIdConstant.ACCESS_TOKEN;
 import static fish.payara.security.openid.api.OpenIdConstant.EXPIRES_IN;
-import static fish.payara.security.openid.api.OpenIdConstant.IDENTITY_TOKEN;
 import static fish.payara.security.openid.api.OpenIdConstant.SCOPE;
 import static fish.payara.security.openid.api.OpenIdConstant.TOKEN_TYPE;
 import fish.payara.security.openid.domain.AccessTokenImpl;
@@ -72,7 +72,7 @@ public class OpenIdCredential implements Credential {
         this.httpContext = httpContext;
         this.configuration = configuration;
 
-        this.identityToken = new IdentityTokenImpl(tokensObject.getString(IDENTITY_TOKEN));
+        this.identityToken = new IdentityTokenImpl(configuration, tokensObject.getString(IDENTITY_TOKEN));
         String accessTokenString = tokensObject.getString(ACCESS_TOKEN, null);
         Long expiresIn = null;
         if(nonNull(tokensObject.getJsonNumber(EXPIRES_IN))){

@@ -57,19 +57,19 @@ public enum DisplayType {
      */
     PAGE,
     /**
-     * The Authorization Server SHOULD display authentication and consent UI
+     * The Authorization Server should display authentication and consent UI
      * consistent with a popup User-Agent window.
      *
      */
     POPUP,
     /**
-     * The Authorization Server SHOULD display authentication and consent UI
+     * The Authorization Server should display authentication and consent UI
      * consistent with a device that leverages a touch interface.
      *
      */
     TOUCH,
     /**
-     * The Authorization Server SHOULD display authentication and consent UI
+     * The Authorization Server should display authentication and consent UI
      * consistent with a "feature phone" type display.
      *
      */

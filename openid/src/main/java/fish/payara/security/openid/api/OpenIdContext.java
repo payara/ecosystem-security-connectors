@@ -41,7 +41,10 @@ package fish.payara.security.openid.api;
 
 import java.io.Serializable;
 import java.util.Optional;
+import java.util.Set;
 import javax.json.JsonObject;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 /**
  * An injectable interface that provides access to access token, identity token,
@@ -52,25 +55,21 @@ import javax.json.JsonObject;
 public interface OpenIdContext extends Serializable {
 
     /**
-     * Gets the caller name of the validated caller
-     *
-     * @return
+     * @return the caller name of the validated caller
      */
     String getCallerName();
 
     /**
-     * Gets the groups associated with the caller
-     *
-     * @return
+     * @return the groups associated with the caller
      */
-    String getCallerGroups();
+    Set<String> getCallerGroups();
 
     /**
      * Subject Identifier. A locally unique and never reassigned identifier
      * within the Issuer for the End-User, which is intended to be consumed by
      * the Client
      *
-     * @return
+     * @return the subject identifier
      */
     String getSubject();
 
@@ -78,38 +77,30 @@ public interface OpenIdContext extends Serializable {
      * Gets the token type value. The value MUST be Bearer or another token_type
      * value that the Client has negotiated with the Authorization Server.
      *
-     * @return
+     * @return the token type value
      */
     String getTokenType();
 
     /**
-     * Gets the authorization token that was received from the OpenId Connect
+     * @return the authorization token that was received from the OpenId Connect
      * provider
-     *
-     * @return
      */
     AccessToken getAccessToken();
 
     /**
-     * Gets the identity token that was received from the OpenId Connect
+     * @return the identity token that was received from the OpenId Connect
      * provider
-     *
-     * @return
      */
     IdentityToken getIdentityToken();
 
     /**
-     * Returns the refresh token that can be used to get a new access token
-     *
-     * @return
+     * @return the refresh token that can be used to get a new access token
      */
     Optional<RefreshToken> getRefreshToken();
 
     /**
-     * Return the time that the access token is granted for, if it is set to
+     * @return the time that the access token is granted for, if it is set to
      * expire
-     *
-     * @return
      */
     Optional<Long> getExpiresIn();
 
@@ -128,10 +119,24 @@ public interface OpenIdContext extends Serializable {
     OpenIdClaims getClaims();
 
     /**
-     * The OpenId Connect Provider's metadata document fetched via provider URI.
-     *
-     * @return
+     * @return the OpenId Connect Provider's metadata document fetched via provider URI.
      */
     JsonObject getProviderMetadata();
+
+    /**
+     * Invalidates the RP's active OpenId Connect session and if
+     * {@link fish.payara.security.annotations.LogoutDefinition#notifyProvider}
+     * set to {@code true} then redirect the End-User's User Agent to the
+     * {@code end_session_endpoint} to notify the OP that the user has logged
+     * out of the RP's application and ask the user whether they want to logout
+     * from the OP as well. After successful logout, the End-User's User Agent
+     * redirect back to the RP's {@code post_redirect_uri}
+     * configured via
+     * {@link fish.payara.security.annotations.LogoutDefinition#redirectURI}
+     *
+     * @param request
+     * @param response
+     */
+    void logout(HttpServletRequest request, HttpServletResponse response);
 
 }
