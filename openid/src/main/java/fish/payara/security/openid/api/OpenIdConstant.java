@@ -1,7 +1,7 @@
 /*
  *  DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  * 
- *  Copyright (c) [2018-2019] Payara Foundation and/or its affiliates. All rights reserved.
+ *  Copyright (c) [2018-2020] Payara Foundation and/or its affiliates. All rights reserved.
  * 
  *  The contents of this file are subject to the terms of either the GNU
  *  General Public License Version 2 only ("GPL") or the Common Development
@@ -68,6 +68,7 @@ public interface OpenIdConstant {
     String LOGIN_HINT = "login_hint";
     String ACR_VALUES = "acr_values";
     String CODE = "code";
+    String POST_LOGOUT_REDIRECT_URI = "post_logout_redirect_uri";
 
     // Access Token request/response parameters
     String GRANT_TYPE = "grant_type";
@@ -93,6 +94,7 @@ public interface OpenIdConstant {
     String AUTHORIZATION_ENDPOINT = "authorization_endpoint";
     String TOKEN_ENDPOINT = "token_endpoint";
     String USERINFO_ENDPOINT = "userinfo_endpoint";
+    String END_SESSION_ENDPOINT = "end_session_endpoint";
     String REGISTRATION_ENDPOINT = "registration_endpoint";
     String JWKS_URI = "jwks_uri";
 

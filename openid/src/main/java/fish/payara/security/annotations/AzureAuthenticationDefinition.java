@@ -1,7 +1,7 @@
 /*
  *  DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- *  Copyright (c) [2018-2019] Payara Foundation and/or its affiliates. All rights reserved.
+ *  Copyright (c) [2018-2020] Payara Foundation and/or its affiliates. All rights reserved.
  *
  *  The contents of this file are subject to the terms of either the GNU
  *  General Public License Version 2 only ("GPL") or the Common Development
@@ -59,6 +59,12 @@ import java.lang.annotation.Target;
 public @interface AzureAuthenticationDefinition {
 
     /**
+     * The Microprofile Config key for the azure tenantId is
+     * <code>{@value}</code>
+     */
+    public static final String OPENID_MP_AZURE_TENANT_ID = "payara.security.openid.azure.tenantId";
+
+    /**
      * Required. Azure tenant id
      *
      * @return
@@ -89,6 +95,14 @@ public @interface AzureAuthenticationDefinition {
      * @return
      */
     ClaimsDefinition claimsDefinition() default @ClaimsDefinition;
+
+    /**
+     * Optional. The Logout definition defines the logout and RP session
+     * management configuration.
+     *
+     * @return
+     */
+    LogoutDefinition logout() default @LogoutDefinition;
 
     /**
      * Required. The client identifier issued when the application was
@@ -178,7 +192,7 @@ public @interface AzureAuthenticationDefinition {
     boolean useNonce() default true;
 
     /**
-     * Optional. If enabled state and nonce value stored in session otherwise in
+     * Optional. If enabled state & nonce value stored in session otherwise in
      * cookies.
      *
      * @return
@@ -212,7 +226,7 @@ public @interface AzureAuthenticationDefinition {
      * @return
      */
     int jwksReadTimeout() default 500;
-
+    
     /**
      * Optional. Enables or disables the automatically performed refresh of
      * Access and Refresh Token.
@@ -230,11 +244,4 @@ public @interface AzureAuthenticationDefinition {
      * @return
      */
     int tokenMinValidity() default 10 * 1000;
-
-    /**
-     * The Microprofile Config key for the azure tenantId is
-     * <code>{@value}</code>
-     */
-    String OPENID_MP_AZURE_TENANT_ID = "payara.security.openid.azure.tenantId";
-
 }

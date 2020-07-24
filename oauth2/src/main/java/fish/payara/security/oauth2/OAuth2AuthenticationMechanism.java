@@ -1,7 +1,7 @@
 /*
  *  DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- *  Copyright (c) [2018] Payara Foundation and/or its affiliates. All rights reserved.
+ *  Copyright (c) [2018-2020] Payara Foundation and/or its affiliates. All rights reserved.
  *
  *  The contents of this file are subject to the terms of either the GNU
  *  General Public License Version 2 only ("GPL") or the Common Development
@@ -72,6 +72,7 @@ import fish.payara.security.oauth2.api.OAuth2State;
 import javax.el.ELProcessor;
 import javax.enterprise.inject.spi.BeanManager;
 import javax.enterprise.inject.spi.CDI;
+import javax.json.JsonNumber;
 import org.eclipse.microprofile.config.Config;
 import org.eclipse.microprofile.config.ConfigProvider;
 
@@ -109,7 +110,7 @@ public class OAuth2AuthenticationMechanism implements HttpAuthenticationMechanis
     /**
      * Creates an OAuth2AuthenticationMechanism.
      * <p>
-     * If this constructor is used then {@link #setDefinition(OAuth2AuthenticationDefinition)} must be
+     * If this constructor is used then {@link #setDefinition(OAuth2AuthenticationDefinition) must be
      * called before any requests are validated.
      */
     public OAuth2AuthenticationMechanism() {
@@ -228,9 +229,9 @@ public class OAuth2AuthenticationMechanism implements HttpAuthenticationMechanis
             tokenHolder.setAccessToken(object.getString("access_token"));
             tokenHolder.setRefreshToken(object.getString("refresh_token", null));
             tokenHolder.setScope(object.getString("scope", null));
-            String expiresIn = object.getString("expires_in", null);
+            JsonNumber expiresIn = object.getJsonNumber("expires_in");
             if (expiresIn != null) {
-                tokenHolder.setExpiresIn(Integer.parseInt(expiresIn));
+                tokenHolder.setExpiresIn(expiresIn.longValue());
             }
 
             RememberMeCredential credential = new RememberMeCredential(result);
@@ -277,7 +278,6 @@ public class OAuth2AuthenticationMechanism implements HttpAuthenticationMechanis
         if (configResult.isPresent()) {
             return configResult.get();
         }
-//        result = TranslatedConfigView.expandValue(result);
         if (isELExpression(value)){
             result = (String) elProcessor.getValue(toRawExpression(result), String.class);
         }
