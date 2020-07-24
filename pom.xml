@@ -92,7 +92,7 @@
     <properties>
         <javase.version>1.8</javase.version>
         <jakartaee.api.version>8.0.0</jakartaee.api.version>
-        <javax.security.enterprise.version>1.1-b01.payara-p3</javax.security.enterprise.version>
+        <javax.security.enterprise.version>1.1-b01.payara-p4</javax.security.enterprise.version>
         <nimbus-jose-jwt.version>8.19</nimbus-jose-jwt.version>
         <accessors-smart.version>1.2.payara-p2</accessors-smart.version>
     </properties>
@@ -102,7 +102,7 @@
             <dependency>
                 <groupId>org.eclipse.microprofile</groupId>
                 <artifactId>microprofile</artifactId>
-                <version>3.2</version>
+                <version>3.3</version>
                 <type>pom</type>
                 <scope>provided</scope>
             </dependency>
@@ -142,7 +142,7 @@
                 <plugin>
                     <groupId>org.apache.felix</groupId>
                     <artifactId>maven-bundle-plugin</artifactId>
-                    <version>4.2.1</version>
+                    <version>5.1.1</version>
                     <extensions>true</extensions>
                 </plugin>
             </plugins>
@@ -160,7 +160,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-source-plugin</artifactId>
-                <version>3.2.0</version>
+                <version>3.2.1</version>
                 <executions>
                     <execution>
                         <id>attach-sources</id>
@@ -173,13 +173,16 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
-                <version>3.1.1</version>
+                <version>3.2.0</version>
                 <executions>
                     <execution>
                         <id>attach-javadocs</id>
                         <goals>
                             <goal>jar</goal>
                         </goals>
+                        <configuration>
+                            <doclint>none</doclint>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>

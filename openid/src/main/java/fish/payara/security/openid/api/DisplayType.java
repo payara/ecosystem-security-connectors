@@ -1,7 +1,7 @@
 /*
  *  DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  * 
- *  Copyright (c) [2018] Payara Foundation and/or its affiliates. All rights reserved.
+ *  Copyright (c) [2018-2020] Payara Foundation and/or its affiliates. All rights reserved.
  * 
  *  The contents of this file are subject to the terms of either the GNU
  *  General Public License Version 2 only ("GPL") or the Common Development
@@ -57,19 +57,19 @@ public enum DisplayType {
      */
     PAGE,
     /**
-     * The Authorization Server SHOULD display authentication and consent UI
+     * The Authorization Server should display authentication and consent UI
      * consistent with a popup User-Agent window.
      *
      */
     POPUP,
     /**
-     * The Authorization Server SHOULD display authentication and consent UI
+     * The Authorization Server should display authentication and consent UI
      * consistent with a device that leverages a touch interface.
      *
      */
     TOUCH,
     /**
-     * The Authorization Server SHOULD display authentication and consent UI
+     * The Authorization Server should display authentication and consent UI
      * consistent with a "feature phone" type display.
      *
      */

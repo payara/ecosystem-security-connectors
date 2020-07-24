@@ -1,7 +1,7 @@
 /*
  *  DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- *  Copyright (c) [2018-2019] Payara Foundation and/or its affiliates. All rights reserved.
+ *  Copyright (c) [2018-2020] Payara Foundation and/or its affiliates. All rights reserved.
  *
  *  The contents of this file are subject to the terms of either the GNU
  *  General Public License Version 2 only ("GPL") or the Common Development
@@ -49,25 +49,19 @@ import java.util.Map;
 public interface AccessToken {
 
     /**
-     * The access token
-     *
-     * @return
+     * @return The access token
      */
     public String getToken();
 
     /**
-     * Gets the access token's claims that was received from the OpenId Connect
+     * @return the access token's claims that was received from the OpenId Connect
      * provider
-     *
-     * @return
      */
     Map<String, Object> getClaims();
 
     /**
-     * Gets the identity token's claim based on requested key type.
-     *
-     * @param key
-     * @return
+     * @param key the claim key
+     * @return the identity token's claim based on requested key type.
      */
     Object getClaim(String key);
 
@@ -75,7 +69,7 @@ public interface AccessToken {
      * Optional. Expiration time of the Access Token in seconds since the
      * response was generated.
      *
-     * @return
+     * @return the expiration time of the Access Token
      */
     Long getExpirationTime();
 
@@ -91,14 +85,12 @@ public interface AccessToken {
     /**
      * Optional. Scope of the Access Token.
      *
-     * @return
+     * @return the scope of the Access Token
      */
     Scope getScope();
 
     /**
-     * Type of the Access Token.
-     *
-     * @return
+     * @return the Type of the Access Token
      */
     public Type getType();
 

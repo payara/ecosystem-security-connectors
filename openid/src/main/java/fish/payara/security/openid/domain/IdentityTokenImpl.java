@@ -1,7 +1,7 @@
 /*
  *  DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- *  Copyright (c) [2018] Payara Foundation and/or its affiliates. All rights reserved.
+ *  Copyright (c) [2018-2020] Payara Foundation and/or its affiliates. All rights reserved.
  *
  *  The contents of this file are subject to the terms of either the GNU
  *  General Public License Version 2 only ("GPL") or the Common Development
@@ -43,9 +43,12 @@ import com.nimbusds.jwt.EncryptedJWT;
 import com.nimbusds.jwt.JWT;
 import com.nimbusds.jwt.JWTParser;
 import fish.payara.security.openid.api.IdentityToken;
+import static fish.payara.security.openid.api.OpenIdConstant.EXPIRATION_IDENTIFIER;
 import java.text.ParseException;
 import static java.util.Collections.emptyMap;
+import java.util.Date;
 import java.util.Map;
+import static java.util.Objects.nonNull;
 
 /**
  *
@@ -59,7 +62,10 @@ public class IdentityTokenImpl implements IdentityToken {
 
     private Map<String, Object> claims;
 
-    public IdentityTokenImpl(String token) {
+    private OpenIdConfiguration configuration;
+
+    public IdentityTokenImpl(OpenIdConfiguration configuration, String token) {
+        this.configuration = configuration;
         this.token = token;
         try {
             this.tokenJWT = JWTParser.parse(token);
@@ -101,6 +107,18 @@ public class IdentityTokenImpl implements IdentityToken {
 
     public boolean isSigned() {
         return tokenJWT != null && tokenJWT instanceof EncryptedJWT;
+    }
+
+    @Override
+    public boolean isExpired() {
+        boolean expired = true;
+        Date exp;
+        if (nonNull(exp = (Date) this.getClaim(EXPIRATION_IDENTIFIER))) {
+            expired = System.currentTimeMillis() + configuration.getTokenMinValidity() > exp.getTime();
+        } else {
+            throw new IllegalStateException("Missing expiration time (exp) claim in identity token");
+        }
+        return expired;
     }
 
     @Override

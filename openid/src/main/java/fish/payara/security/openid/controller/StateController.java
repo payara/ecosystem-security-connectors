@@ -1,7 +1,7 @@
 /*
  *  DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- *  Copyright (c) [2018] Payara Foundation and/or its affiliates. All rights reserved.
+ *  Copyright (c) [2018-2020] Payara Foundation and/or its affiliates. All rights reserved.
  *
  *  The contents of this file are subject to the terms of either the GNU
  *  General Public License Version 2 only ("GPL") or the Common Development
@@ -44,9 +44,11 @@ import static fish.payara.security.openid.OpenIdUtil.not;
 import fish.payara.security.openid.api.OpenIdState;
 import fish.payara.security.openid.domain.OpenIdConfiguration;
 import static fish.payara.security.openid.http.HttpStorageController.getInstance;
-import java.util.Optional;
 import javax.enterprise.context.ApplicationScoped;
 import javax.security.enterprise.authentication.mechanism.http.HttpMessageContext;
+import java.util.Optional;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 /**
  * Controller to manage OpenId state parameter value
@@ -61,17 +63,19 @@ public class StateController {
     public void store(
             OpenIdState state,
             OpenIdConfiguration configuration,
-            HttpMessageContext context) {
+            HttpServletRequest request,
+            HttpServletResponse response) {
 
-        getInstance(configuration, context)
+        getInstance(configuration, request, response)
                 .store(STATE_KEY, state.getValue(), null);
     }
 
     public Optional<OpenIdState> get(
             OpenIdConfiguration configuration,
-            HttpMessageContext context) {
+            HttpServletRequest request,
+            HttpServletResponse response) {
 
-        return getInstance(configuration, context)
+        return getInstance(configuration, request, response)
                 .getAsString(STATE_KEY)
                 .filter(not(OpenIdUtil::isEmpty))
                 .map(OpenIdState::new);
@@ -79,9 +83,10 @@ public class StateController {
 
     public void remove(
             OpenIdConfiguration configuration,
-            HttpMessageContext context) {
+            HttpServletRequest request,
+            HttpServletResponse response) {
 
-        getInstance(configuration, context)
+        getInstance(configuration, request, response)
                 .remove(STATE_KEY);
     }
 }

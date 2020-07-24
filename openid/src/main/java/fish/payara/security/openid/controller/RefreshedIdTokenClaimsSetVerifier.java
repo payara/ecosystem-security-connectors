@@ -1,7 +1,7 @@
 /*
  *  DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- *  Copyright (c) [2019] Payara Foundation and/or its affiliates. All rights reserved.
+ *  Copyright (c) [2019-2020] Payara Foundation and/or its affiliates. All rights reserved.
  *
  *  The contents of this file are subject to the terms of either the GNU
  *  General Public License Version 2 only ("GPL") or the Common Development
@@ -42,10 +42,10 @@ package fish.payara.security.openid.controller;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.proc.BadJWTException;
 import fish.payara.security.openid.api.IdentityToken;
-import static fish.payara.security.openid.api.OpenIdConstant.AUDIENCE;
-import static fish.payara.security.openid.api.OpenIdConstant.AUTHORIZED_PARTY;
 import static fish.payara.security.openid.api.OpenIdConstant.ISSUER_IDENTIFIER;
 import static fish.payara.security.openid.api.OpenIdConstant.SUBJECT_IDENTIFIER;
+import static fish.payara.security.openid.api.OpenIdConstant.AUDIENCE;
+import static fish.payara.security.openid.api.OpenIdConstant.AUTHORIZED_PARTY;
 import fish.payara.security.openid.domain.OpenIdConfiguration;
 import java.util.List;
 import static java.util.Objects.isNull;
@@ -91,7 +91,7 @@ public class RefreshedIdTokenClaimsSetVerifier extends TokenClaimsSetVerifier {
             throw new IllegalStateException("aud Claim Value MUST be the same as in the ID Token issued when the original authentication occurred.");
         }
 
-        if (isNull(claims.getIssueTime())) {
+        if(isNull(claims.getIssueTime())) {
             throw new IllegalStateException("iat Claim Value must not be null.");
         }
 

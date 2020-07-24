@@ -1,7 +1,7 @@
 /*
  *  DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  * 
- *  Copyright (c) [2018-2019] Payara Foundation and/or its affiliates. All rights reserved.
+ *  Copyright (c) [2018-2020] Payara Foundation and/or its affiliates. All rights reserved.
  * 
  *  The contents of this file are subject to the terms of either the GNU
  *  General Public License Version 2 only ("GPL") or the Common Development
@@ -52,18 +52,18 @@ import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 import java.util.Set;
 import static java.util.stream.Collectors.toSet;
-import javax.enterprise.inject.Typed;
 import javax.inject.Inject;
 import javax.json.JsonArray;
 import javax.json.JsonObject;
 import javax.json.JsonValue;
 import javax.security.enterprise.authentication.mechanism.http.HttpMessageContext;
+import javax.enterprise.inject.Typed;
 import javax.security.enterprise.identitystore.CredentialValidationResult;
 import javax.security.enterprise.identitystore.IdentityStore;
 import net.minidev.json.JSONArray;
 
 /**
- * Identity store validates the identity token and access toekn and returns the
+ * Identity store validates the identity token & access toekn and returns the
  * validation result with the caller name and groups.
  *
  * @author Gaurav Gupta
@@ -84,9 +84,9 @@ public class OpenIdIdentityStore implements IdentityStore {
         HttpMessageContext httpContext = credential.getHttpContext();
         OpenIdConfiguration configuration = credential.getConfiguration();
         IdentityTokenImpl idToken = (IdentityTokenImpl) credential.getIdentityToken();
-
+        
         Algorithm idTokenAlgorithm = idToken.getTokenJWT().getHeader().getAlgorithm();
-
+        
         Map<String, Object> idTokenClaims;
         if (isNull(context.getIdentityToken())) {
             idTokenClaims = tokenController.validateIdToken(idToken, httpContext, configuration);
@@ -112,9 +112,12 @@ public class OpenIdIdentityStore implements IdentityStore {
             context.setClaims(userInfo);
         }
 
+        context.setCallerName(getCallerName(configuration));
+        context.setCallerGroups(getCallerGroups(configuration));
+
         return new CredentialValidationResult(
-                getCallerName(configuration),
-                getGroups(configuration)
+                context.getCallerName(),
+                context.getCallerGroups()
         );
     }
 
@@ -133,7 +136,7 @@ public class OpenIdIdentityStore implements IdentityStore {
         return callerName;
     }
 
-    private Set<String> getGroups(OpenIdConfiguration configuration) {
+    private Set<String> getCallerGroups(OpenIdConfiguration configuration) {
         Set<String> groups = new HashSet<>();
         String callerGroupsClaim = configuration.getClaimsConfiguration().getCallerGroupsClaim();
         JsonArray groupsUserinfoClaim
