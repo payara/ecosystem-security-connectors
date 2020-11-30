@@ -38,11 +38,11 @@
 package fish.payara.securityconnector.openid.controller;
 
 import fish.payara.securityconnector.annotations.OpenIdAuthenticationDefinition;
+import fish.payara.securityconnector.annotations.OpenIdProviderMetadata;
 import fish.payara.securityconnector.openid.api.PromptType;
 import fish.payara.securityconnector.openid.domain.ClaimsConfiguration;
 import fish.payara.securityconnector.openid.domain.LogoutConfiguration;
 import fish.payara.securityconnector.openid.domain.OpenIdConfiguration;
-import fish.payara.securityconnector.openid.domain.OpenIdProviderMetadata;
 import fish.payara.securityconnector.openid.domain.OpenIdTokenEncryptionMetadata;
 import java.net.MalformedURLException;
 import java.net.URL;
