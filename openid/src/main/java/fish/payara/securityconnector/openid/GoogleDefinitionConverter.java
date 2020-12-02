@@ -35,7 +35,7 @@
  *  only if the new code is made subject to such option by the copyright
  *  holder.
  */
-package fish.payara.securityconnector.openid.google;
+package fish.payara.securityconnector.openid;
 
 import fish.payara.securityconnector.annotations.ClaimsDefinition;
 import fish.payara.securityconnector.annotations.GoogleAuthenticationDefinition;
@@ -62,54 +62,11 @@ import javax.security.enterprise.authentication.mechanism.http.HttpAuthenticatio
 import javax.security.enterprise.identitystore.IdentityStore;
 
 /**
- * Activates {@link GoogleOpenIdAuthenticationMechanism} with the
- * {@link GoogleAuthenticationDefinition} annotation configuration.
+ * Translates GoogleAuthenticationDefinition to OpenIdAuthenticationDefinition
  *
  * @author Gaurav Gupta
  */
-public class GoogleOpenIdExtension extends OpenIdExtension {
-
-    private final List<GoogleAuthenticationDefinition> definitions = new ArrayList<>();
-
-    protected void beforeBeanDiscovery(@Observes BeforeBeanDiscovery beforeBeanDiscovery, BeanManager manager) {
-        addAnnotatedType(GoogleOpenIdAuthenticationMechanism.class, manager, beforeBeanDiscovery);
-    }
-
-    /**
-     * Find the {@link GoogleAuthenticationDefinition} annotation and validate.
-     *
-     * @param <T>
-     * @param bean
-     * @param beanManager
-     */
-    protected <T> void findOpenIdDefinitionAnnotation(@Observes ProcessBean<T> bean, BeanManager beanManager) {
-        GoogleAuthenticationDefinition definition = bean.getAnnotated().getAnnotation(GoogleAuthenticationDefinition.class);
-        if (nonNull(definition) && !definitions.contains(definition)) {
-            definitions.add(definition);
-            validateExtraParametersFormat(toOpenIdAuthDefinition(definition));
-        }
-    }
-
-    @Override
-    protected void afterBeanDiscovery(@Observes AfterBeanDiscovery afterBean, BeanManager beanManager) {
-        if (!definitions.isEmpty() && beanManager.getBeans(IdentityStore.class).isEmpty()) {
-            afterBean.addBean()
-                    .scope(ApplicationScoped.class)
-                    .beanClass(IdentityStore.class)
-                    .types(IdentityStore.class, Object.class)
-                    .createWith(obj -> CDI.current().select(OpenIdIdentityStore.class).get());
-        }
-
-        for (GoogleAuthenticationDefinition definition : definitions) {
-            afterBean.addBean()
-                    .scope(ApplicationScoped.class)
-                    .beanClass(HttpAuthenticationMechanism.class)
-                    .types(HttpAuthenticationMechanism.class, Object.class)
-                    .createWith(obj -> CDI.current().select(GoogleOpenIdAuthenticationMechanism.class).get().setConfiguration(definition));
-        }
-
-        definitions.clear();
-    }
+public class GoogleDefinitionConverter {
 
     static OpenIdAuthenticationDefinition toOpenIdAuthDefinition(GoogleAuthenticationDefinition googleDefinition) {
 

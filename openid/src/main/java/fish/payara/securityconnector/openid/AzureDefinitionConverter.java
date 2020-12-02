@@ -35,7 +35,7 @@
  *  only if the new code is made subject to such option by the copyright
  *  holder.
  */
-package fish.payara.securityconnector.openid.azure;
+package fish.payara.securityconnector.openid;
 
 import fish.payara.securityconnector.annotations.AzureAuthenticationDefinition;
 import static fish.payara.securityconnector.annotations.AzureAuthenticationDefinition.OPENID_MP_AZURE_TENANT_ID;
@@ -67,54 +67,11 @@ import org.eclipse.microprofile.config.Config;
 import org.eclipse.microprofile.config.ConfigProvider;
 
 /**
- * Activates {@link AzureOpenIdAuthenticationMechanism} with the
- * {@link AzureAuthenticationDefinition} annotation configuration.
+ * Interpret {@link AzureAuthenticationDefinition}
  *
  * @author Gaurav Gupta
  */
-public class AzureOpenIdExtension extends OpenIdExtension {
-
-    private final List<AzureAuthenticationDefinition> definitions = new ArrayList<>();
-
-    protected void beforeBeanDiscovery(@Observes BeforeBeanDiscovery beforeBeanDiscovery, BeanManager manager) {
-        addAnnotatedType(AzureOpenIdAuthenticationMechanism.class, manager, beforeBeanDiscovery);
-    }
-
-    /**
-     * Find the {@link AzureAuthenticationDefinition} annotation and validate.
-     *
-     * @param <T>
-     * @param bean
-     * @param beanManager
-     */
-    protected <T> void findOpenIdDefinitionAnnotation(@Observes ProcessBean<T> bean, BeanManager beanManager) {
-        AzureAuthenticationDefinition definition = bean.getAnnotated().getAnnotation(AzureAuthenticationDefinition.class);
-        if (nonNull(definition) && !definitions.contains(definition)) {
-            definitions.add(definition);
-            validateExtraParametersFormat(toOpenIdAuthDefinition(definition));
-        }
-    }
-
-    @Override
-    protected void afterBeanDiscovery(@Observes AfterBeanDiscovery afterBean, BeanManager beanManager) {
-        if (!definitions.isEmpty() && beanManager.getBeans(IdentityStore.class).isEmpty()) {
-            afterBean.addBean()
-                    .scope(ApplicationScoped.class)
-                    .beanClass(IdentityStore.class)
-                    .types(IdentityStore.class, Object.class)
-                    .createWith(obj -> CDI.current().select(OpenIdIdentityStore.class).get());
-        }
-
-        for (AzureAuthenticationDefinition definition : definitions) {
-            afterBean.addBean()
-                    .scope(ApplicationScoped.class)
-                    .beanClass(HttpAuthenticationMechanism.class)
-                    .types(HttpAuthenticationMechanism.class, Object.class)
-                    .createWith(obj -> CDI.current().select(AzureOpenIdAuthenticationMechanism.class).get().setConfiguration(definition));
-        }
-
-        definitions.clear();
-    }
+public class AzureDefinitionConverter {
 
     static OpenIdAuthenticationDefinition toOpenIdAuthDefinition(AzureAuthenticationDefinition azureDefinition) {
 
