@@ -71,10 +71,8 @@ public class GoogleOpenIdExtension extends OpenIdExtension {
 
     private final List<GoogleAuthenticationDefinition> definitions = new ArrayList<>();
 
-    @Override
     protected void beforeBeanDiscovery(@Observes BeforeBeanDiscovery beforeBeanDiscovery, BeanManager manager) {
         addAnnotatedType(GoogleOpenIdAuthenticationMechanism.class, manager, beforeBeanDiscovery);
-        super.beforeBeanDiscovery(beforeBeanDiscovery, manager);
     }
 
     /**
@@ -84,7 +82,6 @@ public class GoogleOpenIdExtension extends OpenIdExtension {
      * @param bean
      * @param beanManager
      */
-    @Override
     protected <T> void findOpenIdDefinitionAnnotation(@Observes ProcessBean<T> bean, BeanManager beanManager) {
         GoogleAuthenticationDefinition definition = bean.getAnnotated().getAnnotation(GoogleAuthenticationDefinition.class);
         if (nonNull(definition) && !definitions.contains(definition)) {

@@ -50,6 +50,9 @@ import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 import java.util.Set;
 import static java.util.stream.Collectors.toSet;
+
+import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.inject.Alternative;
 import javax.inject.Inject;
 import javax.json.JsonArray;
 import javax.json.JsonObject;
@@ -67,7 +70,8 @@ import net.minidev.json.JSONArray;
  *
  * @author Gaurav Gupta
  */
-@Typed(OpenIdIdentityStore.class)
+@Alternative
+@ApplicationScoped
 public class OpenIdIdentityStore implements IdentityStore {
 
     @Inject

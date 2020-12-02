@@ -76,10 +76,8 @@ public class AzureOpenIdExtension extends OpenIdExtension {
 
     private final List<AzureAuthenticationDefinition> definitions = new ArrayList<>();
 
-    @Override
     protected void beforeBeanDiscovery(@Observes BeforeBeanDiscovery beforeBeanDiscovery, BeanManager manager) {
         addAnnotatedType(AzureOpenIdAuthenticationMechanism.class, manager, beforeBeanDiscovery);
-        super.beforeBeanDiscovery(beforeBeanDiscovery, manager);
     }
 
     /**
@@ -89,7 +87,6 @@ public class AzureOpenIdExtension extends OpenIdExtension {
      * @param bean
      * @param beanManager
      */
-    @Override
     protected <T> void findOpenIdDefinitionAnnotation(@Observes ProcessBean<T> bean, BeanManager beanManager) {
         AzureAuthenticationDefinition definition = bean.getAnnotated().getAnnotation(AzureAuthenticationDefinition.class);
         if (nonNull(definition) && !definitions.contains(definition)) {
