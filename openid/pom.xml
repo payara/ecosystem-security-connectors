@@ -94,6 +94,7 @@
                     <instructions>
                         <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
                         <Bundle-Version>${project.version}</Bundle-Version>
+                        <!-- TODO: This conflicts with payara-api -->
                         <Export-Package>
                             fish.payara.security.annotations,
                             fish.payara.security.openid.api
