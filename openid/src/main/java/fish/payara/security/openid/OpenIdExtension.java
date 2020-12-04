@@ -57,6 +57,7 @@ import javax.enterprise.inject.spi.BeanManager;
 import javax.enterprise.inject.spi.DefinitionException;
 import javax.enterprise.inject.spi.Extension;
 import javax.enterprise.inject.spi.ProcessAnnotatedType;
+import javax.enterprise.inject.spi.ProcessBean;
 import javax.enterprise.inject.spi.WithAnnotations;
 import java.util.logging.Logger;
 
@@ -150,20 +151,27 @@ public class OpenIdExtension implements Extension {
 
     protected void registerTypes(AfterTypeDiscovery event) {
         // in case this is bundled in server and not a library, the types needs explicit registration
-        event.addAnnotatedType(OpenIdContextImpl.class, null);
-        event.addAnnotatedType(NonceController.class, null);
-        event.addAnnotatedType(StateController.class, null);
-        event.addAnnotatedType(ConfigurationController.class, null);
-        event.addAnnotatedType(ProviderMetadataContoller.class, null);
-        event.addAnnotatedType(AuthenticationController.class, null);
-        event.addAnnotatedType(TokenController.class, null);
-        event.addAnnotatedType(UserInfoController.class, null);
-        event.addAnnotatedType(OpenIdAuthenticationMechanism.class, null);
+        // in such case they need explicit type id, otherwise this type conflicts with type discovered within
+        // extension bean manager.
+        registerType(event, OpenIdContextImpl.class);
+        registerType(event, NonceController.class);
+        registerType(event, StateController.class);
+        registerType(event, ConfigurationController.class);
+        registerType(event, ProviderMetadataContoller.class);
+        registerType(event, AuthenticationController.class);
+        registerType(event, TokenController.class);
+        registerType(event, UserInfoController.class);
+        registerType(event, OpenIdAuthenticationMechanism.class);
+    }
+
+    private void registerType(AfterTypeDiscovery event, Class<?> type) {
+        event.addAnnotatedType(type, "OIDCExtension/" + type.getName());
     }
 
     protected void registerDefinition(@Observes AfterBeanDiscovery afterBeanDiscovery, BeanManager beanManager) {
         if (definition != null) {
             afterBeanDiscovery.addBean()
+                    .beanClass(OpenIdAuthenticationDefinition.class)
                     .types(OpenIdAuthenticationDefinition.class)
                     .scope(ApplicationScoped.class)
                     .id("OpenId Definition")
