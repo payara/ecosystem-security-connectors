@@ -103,11 +103,11 @@
                     <relocations>
                         <relocation>
                             <pattern>fish.payara.security</pattern>
-                            <shadedPattern>fish.payara.securityconnector</shadedPattern>
+                            <shadedPattern>fish.payara.security.connectors</shadedPattern>
                         </relocation>
                         <relocation>
                             <pattern></pattern>
-                            <shadedPattern>fish.payara.securityconnector.</shadedPattern>
+                            <shadedPattern>fish.payara.security.connectors.</shadedPattern>
                             <includes>
                                 <include>com.nimbusds.*</include>
                                 <include>org.objectweb.*</include>
