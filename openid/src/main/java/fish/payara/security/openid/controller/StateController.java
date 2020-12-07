@@ -1,7 +1,5 @@
 /*
- *  DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
- *
- *  Copyright (c) [2018-2020] Payara Foundation and/or its affiliates. All rights reserved.
+ * Copyright (c) 2020 Payara Foundation and/or its affiliates. All rights reserved.
  *
  *  The contents of this file are subject to the terms of either the GNU
  *  General Public License Version 2 only ("GPL") or the Common Development
@@ -40,12 +38,11 @@
 package fish.payara.security.openid.controller;
 
 import fish.payara.security.openid.OpenIdUtil;
-import static fish.payara.security.openid.OpenIdUtil.not;
 import fish.payara.security.openid.api.OpenIdState;
 import fish.payara.security.openid.domain.OpenIdConfiguration;
-import static fish.payara.security.openid.http.HttpStorageController.getInstance;
+import fish.payara.security.openid.http.HttpStorageController;
+
 import javax.enterprise.context.ApplicationScoped;
-import javax.security.enterprise.authentication.mechanism.http.HttpMessageContext;
 import java.util.Optional;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -66,7 +63,7 @@ public class StateController {
             HttpServletRequest request,
             HttpServletResponse response) {
 
-        getInstance(configuration, request, response)
+        HttpStorageController.getInstance(configuration, request, response)
                 .store(STATE_KEY, state.getValue(), null);
     }
 
@@ -75,9 +72,9 @@ public class StateController {
             HttpServletRequest request,
             HttpServletResponse response) {
 
-        return getInstance(configuration, request, response)
+        return HttpStorageController.getInstance(configuration, request, response)
                 .getAsString(STATE_KEY)
-                .filter(not(OpenIdUtil::isEmpty))
+                .filter(OpenIdUtil.not(OpenIdUtil::isEmpty))
                 .map(OpenIdState::new);
     }
 
@@ -86,7 +83,7 @@ public class StateController {
             HttpServletRequest request,
             HttpServletResponse response) {
 
-        getInstance(configuration, request, response)
+        HttpStorageController.getInstance(configuration, request, response)
                 .remove(STATE_KEY);
     }
 }

@@ -1,7 +1,5 @@
 /*
- *  DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
- *
- *  Copyright (c) [2018-2020] Payara Foundation and/or its affiliates. All rights reserved.
+ * Copyright (c) 2020 Payara Foundation and/or its affiliates. All rights reserved.
  *
  *  The contents of this file are subject to the terms of either the GNU
  *  General Public License Version 2 only ("GPL") or the Common Development
@@ -39,6 +37,8 @@
  */
 package fish.payara.security.openid.api;
 
+import fish.payara.security.openid.OpenIdAuthenticationMechanism;
+
 import java.io.Serializable;
 import java.util.Objects;
 import java.util.Optional;
@@ -71,7 +71,7 @@ public class OpenIdState implements Serializable {
      * <p>
      * This can be used so that the callback page knows the originating page,
      * but is not used by the
-     * {@link fish.payara.security.openid.OpenIdAuthenticationMechanism} by
+     * {@link OpenIdAuthenticationMechanism} by
      * default
      *
      * @param state the state to encapsulate

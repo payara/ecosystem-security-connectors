@@ -1,7 +1,5 @@
 /*
- *  DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
- *
- *  Copyright (c) [2018-2020] Payara Foundation and/or its affiliates. All rights reserved.
+ * Copyright (c) 2020 Payara Foundation and/or its affiliates. All rights reserved.
  *
  *  The contents of this file are subject to the terms of either the GNU
  *  General Public License Version 2 only ("GPL") or the Common Development
@@ -43,8 +41,9 @@ import com.nimbusds.jose.proc.SecurityContext;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.proc.BadJWTException;
 import com.nimbusds.jwt.proc.JWTClaimsSetVerifier;
-import static fish.payara.security.openid.api.OpenIdConstant.AUTHORIZED_PARTY;
 import fish.payara.security.openid.domain.OpenIdConfiguration;
+import fish.payara.security.openid.api.OpenIdConstant;
+
 import java.util.Date;
 import java.util.List;
 import static java.util.Objects.isNull;
@@ -104,7 +103,7 @@ public abstract class TokenClaimsSetVerifier implements JWTClaimsSetVerifier {
          * If the ID Token contains multiple audiences, the Client should verify
          * that an azp (authorized party) claim is present.
          */
-        Object authorizedParty = claims.getClaim(AUTHORIZED_PARTY);
+        Object authorizedParty = claims.getClaim(OpenIdConstant.AUTHORIZED_PARTY);
         if (audience.size() > 1 && isNull(authorizedParty)) {
             throw new IllegalStateException("Missing authorized party (azp) claim");
         }

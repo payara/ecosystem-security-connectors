@@ -1,7 +1,5 @@
 /*
- *  DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
- *
- *  Copyright (c) [2018-2020] Payara Foundation and/or its affiliates. All rights reserved.
+ * Copyright (c) 2020 Payara Foundation and/or its affiliates. All rights reserved.
  *
  *  The contents of this file are subject to the terms of either the GNU
  *  General Public License Version 2 only ("GPL") or the Common Development
@@ -40,11 +38,9 @@
 package fish.payara.security.annotations;
 
 import fish.payara.security.openid.api.DisplayType;
-import static fish.payara.security.openid.api.DisplayType.PAGE;
-import static fish.payara.security.openid.api.OpenIdConstant.EMAIL_SCOPE;
-import static fish.payara.security.openid.api.OpenIdConstant.OPENID_SCOPE;
-import static fish.payara.security.openid.api.OpenIdConstant.PROFILE_SCOPE;
 import fish.payara.security.openid.api.PromptType;
+import fish.payara.security.openid.api.OpenIdConstant;
+
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -148,7 +144,7 @@ public @interface AzureAuthenticationDefinition {
      *
      * @return
      */
-    String[] scope() default {OPENID_SCOPE, EMAIL_SCOPE, PROFILE_SCOPE};
+    String[] scope() default {OpenIdConstant.OPENID_SCOPE, OpenIdConstant.EMAIL_SCOPE, OpenIdConstant.PROFILE_SCOPE};
 
     /**
      * Optional. Response Type value defines the processing flow to be used. By
@@ -182,7 +178,7 @@ public @interface AzureAuthenticationDefinition {
      *
      * @return
      */
-    DisplayType display() default PAGE;
+    DisplayType display() default DisplayType.PAGE;
 
     /**
      * Optional. Enables string value used to mitigate replay attacks.

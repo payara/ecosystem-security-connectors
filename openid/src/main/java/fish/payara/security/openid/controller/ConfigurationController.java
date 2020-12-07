@@ -1,7 +1,5 @@
 /*
- *  DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
- *
- *  Copyright (c) [2018-2020] Payara Foundation and/or its affiliates. All rights reserved.
+ * Copyright (c) 2020 Payara Foundation and/or its affiliates. All rights reserved.
  *
  *  The contents of this file are subject to the terms of either the GNU
  *  General Public License Version 2 only ("GPL") or the Common Development
@@ -39,52 +37,12 @@
  */
 package fish.payara.security.openid.controller;
 
-import static fish.payara.security.annotations.ClaimsDefinition.OPENID_MP_CALLER_GROUP_CLAIM;
-import static fish.payara.security.annotations.ClaimsDefinition.OPENID_MP_CALLER_NAME_CLAIM;
-import static fish.payara.security.annotations.LogoutDefinition.OPENID_MP_PROVIDER_NOTIFY_LOGOUT;
-import static fish.payara.security.annotations.LogoutDefinition.OPENID_MP_LOGOUT_ON_ACCESS_TOKEN_EXPIRY;
-import static fish.payara.security.annotations.LogoutDefinition.OPENID_MP_LOGOUT_ON_IDENTITY_TOKEN_EXPIRY;
-import static fish.payara.security.annotations.LogoutDefinition.OPENID_MP_POST_LOGOUT_REDIRECT_URI;
 import fish.payara.security.annotations.OpenIdAuthenticationDefinition;
-import static fish.payara.security.annotations.OpenIdAuthenticationDefinition.OPENID_MP_CLIENT_ENC_ALGORITHM;
-import static fish.payara.security.annotations.OpenIdAuthenticationDefinition.OPENID_MP_CLIENT_ENC_JWKS;
-import static fish.payara.security.annotations.OpenIdAuthenticationDefinition.OPENID_MP_CLIENT_ENC_METHOD;
-import static fish.payara.security.annotations.OpenIdAuthenticationDefinition.OPENID_MP_CLIENT_ID;
-import static fish.payara.security.annotations.OpenIdAuthenticationDefinition.OPENID_MP_CLIENT_SECRET;
-import static fish.payara.security.annotations.OpenIdAuthenticationDefinition.OPENID_MP_DISPLAY;
-import static fish.payara.security.annotations.OpenIdAuthenticationDefinition.OPENID_MP_JWKS_CONNECT_TIMEOUT;
-import static fish.payara.security.annotations.OpenIdAuthenticationDefinition.OPENID_MP_JWKS_READ_TIMEOUT;
-import static fish.payara.security.annotations.OpenIdAuthenticationDefinition.OPENID_MP_PROMPT;
-import static fish.payara.security.annotations.OpenIdAuthenticationDefinition.OPENID_MP_PROVIDER_URI;
-import static fish.payara.security.annotations.OpenIdAuthenticationDefinition.OPENID_MP_REDIRECT_URI;
-import static fish.payara.security.annotations.OpenIdAuthenticationDefinition.OPENID_MP_RESPONSE_MODE;
-import static fish.payara.security.annotations.OpenIdAuthenticationDefinition.OPENID_MP_RESPONSE_TYPE;
-import static fish.payara.security.annotations.OpenIdAuthenticationDefinition.OPENID_MP_SCOPE;
-import static fish.payara.security.annotations.OpenIdAuthenticationDefinition.OPENID_MP_TOKEN_AUTO_REFRESH;
-import static fish.payara.security.annotations.OpenIdAuthenticationDefinition.OPENID_MP_TOKEN_MIN_VALIDITY;
-import static fish.payara.security.annotations.OpenIdAuthenticationDefinition.OPENID_MP_USE_NONCE;
-import static fish.payara.security.annotations.OpenIdAuthenticationDefinition.OPENID_MP_USE_SESSION;
-import static fish.payara.security.annotations.OpenIdProviderMetadata.OPENID_MP_AUTHORIZATION_ENDPOINT;
-import static fish.payara.security.annotations.OpenIdProviderMetadata.OPENID_MP_END_SESSION_ENDPOINT;
-import static fish.payara.security.annotations.OpenIdProviderMetadata.OPENID_MP_JWKS_URI;
-import static fish.payara.security.annotations.OpenIdProviderMetadata.OPENID_MP_TOKEN_ENDPOINT;
-import static fish.payara.security.annotations.OpenIdProviderMetadata.OPENID_MP_USERINFO_ENDPOINT;
-import static fish.payara.security.openid.OpenIdUtil.getConfiguredValue;
-import static fish.payara.security.openid.OpenIdUtil.isEmpty;
-import static fish.payara.security.openid.api.OpenIdConstant.AUTHORIZATION_CODE_FLOW_TYPES;
-import static fish.payara.security.openid.api.OpenIdConstant.AUTHORIZATION_ENDPOINT;
-import static fish.payara.security.openid.api.OpenIdConstant.END_SESSION_ENDPOINT;
-import static fish.payara.security.openid.api.OpenIdConstant.HYBRID_FLOW_TYPES;
-import static fish.payara.security.openid.api.OpenIdConstant.IMPLICIT_FLOW_TYPES;
-import static fish.payara.security.openid.api.OpenIdConstant.JWKS_URI;
-import static fish.payara.security.openid.api.OpenIdConstant.OPENID_SCOPE;
-import static fish.payara.security.openid.api.OpenIdConstant.TOKEN_ENDPOINT;
-import static fish.payara.security.openid.api.OpenIdConstant.USERINFO_ENDPOINT;
+import fish.payara.security.annotations.OpenIdProviderMetadata;
 import fish.payara.security.openid.api.PromptType;
 import fish.payara.security.openid.domain.ClaimsConfiguration;
 import fish.payara.security.openid.domain.LogoutConfiguration;
 import fish.payara.security.openid.domain.OpenIdConfiguration;
-import fish.payara.security.openid.domain.OpenIdProviderMetadata;
 import fish.payara.security.openid.domain.OpenIdTokenEncryptionMetadata;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -98,6 +56,11 @@ import static java.util.stream.Collectors.joining;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.json.JsonObject;
+
+import fish.payara.security.annotations.ClaimsDefinition;
+import fish.payara.security.annotations.LogoutDefinition;
+import fish.payara.security.openid.OpenIdUtil;
+import fish.payara.security.openid.api.OpenIdConstant;
 import org.eclipse.microprofile.config.Config;
 import org.eclipse.microprofile.config.ConfigProvider;
 
@@ -135,69 +98,69 @@ public class ConfigurationController {
         String jwksURI;
         URL jwksURL;
 
-        providerURI = getConfiguredValue(String.class, definition.providerURI(), provider, OPENID_MP_PROVIDER_URI);
+        providerURI = OpenIdUtil.getConfiguredValue(String.class, definition.providerURI(), provider, OpenIdAuthenticationDefinition.OPENID_MP_PROVIDER_URI);
         fish.payara.security.annotations.OpenIdProviderMetadata providerMetadata = definition.providerMetadata();
         providerDocument = configurationContoller.getDocument(providerURI);
 
-        if (isEmpty(providerMetadata.authorizationEndpoint()) && providerDocument.containsKey(AUTHORIZATION_ENDPOINT)) {
-            authorizationEndpoint = getConfiguredValue(String.class, providerDocument.getString(AUTHORIZATION_ENDPOINT), provider, OPENID_MP_AUTHORIZATION_ENDPOINT);
+        if (OpenIdUtil.isEmpty(providerMetadata.authorizationEndpoint()) && providerDocument.containsKey(OpenIdConstant.AUTHORIZATION_ENDPOINT)) {
+            authorizationEndpoint = OpenIdUtil.getConfiguredValue(String.class, providerDocument.getString(OpenIdConstant.AUTHORIZATION_ENDPOINT), provider, OpenIdProviderMetadata.OPENID_MP_AUTHORIZATION_ENDPOINT);
         } else {
-            authorizationEndpoint = getConfiguredValue(String.class, providerMetadata.authorizationEndpoint(), provider, OPENID_MP_AUTHORIZATION_ENDPOINT);
+            authorizationEndpoint = OpenIdUtil.getConfiguredValue(String.class, providerMetadata.authorizationEndpoint(), provider, OpenIdProviderMetadata.OPENID_MP_AUTHORIZATION_ENDPOINT);
         }
-        if (isEmpty(providerMetadata.tokenEndpoint()) && providerDocument.containsKey(TOKEN_ENDPOINT)) {
-            tokenEndpoint = getConfiguredValue(String.class, providerDocument.getString(TOKEN_ENDPOINT), provider, OPENID_MP_TOKEN_ENDPOINT);
+        if (OpenIdUtil.isEmpty(providerMetadata.tokenEndpoint()) && providerDocument.containsKey(OpenIdConstant.TOKEN_ENDPOINT)) {
+            tokenEndpoint = OpenIdUtil.getConfiguredValue(String.class, providerDocument.getString(OpenIdConstant.TOKEN_ENDPOINT), provider, OpenIdProviderMetadata.OPENID_MP_TOKEN_ENDPOINT);
         } else {
-            tokenEndpoint = getConfiguredValue(String.class, providerMetadata.tokenEndpoint(), provider, OPENID_MP_TOKEN_ENDPOINT);
+            tokenEndpoint = OpenIdUtil.getConfiguredValue(String.class, providerMetadata.tokenEndpoint(), provider, OpenIdProviderMetadata.OPENID_MP_TOKEN_ENDPOINT);
         }
-        if (isEmpty(providerMetadata.userinfoEndpoint()) && providerDocument.containsKey(USERINFO_ENDPOINT)) {
-            userinfoEndpoint = getConfiguredValue(String.class, providerDocument.getString(USERINFO_ENDPOINT), provider, OPENID_MP_USERINFO_ENDPOINT);
+        if (OpenIdUtil.isEmpty(providerMetadata.userinfoEndpoint()) && providerDocument.containsKey(OpenIdConstant.USERINFO_ENDPOINT)) {
+            userinfoEndpoint = OpenIdUtil.getConfiguredValue(String.class, providerDocument.getString(OpenIdConstant.USERINFO_ENDPOINT), provider, OpenIdProviderMetadata.OPENID_MP_USERINFO_ENDPOINT);
         } else {
-            userinfoEndpoint = getConfiguredValue(String.class, providerMetadata.userinfoEndpoint(), provider, OPENID_MP_USERINFO_ENDPOINT);
+            userinfoEndpoint = OpenIdUtil.getConfiguredValue(String.class, providerMetadata.userinfoEndpoint(), provider, OpenIdProviderMetadata.OPENID_MP_USERINFO_ENDPOINT);
         }
-        if (isEmpty(providerMetadata.endSessionEndpoint()) && providerDocument.containsKey(END_SESSION_ENDPOINT)) {
-            endSessionEndpoint = getConfiguredValue(String.class, providerDocument.getString(END_SESSION_ENDPOINT), provider, OPENID_MP_END_SESSION_ENDPOINT);
+        if (OpenIdUtil.isEmpty(providerMetadata.endSessionEndpoint()) && providerDocument.containsKey(OpenIdConstant.END_SESSION_ENDPOINT)) {
+            endSessionEndpoint = OpenIdUtil.getConfiguredValue(String.class, providerDocument.getString(OpenIdConstant.END_SESSION_ENDPOINT), provider, OpenIdProviderMetadata.OPENID_MP_END_SESSION_ENDPOINT);
         } else {
-            endSessionEndpoint = getConfiguredValue(String.class, providerMetadata.endSessionEndpoint(), provider, OPENID_MP_END_SESSION_ENDPOINT);
+            endSessionEndpoint = OpenIdUtil.getConfiguredValue(String.class, providerMetadata.endSessionEndpoint(), provider, OpenIdProviderMetadata.OPENID_MP_END_SESSION_ENDPOINT);
         }
-        if (isEmpty(providerMetadata.jwksURI()) && providerDocument.containsKey(JWKS_URI)) {
-            jwksURI = getConfiguredValue(String.class, providerDocument.getString(JWKS_URI), provider, OPENID_MP_JWKS_URI);
+        if (OpenIdUtil.isEmpty(providerMetadata.jwksURI()) && providerDocument.containsKey(OpenIdConstant.JWKS_URI)) {
+            jwksURI = OpenIdUtil.getConfiguredValue(String.class, providerDocument.getString(OpenIdConstant.JWKS_URI), provider, OpenIdProviderMetadata.OPENID_MP_JWKS_URI);
         } else {
-            jwksURI = getConfiguredValue(String.class, providerMetadata.jwksURI(), provider, OPENID_MP_JWKS_URI);
+            jwksURI = OpenIdUtil.getConfiguredValue(String.class, providerMetadata.jwksURI(), provider, OpenIdProviderMetadata.OPENID_MP_JWKS_URI);
         }
         try {
             jwksURL = new URL(jwksURI);
         } catch (MalformedURLException ex) {
             throw new IllegalStateException("jwksURI is invalid", ex);
         }
-        String clientId = getConfiguredValue(String.class, definition.clientId(), provider, OPENID_MP_CLIENT_ID);
-        char[] clientSecret = getConfiguredValue(String.class, definition.clientSecret(), provider, OPENID_MP_CLIENT_SECRET).toCharArray();
-        String redirectURI = getConfiguredValue(String.class, definition.redirectURI(), provider, OPENID_MP_REDIRECT_URI);
+        String clientId = OpenIdUtil.getConfiguredValue(String.class, definition.clientId(), provider, OpenIdAuthenticationDefinition.OPENID_MP_CLIENT_ID);
+        char[] clientSecret = OpenIdUtil.getConfiguredValue(String.class, definition.clientSecret(), provider, OpenIdAuthenticationDefinition.OPENID_MP_CLIENT_SECRET).toCharArray();
+        String redirectURI = OpenIdUtil.getConfiguredValue(String.class, definition.redirectURI(), provider, OpenIdAuthenticationDefinition.OPENID_MP_REDIRECT_URI);
 
         String scopes = Arrays.stream(definition.scope()).collect(joining(SPACE_SEPARATOR));
-        scopes = getConfiguredValue(String.class, scopes, provider, OPENID_MP_SCOPE);
-        if (isEmpty(scopes)) {
-            scopes = OPENID_SCOPE;
-        } else if (!scopes.contains(OPENID_SCOPE)) {
-            scopes = OPENID_SCOPE + SPACE_SEPARATOR + scopes;
+        scopes = OpenIdUtil.getConfiguredValue(String.class, scopes, provider, OpenIdAuthenticationDefinition.OPENID_MP_SCOPE);
+        if (OpenIdUtil.isEmpty(scopes)) {
+            scopes = OpenIdConstant.OPENID_SCOPE;
+        } else if (!scopes.contains(OpenIdConstant.OPENID_SCOPE)) {
+            scopes = OpenIdConstant.OPENID_SCOPE + SPACE_SEPARATOR + scopes;
         }
 
-        String responseType = getConfiguredValue(String.class, definition.responseType(), provider, OPENID_MP_RESPONSE_TYPE);
+        String responseType = OpenIdUtil.getConfiguredValue(String.class, definition.responseType(), provider, OpenIdAuthenticationDefinition.OPENID_MP_RESPONSE_TYPE);
         responseType
                 = Arrays.stream(responseType.trim().split(SPACE_SEPARATOR))
                         .map(String::toLowerCase)
                         .sorted()
                         .collect(joining(SPACE_SEPARATOR));
 
-        String responseMode = getConfiguredValue(String.class, definition.responseMode(), provider, OPENID_MP_RESPONSE_MODE);
+        String responseMode = OpenIdUtil.getConfiguredValue(String.class, definition.responseMode(), provider, OpenIdAuthenticationDefinition.OPENID_MP_RESPONSE_MODE);
 
         String display = definition.display().toString().toLowerCase();
-        display = getConfiguredValue(String.class, display, provider, OPENID_MP_DISPLAY);
+        display = OpenIdUtil.getConfiguredValue(String.class, display, provider, OpenIdAuthenticationDefinition.OPENID_MP_DISPLAY);
 
         String prompt = Arrays.stream(definition.prompt())
                 .map(PromptType::toString)
                 .map(String::toLowerCase)
                 .collect(joining(SPACE_SEPARATOR));
-        prompt = getConfiguredValue(String.class, prompt, provider, OPENID_MP_PROMPT);
+        prompt = OpenIdUtil.getConfiguredValue(String.class, prompt, provider, OpenIdAuthenticationDefinition.OPENID_MP_PROMPT);
 
         Map<String, String> extraParameters = new HashMap<>();
         for (String extraParameter : definition.extraParameters()) {
@@ -207,30 +170,30 @@ public class ConfigurationController {
             extraParameters.put(key, value);
         }
 
-        boolean nonce = getConfiguredValue(Boolean.class, definition.useNonce(), provider, OPENID_MP_USE_NONCE);
-        boolean session = getConfiguredValue(Boolean.class, definition.useSession(), provider, OPENID_MP_USE_SESSION);
+        boolean nonce = OpenIdUtil.getConfiguredValue(Boolean.class, definition.useNonce(), provider, OpenIdAuthenticationDefinition.OPENID_MP_USE_NONCE);
+        boolean session = OpenIdUtil.getConfiguredValue(Boolean.class, definition.useSession(), provider, OpenIdAuthenticationDefinition.OPENID_MP_USE_SESSION);
 
-        int jwksConnectTimeout = getConfiguredValue(Integer.class, definition.jwksConnectTimeout(), provider, OPENID_MP_JWKS_CONNECT_TIMEOUT);
-        int jwksReadTimeout = getConfiguredValue(Integer.class, definition.jwksReadTimeout(), provider, OPENID_MP_JWKS_READ_TIMEOUT);
+        int jwksConnectTimeout = OpenIdUtil.getConfiguredValue(Integer.class, definition.jwksConnectTimeout(), provider, OpenIdAuthenticationDefinition.OPENID_MP_JWKS_CONNECT_TIMEOUT);
+        int jwksReadTimeout = OpenIdUtil.getConfiguredValue(Integer.class, definition.jwksReadTimeout(), provider, OpenIdAuthenticationDefinition.OPENID_MP_JWKS_READ_TIMEOUT);
 
-        String encryptionAlgorithm = provider.getOptionalValue(OPENID_MP_CLIENT_ENC_ALGORITHM, String.class).orElse(null);
-        String encryptionMethod = provider.getOptionalValue(OPENID_MP_CLIENT_ENC_METHOD, String.class).orElse(null);
-        String privateKeyJWKS = provider.getOptionalValue(OPENID_MP_CLIENT_ENC_JWKS, String.class).orElse(null);
+        String encryptionAlgorithm = provider.getOptionalValue(OpenIdAuthenticationDefinition.OPENID_MP_CLIENT_ENC_ALGORITHM, String.class).orElse(null);
+        String encryptionMethod = provider.getOptionalValue(OpenIdAuthenticationDefinition.OPENID_MP_CLIENT_ENC_METHOD, String.class).orElse(null);
+        String privateKeyJWKS = provider.getOptionalValue(OpenIdAuthenticationDefinition.OPENID_MP_CLIENT_ENC_JWKS, String.class).orElse(null);
 
-        String callerNameClaim = getConfiguredValue(String.class, definition.claimsDefinition().callerNameClaim(), provider, OPENID_MP_CALLER_NAME_CLAIM);
-        String callerGroupsClaim = getConfiguredValue(String.class, definition.claimsDefinition().callerGroupsClaim(), provider, OPENID_MP_CALLER_GROUP_CLAIM);
+        String callerNameClaim = OpenIdUtil.getConfiguredValue(String.class, definition.claimsDefinition().callerNameClaim(), provider, ClaimsDefinition.OPENID_MP_CALLER_NAME_CLAIM);
+        String callerGroupsClaim = OpenIdUtil.getConfiguredValue(String.class, definition.claimsDefinition().callerGroupsClaim(), provider, ClaimsDefinition.OPENID_MP_CALLER_GROUP_CLAIM);
 
-        Boolean notifyProvider = getConfiguredValue(Boolean.class, definition.logout().notifyProvider(), provider, OPENID_MP_PROVIDER_NOTIFY_LOGOUT);
-        String logoutRedirectURI = getConfiguredValue(String.class, definition.logout().redirectURI(), provider, OPENID_MP_POST_LOGOUT_REDIRECT_URI);
-        Boolean accessTokenExpiry = getConfiguredValue(Boolean.class, definition.logout().accessTokenExpiry(), provider, OPENID_MP_LOGOUT_ON_ACCESS_TOKEN_EXPIRY);
-        Boolean identityTokenExpiry = getConfiguredValue(Boolean.class, definition.logout().identityTokenExpiry(), provider, OPENID_MP_LOGOUT_ON_IDENTITY_TOKEN_EXPIRY);
+        Boolean notifyProvider = OpenIdUtil.getConfiguredValue(Boolean.class, definition.logout().notifyProvider(), provider, LogoutDefinition.OPENID_MP_PROVIDER_NOTIFY_LOGOUT);
+        String logoutRedirectURI = OpenIdUtil.getConfiguredValue(String.class, definition.logout().redirectURI(), provider, LogoutDefinition.OPENID_MP_POST_LOGOUT_REDIRECT_URI);
+        Boolean accessTokenExpiry = OpenIdUtil.getConfiguredValue(Boolean.class, definition.logout().accessTokenExpiry(), provider, LogoutDefinition.OPENID_MP_LOGOUT_ON_ACCESS_TOKEN_EXPIRY);
+        Boolean identityTokenExpiry = OpenIdUtil.getConfiguredValue(Boolean.class, definition.logout().identityTokenExpiry(), provider, LogoutDefinition.OPENID_MP_LOGOUT_ON_IDENTITY_TOKEN_EXPIRY);
 
-        boolean tokenAutoRefresh = getConfiguredValue(Boolean.class, definition.tokenAutoRefresh(), provider, OPENID_MP_TOKEN_AUTO_REFRESH);
-        int tokenMinValidity = getConfiguredValue(Integer.class, definition.tokenMinValidity(), provider, OPENID_MP_TOKEN_MIN_VALIDITY);
+        boolean tokenAutoRefresh = OpenIdUtil.getConfiguredValue(Boolean.class, definition.tokenAutoRefresh(), provider, OpenIdAuthenticationDefinition.OPENID_MP_TOKEN_AUTO_REFRESH);
+        int tokenMinValidity = OpenIdUtil.getConfiguredValue(Integer.class, definition.tokenMinValidity(), provider, OpenIdAuthenticationDefinition.OPENID_MP_TOKEN_MIN_VALIDITY);
 
         OpenIdConfiguration configuration = new OpenIdConfiguration()
                 .setProviderMetadata(
-                        new OpenIdProviderMetadata(providerDocument)
+                        new fish.payara.security.openid.domain.OpenIdProviderMetadata(providerDocument)
                                 .setAuthorizationEndpoint(authorizationEndpoint)
                                 .setTokenEndpoint(tokenEndpoint)
                                 .setUserinfoEndpoint(userinfoEndpoint)
@@ -292,13 +255,13 @@ public class ConfigurationController {
     private List<String> validateProviderMetadata(OpenIdConfiguration configuration) {
         List<String> errorMessages = new ArrayList<>();
 
-        if (isEmpty(configuration.getProviderMetadata().getIssuerURI())) {
+        if (OpenIdUtil.isEmpty(configuration.getProviderMetadata().getIssuerURI())) {
             errorMessages.add("issuer metadata is mandatory");
         }
-        if (isEmpty(configuration.getProviderMetadata().getAuthorizationEndpoint())) {
+        if (OpenIdUtil.isEmpty(configuration.getProviderMetadata().getAuthorizationEndpoint())) {
             errorMessages.add("authorization_endpoint metadata is mandatory");
         }
-        if (isEmpty(configuration.getProviderMetadata().getTokenEndpoint())) {
+        if (OpenIdUtil.isEmpty(configuration.getProviderMetadata().getTokenEndpoint())) {
             errorMessages.add("token_endpoint metadata is mandatory");
         }
         if (configuration.getProviderMetadata().getJwksURL() == null) {
@@ -319,10 +282,10 @@ public class ConfigurationController {
     private List<String> validateClientConfiguration(OpenIdConfiguration configuration) {
         List<String> errorMessages = new ArrayList<>();
 
-        if (isEmpty(configuration.getClientId())) {
+        if (OpenIdUtil.isEmpty(configuration.getClientId())) {
             errorMessages.add("client_id request parameter is mandatory");
         }
-        if (isEmpty(configuration.getRedirectURI())) {
+        if (OpenIdUtil.isEmpty(configuration.getRedirectURI())) {
             errorMessages.add("redirect_uri request parameter is mandatory");
         }
         if (configuration.getJwksConnectTimeout() <= 0) {
@@ -332,12 +295,12 @@ public class ConfigurationController {
             errorMessages.add("jwksReadTimeout value is not valid");
         }
 
-        if (isEmpty(configuration.getResponseType())) {
+        if (OpenIdUtil.isEmpty(configuration.getResponseType())) {
             errorMessages.add("The response type must contain at least one value");
         } else if (!configuration.getProviderMetadata().getResponseTypeSupported().contains(configuration.getResponseType())
-                && !AUTHORIZATION_CODE_FLOW_TYPES.contains(configuration.getResponseType())
-                && !IMPLICIT_FLOW_TYPES.contains(configuration.getResponseType())
-                && !HYBRID_FLOW_TYPES.contains(configuration.getResponseType())) {
+                && !OpenIdConstant.AUTHORIZATION_CODE_FLOW_TYPES.contains(configuration.getResponseType())
+                && !OpenIdConstant.IMPLICIT_FLOW_TYPES.contains(configuration.getResponseType())
+                && !OpenIdConstant.HYBRID_FLOW_TYPES.contains(configuration.getResponseType())) {
             errorMessages.add("Unsupported OpenID Connect response type value : " + configuration.getResponseType());
         }
 

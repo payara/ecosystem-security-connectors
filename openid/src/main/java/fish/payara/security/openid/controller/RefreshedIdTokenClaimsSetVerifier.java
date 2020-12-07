@@ -1,7 +1,5 @@
 /*
- *  DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
- *
- *  Copyright (c) [2019-2020] Payara Foundation and/or its affiliates. All rights reserved.
+ * Copyright (c) 2020 Payara Foundation and/or its affiliates. All rights reserved.
  *
  *  The contents of this file are subject to the terms of either the GNU
  *  General Public License Version 2 only ("GPL") or the Common Development
@@ -42,11 +40,9 @@ package fish.payara.security.openid.controller;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.proc.BadJWTException;
 import fish.payara.security.openid.api.IdentityToken;
-import static fish.payara.security.openid.api.OpenIdConstant.ISSUER_IDENTIFIER;
-import static fish.payara.security.openid.api.OpenIdConstant.SUBJECT_IDENTIFIER;
-import static fish.payara.security.openid.api.OpenIdConstant.AUDIENCE;
-import static fish.payara.security.openid.api.OpenIdConstant.AUTHORIZED_PARTY;
 import fish.payara.security.openid.domain.OpenIdConfiguration;
+import fish.payara.security.openid.api.OpenIdConstant;
+
 import java.util.List;
 import static java.util.Objects.isNull;
 
@@ -73,19 +69,19 @@ public class RefreshedIdTokenClaimsSetVerifier extends TokenClaimsSetVerifier {
     @Override
     public void verify(JWTClaimsSet claims) throws BadJWTException {
 
-        String previousIssuer = (String) previousIdToken.getClaim(ISSUER_IDENTIFIER);
+        String previousIssuer = (String) previousIdToken.getClaim(OpenIdConstant.ISSUER_IDENTIFIER);
         String newIssuer = (String) claims.getIssuer();
         if (newIssuer == null || !newIssuer.equals(previousIssuer)) {
             throw new IllegalStateException("iss Claim Value MUST be the same as in the ID Token issued when the original authentication occurred.");
         }
 
-        String previousSubject = (String) previousIdToken.getClaim(SUBJECT_IDENTIFIER);
+        String previousSubject = (String) previousIdToken.getClaim(OpenIdConstant.SUBJECT_IDENTIFIER);
         String newSubject = (String) claims.getSubject();
         if (newSubject == null || !newSubject.equals(previousSubject)) {
             throw new IllegalStateException("sub Claim Value MUST be the same as in the ID Token issued when the original authentication occurred.");
         }
 
-        List<String> previousAudience = (List<String>) previousIdToken.getClaim(AUDIENCE);
+        List<String> previousAudience = (List<String>) previousIdToken.getClaim(OpenIdConstant.AUDIENCE);
         List<String> newAudience = claims.getAudience();
         if (newAudience == null || !newAudience.equals(previousAudience)) {
             throw new IllegalStateException("aud Claim Value MUST be the same as in the ID Token issued when the original authentication occurred.");
@@ -95,8 +91,8 @@ public class RefreshedIdTokenClaimsSetVerifier extends TokenClaimsSetVerifier {
             throw new IllegalStateException("iat Claim Value must not be null.");
         }
 
-        String previousAzp = (String) previousIdToken.getClaim(AUTHORIZED_PARTY);
-        String newAzp = (String) claims.getClaim(AUTHORIZED_PARTY);
+        String previousAzp = (String) previousIdToken.getClaim(OpenIdConstant.AUTHORIZED_PARTY);
+        String newAzp = (String) claims.getClaim(OpenIdConstant.AUTHORIZED_PARTY);
         if (previousAzp == null ? newAzp != null : !previousAzp.equals(newAzp)) {
             throw new IllegalStateException("azp Claim Value MUST be the same as in the ID Token issued when the original authentication occurred.");
         }

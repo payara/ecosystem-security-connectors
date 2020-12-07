@@ -1,7 +1,5 @@
 /*
- *  DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
- *
- *  Copyright (c) [2018-2020] Payara Foundation and/or its affiliates. All rights reserved.
+ * Copyright (c) 2020 Payara Foundation and/or its affiliates. All rights reserved.
  *
  *  The contents of this file are subject to the terms of either the GNU
  *  General Public License Version 2 only ("GPL") or the Common Development
@@ -66,19 +64,13 @@ import com.nimbusds.jwt.proc.ConfigurableJWTProcessor;
 import com.nimbusds.jwt.proc.DefaultJWTProcessor;
 import com.nimbusds.jwt.proc.JWTClaimsSetVerifier;
 import fish.payara.security.openid.api.IdentityToken;
-import static fish.payara.security.openid.api.OpenIdConstant.AUTHORIZATION_CODE;
-import static fish.payara.security.openid.api.OpenIdConstant.CLIENT_ID;
-import static fish.payara.security.openid.api.OpenIdConstant.CLIENT_SECRET;
-import static fish.payara.security.openid.api.OpenIdConstant.CODE;
-import static fish.payara.security.openid.api.OpenIdConstant.DEFAULT_JWT_SIGNED_ALGORITHM;
-import static fish.payara.security.openid.api.OpenIdConstant.GRANT_TYPE;
-import static fish.payara.security.openid.api.OpenIdConstant.REDIRECT_URI;
-import static fish.payara.security.openid.api.OpenIdConstant.REFRESH_TOKEN;
 import fish.payara.security.openid.api.RefreshToken;
 import fish.payara.security.openid.domain.AccessTokenImpl;
 import fish.payara.security.openid.domain.IdentityTokenImpl;
 import fish.payara.security.openid.domain.OpenIdConfiguration;
 import fish.payara.security.openid.domain.OpenIdNonce;
+import fish.payara.security.openid.api.OpenIdConstant;
+
 import static java.nio.charset.StandardCharsets.UTF_8;
 import java.text.ParseException;
 import static java.util.Collections.emptyMap;
@@ -121,7 +113,7 @@ public class TokenController {
         /**
          * one-time authorization code that RP exchange for an Access / Id token
          */
-        String authorizationCode = request.getParameter(CODE);
+        String authorizationCode = request.getParameter(OpenIdConstant.CODE);
 
         /**
          * The Client sends the parameters to the Token Endpoint using the Form
@@ -133,11 +125,11 @@ public class TokenController {
          * initial authorization request's redirect_uri parameter value.
          */
         Form form = new Form()
-                .param(CLIENT_ID, configuration.getClientId())
-                .param(CLIENT_SECRET, new String(configuration.getClientSecret()))
-                .param(GRANT_TYPE, AUTHORIZATION_CODE)
-                .param(CODE, authorizationCode)
-                .param(REDIRECT_URI, configuration.buildRedirectURI(request));
+                .param(OpenIdConstant.CLIENT_ID, configuration.getClientId())
+                .param(OpenIdConstant.CLIENT_SECRET, new String(configuration.getClientSecret()))
+                .param(OpenIdConstant.GRANT_TYPE, OpenIdConstant.AUTHORIZATION_CODE)
+                .param(OpenIdConstant.CODE, authorizationCode)
+                .param(OpenIdConstant.REDIRECT_URI, configuration.buildRedirectURI(request));
 
         //  ID Token and Access Token Request
         Client client = ClientBuilder.newClient();
@@ -237,10 +229,10 @@ public class TokenController {
     public Response refreshTokens(OpenIdConfiguration configuration, RefreshToken refreshToken) {
 
         Form form = new Form()
-                .param(CLIENT_ID, configuration.getClientId())
-                .param(CLIENT_SECRET, new String(configuration.getClientSecret()))
-                .param(GRANT_TYPE, REFRESH_TOKEN)
-                .param(REFRESH_TOKEN, refreshToken.getToken());
+                .param(OpenIdConstant.CLIENT_ID, configuration.getClientId())
+                .param(OpenIdConstant.CLIENT_SECRET, new String(configuration.getClientSecret()))
+                .param(OpenIdConstant.GRANT_TYPE, OpenIdConstant.REFRESH_TOKEN)
+                .param(OpenIdConstant.REFRESH_TOKEN, refreshToken.getToken());
 
         // Access Token and RefreshToken Request
         Client client = ClientBuilder.newClient();
@@ -263,7 +255,7 @@ public class TokenController {
                 String alg = header.getAlgorithm().getName();
                 if (isNull(alg)) {
                     // set the default value
-                    alg = DEFAULT_JWT_SIGNED_ALGORITHM;
+                    alg = OpenIdConstant.DEFAULT_JWT_SIGNED_ALGORITHM;
                 }
 
                 ConfigurableJWTProcessor jwtProcessor = new DefaultJWTProcessor();

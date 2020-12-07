@@ -1,7 +1,5 @@
 /*
- *  DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
- *
- *  Copyright (c) [2018] Payara Foundation and/or its affiliates. All rights reserved.
+ * Copyright (c) 2020 Payara Foundation and/or its affiliates. All rights reserved.
  *
  *  The contents of this file are subject to the terms of either the GNU
  *  General Public License Version 2 only ("GPL") or the Common Development
@@ -41,8 +39,9 @@ package fish.payara.security.openid.controller;
 
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.proc.BadJWTException;
-import static fish.payara.security.openid.api.OpenIdConstant.NONCE;
 import fish.payara.security.openid.domain.OpenIdConfiguration;
+import fish.payara.security.openid.api.OpenIdConstant;
+
 import static java.util.Objects.isNull;
 
 /**
@@ -79,7 +78,7 @@ public class IdTokenClaimsSetVerifier extends TokenClaimsSetVerifier {
             final String nonce;
 
             try {
-                nonce = claims.getStringClaim(NONCE);
+                nonce = claims.getStringClaim(OpenIdConstant.NONCE);
             } catch (java.text.ParseException ex) {
                 throw new IllegalStateException("Invalid nonce claim", ex);
             }

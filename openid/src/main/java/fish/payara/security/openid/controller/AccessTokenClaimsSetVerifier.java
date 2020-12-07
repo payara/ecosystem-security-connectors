@@ -1,7 +1,5 @@
 /*
- *  DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
- *
- *  Copyright (c) [2018] Payara Foundation and/or its affiliates. All rights reserved.
+ * Copyright (c) 2020 Payara Foundation and/or its affiliates. All rights reserved.
  *
  *  The contents of this file are subject to the terms of either the GNU
  *  General Public License Version 2 only ("GPL") or the Common Development
@@ -44,8 +42,9 @@ import com.nimbusds.jose.util.Base64URL;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.proc.BadJWTException;
 import fish.payara.security.openid.api.AccessToken;
-import static fish.payara.security.openid.api.OpenIdConstant.ACCESS_TOKEN_HASH;
 import fish.payara.security.openid.domain.OpenIdConfiguration;
+import fish.payara.security.openid.api.OpenIdConstant;
+
 import static java.nio.charset.StandardCharsets.US_ASCII;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -82,7 +81,7 @@ public class AccessTokenClaimsSetVerifier extends TokenClaimsSetVerifier {
     }
 
     public void validateAccessToken() {
-        if (idTokenClaims.containsKey(ACCESS_TOKEN_HASH)) {
+        if (idTokenClaims.containsKey(OpenIdConstant.ACCESS_TOKEN_HASH)) {
 
             //Get the message digest for the JWS algorithm value used in the header(alg) of the ID Token
             MessageDigest md = getMessageDigest(idTokenAlgorithm);
@@ -96,7 +95,7 @@ public class AccessTokenClaimsSetVerifier extends TokenClaimsSetVerifier {
             String accessTokenHash = Base64URL.encode(leftHalf).toString();
 
             // The value of at_hash in the ID Token MUST match the value produced
-            if (!idTokenClaims.get(ACCESS_TOKEN_HASH).equals(accessTokenHash)) {
+            if (!idTokenClaims.get(OpenIdConstant.ACCESS_TOKEN_HASH).equals(accessTokenHash)) {
                 throw new IllegalStateException("Invalid access token hash (at_hash) value");
             }
         }

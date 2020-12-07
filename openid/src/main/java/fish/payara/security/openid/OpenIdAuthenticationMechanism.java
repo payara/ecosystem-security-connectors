@@ -1,7 +1,5 @@
 /*
- *  DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
- *
- *  Copyright (c) [2018-2020] Payara Foundation and/or its affiliates. All rights reserved.
+ * Copyright (c) 2020 Payara Foundation and/or its affiliates. All rights reserved.
  *
  *  The contents of this file are subject to the terms of either the GNU
  *  General Public License Version 2 only ("GPL") or the Common Development
@@ -57,6 +55,7 @@ import fish.payara.security.openid.domain.LogoutConfiguration;
 import fish.payara.security.openid.domain.OpenIdConfiguration;
 import fish.payara.security.openid.domain.OpenIdContextImpl;
 import fish.payara.security.openid.domain.RefreshTokenImpl;
+
 import java.io.IOException;
 import java.io.Serializable;
 import java.io.StringReader;
@@ -67,7 +66,10 @@ import java.util.logging.Level;
 import static java.util.logging.Level.INFO;
 import static java.util.logging.Level.WARNING;
 import java.util.logging.Logger;
-import javax.enterprise.inject.Typed;
+import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.context.Initialized;
+import javax.enterprise.event.Observes;
+import javax.enterprise.inject.Alternative;
 import javax.inject.Inject;
 import javax.json.Json;
 import javax.json.JsonNumber;
@@ -126,7 +128,8 @@ import javax.ws.rs.core.Response.Status;
 //  |        |<------------------------------------------------------|        |
 //  |        |                                                       |        |
 //  +--------+                                                       +--------+
-@Typed(OpenIdAuthenticationMechanism.class)
+@Alternative
+@ApplicationScoped
 public class OpenIdAuthenticationMechanism implements HttpAuthenticationMechanism {
 
     private OpenIdConfiguration configuration;
@@ -165,16 +168,6 @@ public class OpenIdAuthenticationMechanism implements HttpAuthenticationMechanis
     public OpenIdAuthenticationMechanism() {
     }
 
-    /**
-     * Creates an {@link OpenIdAuthenticationMechanism} that has been defined
-     * using an annotation
-     *
-     * @param definition
-     */
-    public OpenIdAuthenticationMechanism(OpenIdAuthenticationDefinition definition) {
-        this();
-        setConfiguration(definition);
-    }
 
     /**
      * Sets the properties of the {@link OpenIdAuthenticationMechanism} as
@@ -188,6 +181,10 @@ public class OpenIdAuthenticationMechanism implements HttpAuthenticationMechanis
     public OpenIdAuthenticationMechanism setConfiguration(OpenIdAuthenticationDefinition definition) {
         this.configuration = configurationController.buildConfig(definition);
         return this;
+    }
+
+    void init(@Observes @Initialized(ApplicationScoped.class) Object context, OpenIdAuthenticationDefinition definition) {
+        setConfiguration(definition);
     }
 
     @Override

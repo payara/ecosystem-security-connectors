@@ -1,7 +1,5 @@
 /*
- *  DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
- *
- *  Copyright (c) [2018-2020] Payara Foundation and/or its affiliates. All rights reserved.
+ * Copyright (c) 2020 Payara Foundation and/or its affiliates. All rights reserved.
  *
  *  The contents of this file are subject to the terms of either the GNU
  *  General Public License Version 2 only ("GPL") or the Common Development
@@ -41,11 +39,11 @@ package fish.payara.security.openid.controller;
 
 import com.nimbusds.jose.util.Base64URL;
 import fish.payara.security.openid.OpenIdUtil;
-import static fish.payara.security.openid.OpenIdUtil.not;
-import static fish.payara.security.openid.api.OpenIdConstant.DEFAULT_HASH_ALGORITHM;
 import fish.payara.security.openid.domain.OpenIdConfiguration;
 import fish.payara.security.openid.domain.OpenIdNonce;
-import static fish.payara.security.openid.http.HttpStorageController.getInstance;
+import fish.payara.security.openid.api.OpenIdConstant;
+import fish.payara.security.openid.http.HttpStorageController;
+
 import static java.nio.charset.StandardCharsets.US_ASCII;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -70,7 +68,7 @@ public class NonceController {
             HttpServletRequest request,
             HttpServletResponse response) {
         if (configuration.isUseNonce()) {
-            getInstance(configuration, request, response)
+            HttpStorageController.getInstance(configuration, request, response)
                     .store(NONCE_KEY, nonce.getValue(), null);
         }
     }
@@ -80,9 +78,9 @@ public class NonceController {
             HttpServletRequest request,
             HttpServletResponse response) {
 
-        return getInstance(configuration, request, response)
+        return HttpStorageController.getInstance(configuration, request, response)
                 .getAsString(NONCE_KEY)
-                .filter(not(OpenIdUtil::isEmpty))
+                .filter(OpenIdUtil.not(OpenIdUtil::isEmpty))
                 .map(OpenIdNonce::new)
                 .orElse(null);
     }
@@ -92,7 +90,7 @@ public class NonceController {
             HttpServletRequest request,
             HttpServletResponse response) {
 
-        getInstance(configuration, request, response)
+        HttpStorageController.getInstance(configuration, request, response)
                 .remove(NONCE_KEY);
     }
 
@@ -101,7 +99,7 @@ public class NonceController {
 
         String nonceHash;
         try {
-            MessageDigest md = MessageDigest.getInstance(DEFAULT_HASH_ALGORITHM);
+            MessageDigest md = MessageDigest.getInstance(OpenIdConstant.DEFAULT_HASH_ALGORITHM);
             md.update(nonce.getValue().getBytes(US_ASCII));
             byte[] hash = md.digest();
             nonceHash = Base64URL.encode(hash).toString();

@@ -1,8 +1,6 @@
 /*
- *  DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
- * 
- *  Copyright (c) [2018] Payara Foundation and/or its affiliates. All rights reserved.
- * 
+ * Copyright (c) 2020 Payara Foundation and/or its affiliates. All rights reserved.
+ *
  *  The contents of this file are subject to the terms of either the GNU
  *  General Public License Version 2 only ("GPL") or the Common Development
  *  and Distribution License("CDDL") (collectively, the "License").  You
@@ -11,20 +9,20 @@
  *  https://github.com/payara/Payara/blob/master/LICENSE.txt
  *  See the License for the specific
  *  language governing permissions and limitations under the License.
- * 
+ *
  *  When distributing the software, include this License Header Notice in each
  *  file and include the License file at glassfish/legal/LICENSE.txt.
- * 
+ *
  *  GPL Classpath Exception:
  *  The Payara Foundation designates this particular file as subject to the "Classpath"
  *  exception as provided by the Payara Foundation in the GPL Version 2 section of the License
  *  file that accompanied this code.
- * 
+ *
  *  Modifications:
  *  If applicable, add the following below the License Header, with the fields
  *  enclosed by brackets [] replaced by your own identifying information:
  *  "Portions Copyright [year] [name of copyright owner]"
- * 
+ *
  *  Contributor(s):
  *  If you wish your version of this file to be governed by only the CDDL or
  *  only the GPL Version 2, indicate your decision by adding "[Contributor]
@@ -39,6 +37,8 @@
  */
 package fish.payara.security.openid;
 
+import fish.payara.security.annotations.AzureAuthenticationDefinition;
+import fish.payara.security.annotations.GoogleAuthenticationDefinition;
 import fish.payara.security.annotations.OpenIdAuthenticationDefinition;
 import fish.payara.security.openid.controller.AuthenticationController;
 import fish.payara.security.openid.controller.ConfigurationController;
@@ -48,101 +48,81 @@ import fish.payara.security.openid.controller.StateController;
 import fish.payara.security.openid.controller.TokenController;
 import fish.payara.security.openid.controller.UserInfoController;
 import fish.payara.security.openid.domain.OpenIdContextImpl;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import static java.util.logging.Level.FINE;
-import static java.util.logging.Level.INFO;
-import java.util.logging.Logger;
+
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.event.Observes;
 import javax.enterprise.inject.spi.AfterBeanDiscovery;
-import javax.enterprise.inject.spi.Bean;
+import javax.enterprise.inject.spi.AfterTypeDiscovery;
 import javax.enterprise.inject.spi.BeanManager;
-import javax.enterprise.inject.spi.BeforeBeanDiscovery;
-import javax.enterprise.inject.spi.CDI;
 import javax.enterprise.inject.spi.DefinitionException;
 import javax.enterprise.inject.spi.Extension;
+import javax.enterprise.inject.spi.ProcessAnnotatedType;
 import javax.enterprise.inject.spi.ProcessBean;
-import javax.security.enterprise.authentication.mechanism.http.HttpAuthenticationMechanism;
-import javax.security.enterprise.identitystore.IdentityStore;
-import org.glassfish.soteria.cdi.CdiProducer;
-import static org.glassfish.soteria.cdi.CdiUtils.getAnnotation;
+import javax.enterprise.inject.spi.WithAnnotations;
+import java.util.logging.Logger;
+
+import static java.util.logging.Level.INFO;
 
 /**
  * Activates {@link OpenIdAuthenticationMechanism} with the
  * {@link OpenIdAuthenticationDefinition} annotation configuration.
  *
  * @author Gaurav Gupta
+ * @author Patrik Duditš
  */
 public class OpenIdExtension implements Extension {
 
-    private final List<Bean<IdentityStore>> identityStoreBeans = new ArrayList<>();
-    private Bean<HttpAuthenticationMechanism> authenticationMechanismBean;
-
     private static final Logger LOGGER = Logger.getLogger(OpenIdExtension.class.getName());
 
-    protected void beforeBeanDiscovery(@Observes BeforeBeanDiscovery beforeBeanDiscovery, BeanManager manager) {
-        addAnnotatedType(OpenIdAuthenticationMechanism.class, manager, beforeBeanDiscovery);
-        addAnnotatedType(OpenIdIdentityStore.class, manager, beforeBeanDiscovery);
+    private OpenIdAuthenticationDefinition definition;
+    private boolean deployedAsAppLibrary;
 
-        addAnnotatedType(OpenIdContextImpl.class, manager, beforeBeanDiscovery);
-
-        addAnnotatedType(NonceController.class, manager, beforeBeanDiscovery);
-        addAnnotatedType(StateController.class, manager, beforeBeanDiscovery);
-        addAnnotatedType(ConfigurationController.class, manager, beforeBeanDiscovery);
-        addAnnotatedType(ProviderMetadataContoller.class, manager, beforeBeanDiscovery);
-        addAnnotatedType(AuthenticationController.class, manager, beforeBeanDiscovery);
-        addAnnotatedType(TokenController.class, manager, beforeBeanDiscovery);
-        addAnnotatedType(UserInfoController.class, manager, beforeBeanDiscovery);
-    }
-
-    protected <T extends Object> void addAnnotatedType(Class<T> type, BeanManager manager, BeforeBeanDiscovery beforeBeanDiscovery) {
-        beforeBeanDiscovery.addAnnotatedType(manager.createAnnotatedType(type), type.getName());
+    protected void foundMyClasses(@Observes ProcessAnnotatedType<OpenIdContextImpl> myType) {
+        this.deployedAsAppLibrary = true;
     }
 
     /**
      * Find the {@link OpenIdAuthenticationDefinition} annotation and validate.
-     *
-     * @param <T>
-     * @param eventIn
-     * @param beanManager
      */
-    protected <T> void findOpenIdDefinitionAnnotation(@Observes ProcessBean<T> eventIn, BeanManager beanManager) {
+    protected void findOpenIdDefinitionAnnotation(@Observes @WithAnnotations(OpenIdAuthenticationDefinition.class) ProcessAnnotatedType<?> event) {
+        Class<?> beanClass = event.getAnnotatedType().getJavaClass();
+        OpenIdAuthenticationDefinition standardDefinition = event.getAnnotatedType().getAnnotation(OpenIdAuthenticationDefinition.class);
+        setDefinition(standardDefinition, beanClass, "Generic");
+    }
 
-        ProcessBean<T> event = eventIn;
+    private void setDefinition(OpenIdAuthenticationDefinition definition, Class<?> sourceClass, String definitionKind) {
+        if (this.definition != null) {
+            LOGGER.warning("Multiple authentication definition found. Will ignore the definition in " + sourceClass);
+            return;
+        }
 
-        //create the bean being proccessed.
-        Class<?> beanClass = event.getBean().getBeanClass();
+        this.definition = definition;
+        LOGGER.log(INFO, "Activating {0} OpenID Connect authentication definition from class {1}",
+                new Object[]{definitionKind, sourceClass.getName()});
+    }
 
-        //get the identity store from the annotation (if it exists)
-        Optional<OpenIdAuthenticationDefinition> optionalOpenIdStore
-                = getAnnotation(beanManager, event.getAnnotated(), OpenIdAuthenticationDefinition.class);
+    /**
+     * Find {@link GoogleAuthenticationDefinition} annotation and validate.
+     *
+     * @param event
+     */
+    protected void findGoogleDefinitionAnnotation(@Observes @WithAnnotations(GoogleAuthenticationDefinition.class) ProcessAnnotatedType<?> event) {
+        Class<?> beanClass = event.getAnnotatedType().getJavaClass();
+        OpenIdAuthenticationDefinition standardDefinition = GoogleDefinitionConverter
+                .toOpenIdAuthDefinition(event.getAnnotatedType().getAnnotation(GoogleAuthenticationDefinition.class));
+        setDefinition(standardDefinition, beanClass, "Google");
+    }
 
-        optionalOpenIdStore.ifPresent(definition -> {
-            validateExtraParametersFormat(definition);
-            logActivatedIdentityStore(OpenIdIdentityStore.class, beanClass);
-
-            identityStoreBeans.add(new CdiProducer<IdentityStore>()
-                    .scope(ApplicationScoped.class)
-                    .beanClass(IdentityStore.class)
-                    .types(Object.class, IdentityStore.class)
-                    .addToId(OpenIdIdentityStore.class)
-                    .create(e -> CDI.current().select(OpenIdIdentityStore.class).get())
-            );
-
-            logActivatedAuthenticationMechanism(OpenIdAuthenticationMechanism.class, beanClass);
-            authenticationMechanismBean = new CdiProducer<HttpAuthenticationMechanism>()
-                    .scope(ApplicationScoped.class)
-                    .beanClass(HttpAuthenticationMechanism.class)
-                    .types(Object.class, HttpAuthenticationMechanism.class)
-                    .addToId(OpenIdAuthenticationMechanism.class)
-                    .create(e -> {
-                        OpenIdAuthenticationMechanism mechanism = CDI.current().select(OpenIdAuthenticationMechanism.class).get();
-                        mechanism.setConfiguration(definition);
-                        return mechanism;
-                    });
-        });
+    /**
+     * Find {@link AzureAuthenticationDefinition} annotation and validate.
+     *
+     * @param event
+     */
+    protected void findAzureDefinitionAnnotation(@Observes @WithAnnotations(AzureAuthenticationDefinition.class) ProcessAnnotatedType<?> event) {
+        Class<?> beanClass = event.getAnnotatedType().getJavaClass();
+        OpenIdAuthenticationDefinition standardDefinition = AzureDefinitionConverter
+                .toOpenIdAuthDefinition(event.getAnnotatedType().getAnnotation(AzureAuthenticationDefinition.class));
+        setDefinition(standardDefinition, beanClass, "Azure");
     }
 
     protected void validateExtraParametersFormat(OpenIdAuthenticationDefinition definition) {
@@ -151,31 +131,52 @@ public class OpenIdExtension implements Extension {
             if (parts.length != 2) {
                 throw new DefinitionException(
                         OpenIdAuthenticationDefinition.class.getSimpleName()
-                        + ".extraParameters() value '" + extraParameter
-                        + "' is not of the format key=value"
+                                + ".extraParameters() value '" + extraParameter
+                                + "' is not of the format key=value"
                 );
             }
         }
     }
 
-    protected void afterBeanDiscovery(@Observes AfterBeanDiscovery afterBeanDiscovery, BeanManager beanManager) {
-
-        if (!identityStoreBeans.isEmpty()) {
-            identityStoreBeans.forEach(afterBeanDiscovery::addBean);
+    protected void afterTypeDiscovery(@Observes AfterTypeDiscovery afterTypeDiscovery) {
+        if (!deployedAsAppLibrary) {
+            registerTypes(afterTypeDiscovery);
         }
-
-        if (authenticationMechanismBean != null) {
-            LOGGER.log(FINE, "Creating OpenId Mechanism");
-            afterBeanDiscovery.addBean(authenticationMechanismBean);
+        if (this.definition != null) {
+            // if there is a definition, enable mechanism and identity store
+            afterTypeDiscovery.getAlternatives().add(OpenIdAuthenticationMechanism.class);
+            afterTypeDiscovery.getAlternatives().add(OpenIdIdentityStore.class);
         }
     }
 
-    private void logActivatedIdentityStore(Class<?> identityStoreClass, Class<?> beanClass) {
-        LOGGER.log(INFO, "Activating {0} identity store from {1} class", new Object[]{identityStoreClass.getName(), beanClass.getName()});
+    protected void registerTypes(AfterTypeDiscovery event) {
+        // in case this is bundled in server and not a library, the types needs explicit registration
+        // in such case they need explicit type id, otherwise this type conflicts with type discovered within
+        // extension bean manager.
+        registerType(event, OpenIdContextImpl.class);
+        registerType(event, NonceController.class);
+        registerType(event, StateController.class);
+        registerType(event, ConfigurationController.class);
+        registerType(event, ProviderMetadataContoller.class);
+        registerType(event, AuthenticationController.class);
+        registerType(event, TokenController.class);
+        registerType(event, UserInfoController.class);
+        registerType(event, OpenIdAuthenticationMechanism.class);
     }
 
-    private void logActivatedAuthenticationMechanism(Class<?> authenticationMechanismClass, Class<?> beanClass) {
-        LOGGER.log(INFO, "Activating {0} authentication mechanism from {1} class", new Object[]{authenticationMechanismClass.getName(), beanClass.getName()});
+    private void registerType(AfterTypeDiscovery event, Class<?> type) {
+        event.addAnnotatedType(type, "OIDCExtension/" + type.getName());
+    }
+
+    protected void registerDefinition(@Observes AfterBeanDiscovery afterBeanDiscovery, BeanManager beanManager) {
+        if (definition != null) {
+            afterBeanDiscovery.addBean()
+                    .beanClass(OpenIdAuthenticationDefinition.class)
+                    .types(OpenIdAuthenticationDefinition.class)
+                    .scope(ApplicationScoped.class)
+                    .id("OpenId Definition")
+                    .createWith(cc -> this.definition);
+        }
     }
 
 }

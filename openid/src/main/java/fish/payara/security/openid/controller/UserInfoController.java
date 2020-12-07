@@ -1,7 +1,5 @@
 /*
- *  DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
- *
- *  Copyright (c) [2018-2020] Payara Foundation and/or its affiliates. All rights reserved.
+ * Copyright (c) 2020 Payara Foundation and/or its affiliates. All rights reserved.
  *
  *  The contents of this file are subject to the terms of either the GNU
  *  General Public License Version 2 only ("GPL") or the Common Development
@@ -40,9 +38,6 @@
 package fish.payara.security.openid.controller;
 
 import fish.payara.security.openid.api.AccessToken;
-import static fish.payara.security.openid.api.OpenIdConstant.ERROR_DESCRIPTION_PARAM;
-import static fish.payara.security.openid.api.OpenIdConstant.ERROR_PARAM;
-import static fish.payara.security.openid.api.OpenIdConstant.SUBJECT_IDENTIFIER;
 import fish.payara.security.openid.domain.OpenIdConfiguration;
 import java.io.StringReader;
 import static java.util.Objects.nonNull;
@@ -60,6 +55,8 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import fish.payara.security.openid.api.OpenIdContext;
+import fish.payara.security.openid.api.OpenIdConstant;
+
 import javax.enterprise.context.RequestScoped;
 
 /**
@@ -118,8 +115,8 @@ public class UserInfoController {
         } else {
             // UserInfo Error Response
             JsonObject responseObject = Json.createReader(new StringReader(responseBody)).readObject();
-            String error = responseObject.getString(ERROR_PARAM, "Unknown Error");
-            String errorDescription = responseObject.getString(ERROR_DESCRIPTION_PARAM, "Unknown");
+            String error = responseObject.getString(OpenIdConstant.ERROR_PARAM, "Unknown Error");
+            String errorDescription = responseObject.getString(OpenIdConstant.ERROR_DESCRIPTION_PARAM, "Unknown");
             LOGGER.log(WARNING, "Error occurred in fetching user info: {0} caused by {1}", new Object[]{error, errorDescription});
             throw new IllegalStateException("Error occurred in fetching user info");
         }
@@ -133,7 +130,7 @@ public class UserInfoController {
          * Response must be verified to exactly match the sub claim in the ID
          * Token.
          */
-        if (!context.getSubject().equals(userInfo.getString(SUBJECT_IDENTIFIER))) {
+        if (!context.getSubject().equals(userInfo.getString(OpenIdConstant.SUBJECT_IDENTIFIER))) {
             throw new IllegalStateException("UserInfo Response is invalid as sub claim must match with the sub Claim in the ID Token");
         }
     }

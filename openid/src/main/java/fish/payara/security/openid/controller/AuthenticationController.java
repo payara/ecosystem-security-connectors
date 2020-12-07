@@ -1,7 +1,5 @@
 /*
- *  DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
- *
- *  Copyright (c) [2018-2020] Payara Foundation and/or its affiliates. All rights reserved.
+ * Copyright (c) 2020 Payara Foundation and/or its affiliates. All rights reserved.
  *
  *  The contents of this file are subject to the terms of either the GNU
  *  General Public License Version 2 only ("GPL") or the Common Development
@@ -39,19 +37,12 @@
  */
 package fish.payara.security.openid.controller;
 
-import static fish.payara.security.openid.OpenIdUtil.isEmpty;
-import static fish.payara.security.openid.api.OpenIdConstant.CLIENT_ID;
-import static fish.payara.security.openid.api.OpenIdConstant.DISPLAY;
-import static fish.payara.security.openid.api.OpenIdConstant.NONCE;
-import static fish.payara.security.openid.api.OpenIdConstant.PROMPT;
-import static fish.payara.security.openid.api.OpenIdConstant.REDIRECT_URI;
-import static fish.payara.security.openid.api.OpenIdConstant.RESPONSE_MODE;
-import static fish.payara.security.openid.api.OpenIdConstant.RESPONSE_TYPE;
-import static fish.payara.security.openid.api.OpenIdConstant.SCOPE;
-import static fish.payara.security.openid.api.OpenIdConstant.STATE;
 import fish.payara.security.openid.api.OpenIdState;
 import fish.payara.security.openid.domain.OpenIdConfiguration;
 import fish.payara.security.openid.domain.OpenIdNonce;
+import fish.payara.security.openid.OpenIdUtil;
+import fish.payara.security.openid.api.OpenIdConstant;
+
 import java.io.IOException;
 import static java.util.logging.Level.FINEST;
 import java.util.logging.Logger;
@@ -106,13 +97,13 @@ public class AuthenticationController {
          */
         UriBuilder authRequest
                 = UriBuilder.fromUri(configuration.getProviderMetadata().getAuthorizationEndpoint())
-                        .queryParam(SCOPE, configuration.getScopes())
-                        .queryParam(RESPONSE_TYPE, configuration.getResponseType())
-                        .queryParam(CLIENT_ID, configuration.getClientId())
-                        .queryParam(REDIRECT_URI, configuration.buildRedirectURI(request));
+                        .queryParam(OpenIdConstant.SCOPE, configuration.getScopes())
+                        .queryParam(OpenIdConstant.RESPONSE_TYPE, configuration.getResponseType())
+                        .queryParam(OpenIdConstant.CLIENT_ID, configuration.getClientId())
+                        .queryParam(OpenIdConstant.REDIRECT_URI, configuration.buildRedirectURI(request));
 
         OpenIdState state = new OpenIdState();
-        authRequest.queryParam(STATE, state.getValue());
+        authRequest.queryParam(OpenIdConstant.STATE, state.getValue());
         stateController.store(state, configuration, request, response);
 
         // add nonce for replay attack prevention
@@ -120,18 +111,18 @@ public class AuthenticationController {
             OpenIdNonce nonce = new OpenIdNonce();
             // use a cryptographic hash of the value as the nonce parameter
             String nonceHash = nonceController.getNonceHash(nonce);
-            authRequest.queryParam(NONCE, nonceHash);
+            authRequest.queryParam(OpenIdConstant.NONCE, nonceHash);
             nonceController.store(nonce, configuration, request, response);
 
         }
-        if (!isEmpty(configuration.getResponseMode())) {
-            authRequest.queryParam(RESPONSE_MODE, configuration.getResponseMode());
+        if (!OpenIdUtil.isEmpty(configuration.getResponseMode())) {
+            authRequest.queryParam(OpenIdConstant.RESPONSE_MODE, configuration.getResponseMode());
         }
-        if (!isEmpty(configuration.getDisplay())) {
-            authRequest.queryParam(DISPLAY, configuration.getDisplay());
+        if (!OpenIdUtil.isEmpty(configuration.getDisplay())) {
+            authRequest.queryParam(OpenIdConstant.DISPLAY, configuration.getDisplay());
         }
-        if (!isEmpty(configuration.getPrompt())) {
-            authRequest.queryParam(PROMPT, configuration.getPrompt());
+        if (!OpenIdUtil.isEmpty(configuration.getPrompt())) {
+            authRequest.queryParam(OpenIdConstant.PROMPT, configuration.getPrompt());
         }
 
         configuration.getExtraParameters().forEach(authRequest::queryParam);

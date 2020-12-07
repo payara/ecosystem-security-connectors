@@ -1,8 +1,6 @@
 /*
- *  DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
- * 
- *  Copyright (c) [2018-2020] Payara Foundation and/or its affiliates. All rights reserved.
- * 
+ * Copyright (c) 2020 Payara Foundation and/or its affiliates. All rights reserved.
+ *
  *  The contents of this file are subject to the terms of either the GNU
  *  General Public License Version 2 only ("GPL") or the Common Development
  *  and Distribution License("CDDL") (collectively, the "License").  You
@@ -11,20 +9,20 @@
  *  https://github.com/payara/Payara/blob/master/LICENSE.txt
  *  See the License for the specific
  *  language governing permissions and limitations under the License.
- * 
+ *
  *  When distributing the software, include this License Header Notice in each
  *  file and include the License file at glassfish/legal/LICENSE.txt.
- * 
+ *
  *  GPL Classpath Exception:
  *  The Payara Foundation designates this particular file as subject to the "Classpath"
  *  exception as provided by the Payara Foundation in the GPL Version 2 section of the License
  *  file that accompanied this code.
- * 
+ *
  *  Modifications:
  *  If applicable, add the following below the License Header, with the fields
  *  enclosed by brackets [] replaced by your own identifying information:
  *  "Portions Copyright [year] [name of copyright owner]"
- * 
+ *
  *  Contributor(s):
  *  If you wish your version of this file to be governed by only the CDDL or
  *  only the GPL Version 2, indicate your decision by adding "[Contributor]
@@ -42,13 +40,12 @@ package fish.payara.security.openid.domain;
 import fish.payara.security.openid.api.AccessToken;
 import fish.payara.security.openid.api.IdentityToken;
 import fish.payara.security.openid.api.OpenIdClaims;
-import static fish.payara.security.openid.OpenIdUtil.isEmpty;
-import static fish.payara.security.openid.api.OpenIdConstant.ID_TOKEN_HINT;
-import static fish.payara.security.openid.api.OpenIdConstant.POST_LOGOUT_REDIRECT_URI;
-import static fish.payara.security.openid.api.OpenIdConstant.SUBJECT_IDENTIFIER;
 import fish.payara.security.openid.api.OpenIdContext;
 import fish.payara.security.openid.api.RefreshToken;
 import fish.payara.security.openid.controller.AuthenticationController;
+import fish.payara.security.openid.OpenIdUtil;
+import fish.payara.security.openid.api.OpenIdConstant;
+
 import java.io.IOException;
 import java.util.Optional;
 import static java.util.logging.Level.WARNING;
@@ -108,7 +105,7 @@ public class OpenIdContextImpl implements OpenIdContext {
 
     @Override
     public String getSubject() {
-        return (String) getIdentityToken().getClaim(SUBJECT_IDENTIFIER);
+        return (String) getIdentityToken().getClaim(OpenIdConstant.SUBJECT_IDENTIFIER);
     }
 
     @Override
@@ -199,19 +196,19 @@ public class OpenIdContextImpl implements OpenIdContext {
          * https://openid.net/specs/openid-connect-session-1_0.html#RPLogout
          */
         if (logout.isNotifyProvider()
-                && !isEmpty(configuration.getProviderMetadata().getEndSessionEndpoint())) {
+                && !OpenIdUtil.isEmpty(configuration.getProviderMetadata().getEndSessionEndpoint())) {
             UriBuilder logoutURI = UriBuilder.fromUri(configuration.getProviderMetadata().getEndSessionEndpoint())
-                    .queryParam(ID_TOKEN_HINT, getIdentityToken().getToken());
-            if (!isEmpty(logout.getRedirectURI())) {
+                    .queryParam(OpenIdConstant.ID_TOKEN_HINT, getIdentityToken().getToken());
+            if (!OpenIdUtil.isEmpty(logout.getRedirectURI())) {
                 // User Agent redirected to POST_LOGOUT_REDIRECT_URI after a logout operation performed in OP.
-                logoutURI.queryParam(POST_LOGOUT_REDIRECT_URI, logout.buildRedirectURI(request));
+                logoutURI.queryParam(OpenIdConstant.POST_LOGOUT_REDIRECT_URI, logout.buildRedirectURI(request));
             }
             try {
                 response.sendRedirect(logoutURI.toString());
             } catch (IOException e) {
                 throw new IllegalStateException(e);
             }
-        } else if (!isEmpty(logout.getRedirectURI())) {
+        } else if (!OpenIdUtil.isEmpty(logout.getRedirectURI())) {
             try {
                 response.sendRedirect(logout.buildRedirectURI(request));
             } catch (IOException e) {
