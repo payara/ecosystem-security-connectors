@@ -67,6 +67,7 @@ public class OpenIdConfiguration {
     private LogoutConfiguration logoutConfiguration;
     private boolean tokenAutoRefresh;
     private int tokenMinValidity;
+    private JWTValidator validator;
 
     static final String BASE_URL_EXPRESSION = "${baseURL}";
 
@@ -273,4 +274,10 @@ public class OpenIdConfiguration {
                 + '}';
     }
 
+    public JWTValidator getJWTValidator() {
+        if (this.validator == null) {
+            this.validator = new JWTValidator(this);
+        }
+        return this.validator;
+    }
 }
