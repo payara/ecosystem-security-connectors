@@ -101,13 +101,12 @@
                             <shadedPattern>fish.payara.security.connectors</shadedPattern>
                         </relocation>
                         <relocation>
-                            <pattern></pattern>
-                            <shadedPattern>fish.payara.security.connectors.</shadedPattern>
-                            <includes>
-                                <include>com.nimbusds.*</include>
-                                <include>org.objectweb.*</include>
-                                <include>net.jcip.*</include>
-                            </includes>
+                            <pattern>com</pattern>
+                            <shadedPattern>fish.payara.security.connectors.shaded</shadedPattern>
+                        </relocation>
+                        <relocation>
+                            <pattern>net</pattern>
+                            <shadedPattern>fish.payara.security.connectors.shaded</shadedPattern>
                         </relocation>
                     </relocations>
                     <transformers>
