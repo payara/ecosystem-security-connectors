@@ -94,7 +94,7 @@
         <javase.version>1.8</javase.version>
         <jakartaee.api.version>8.0.0</jakartaee.api.version>
         <javax.security.enterprise.version>1.1-b01.payara-p4</javax.security.enterprise.version>
-        <nimbus-jose-jwt.version>9.2</nimbus-jose-jwt.version>
+        <nimbus-jose-jwt.version>9.4.2</nimbus-jose-jwt.version>
         <accessors-smart.version>1.2.payara-p2</accessors-smart.version>
     </properties>
 
