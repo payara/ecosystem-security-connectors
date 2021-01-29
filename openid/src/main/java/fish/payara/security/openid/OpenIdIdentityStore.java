@@ -85,7 +85,7 @@ public class OpenIdIdentityStore implements IdentityStore {
     public CredentialValidationResult validate(OpenIdCredential credential) {
         HttpMessageContext httpContext = credential.getHttpContext();
         OpenIdConfiguration configuration = credential.getConfiguration();
-        IdentityTokenImpl idToken = (IdentityTokenImpl) credential.getIdentityToken();
+        IdentityTokenImpl idToken = credential.getIdentityTokenImpl();
         
         Algorithm idTokenAlgorithm = idToken.getTokenJWT().getHeader().getAlgorithm();
         
