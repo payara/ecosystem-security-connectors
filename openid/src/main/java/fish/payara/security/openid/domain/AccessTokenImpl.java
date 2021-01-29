@@ -39,7 +39,9 @@ package fish.payara.security.openid.domain;
 
 import com.nimbusds.jwt.EncryptedJWT;
 import com.nimbusds.jwt.JWT;
+import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.JWTParser;
+import com.nimbusds.jwt.proc.JWTClaimsSetVerifier;
 import fish.payara.security.openid.api.AccessToken;
 import java.text.ParseException;
 import static java.util.Collections.emptyMap;
@@ -84,6 +86,23 @@ public class AccessTokenImpl implements AccessToken {
         this.expiresIn = expiresIn;
         this.createdAt = System.currentTimeMillis();
         this.scope = Scope.parse(scopeValue);
+    }
+
+    private AccessTokenImpl(OpenIdConfiguration configuration,JWT token, Map<String,Object> claims) throws ParseException {
+        this.configuration = configuration;
+        this.token = token.getParsedString();
+        this.tokenJWT = token;
+        this.claims = claims;
+        this.type = Type.BEARER;
+        this.expiresIn = null;
+        this.createdAt = System.currentTimeMillis();
+        this.scope = Scope.parse((String) claims.get(OpenIdConstant.SCOPE));
+    }
+
+    public static AccessTokenImpl forBearerToken(OpenIdConfiguration configuration, String rawToken, JWTClaimsSetVerifier validator) throws ParseException {
+        JWT token = JWTParser.parse(rawToken);
+        JWTClaimsSet claims = configuration.getJWTValidator().validateBearerToken(token, validator);
+        return new AccessTokenImpl(configuration, token, claims.getClaims());
     }
 
     public JWT getTokenJWT() {

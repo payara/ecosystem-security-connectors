@@ -68,7 +68,7 @@ public abstract class TokenClaimsSetVerifier implements JWTClaimsSetVerifier {
         private final OpenIdConfiguration configuration;
         private final JWTClaimsSet claims;
 
-        protected StandardVerifications(OpenIdConfiguration configuration, JWTClaimsSet claims) {
+        public StandardVerifications(OpenIdConfiguration configuration, JWTClaimsSet claims) {
             this.configuration = configuration;
             this.claims = claims;
         }

@@ -132,6 +132,7 @@ import javax.ws.rs.core.Response.Status;
 @ApplicationScoped
 public class OpenIdAuthenticationMechanism implements HttpAuthenticationMechanism {
 
+    public static final String BEARER_PREFIX = "Bearer ";
     private OpenIdConfiguration configuration;
 
     @Inject
@@ -178,7 +179,7 @@ public class OpenIdAuthenticationMechanism implements HttpAuthenticationMechanis
      * @param definition
      * @return
      */
-    public OpenIdAuthenticationMechanism setConfiguration(OpenIdAuthenticationDefinition definition) {
+    OpenIdAuthenticationMechanism setConfiguration(OpenIdAuthenticationDefinition definition) {
         this.configuration = configurationController.buildConfig(definition);
         return this;
     }
@@ -195,6 +196,9 @@ public class OpenIdAuthenticationMechanism implements HttpAuthenticationMechanis
 
         if (isNull(request.getUserPrincipal())) {
             LOGGER.fine("UserPrincipal is not set, authenticate user using OpenId Connect protocol.");
+            if (hasBearerAuthorization(request)) {
+                return authenticateBearer(request, response, httpContext);
+            }
             // User is not authenticated
             // Perform steps (1) to (6)
             return this.authenticate(request, response, httpContext);
@@ -240,6 +244,25 @@ public class OpenIdAuthenticationMechanism implements HttpAuthenticationMechanis
                 return SUCCESS;
             }
         }
+    }
+
+    private AuthenticationStatus authenticateBearer(HttpServletRequest request, HttpServletResponse response, HttpMessageContext httpContext) {
+            // Validate bearer access token
+            CredentialValidationResult validationResult = identityStoreHandler.validate(new AccessTokenCredential(configuration, readBearerAuthorization(request)));
+            // Register session manually (if @AutoApplySession used, this would be done by its interceptor)
+            httpContext.setRegisterSession(validationResult.getCallerPrincipal().getName(), validationResult.getCallerGroups());
+            return httpContext.notifyContainerAboutLogin(validationResult);
+    }
+
+    private boolean hasBearerAuthorization(HttpServletRequest request) {
+        String authHeader = request.getHeader("Authorization");
+        // Header starts with "Bearer ". Case sensitive per RFC 6750
+        return authHeader != null && authHeader.startsWith(BEARER_PREFIX);
+    }
+
+    private String readBearerAuthorization(HttpServletRequest request) {
+        String authHeader = request.getHeader("Authorization");
+        return authHeader.substring(BEARER_PREFIX.length()).trim();
     }
 
     private AuthenticationStatus authenticate(
