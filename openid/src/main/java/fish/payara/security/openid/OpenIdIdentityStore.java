@@ -45,6 +45,7 @@ import fish.payara.security.openid.domain.IdentityTokenImpl;
 import fish.payara.security.openid.domain.OpenIdConfiguration;
 import fish.payara.security.openid.domain.OpenIdContextImpl;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
@@ -60,8 +61,6 @@ import javax.json.JsonValue;
 import javax.security.enterprise.authentication.mechanism.http.HttpMessageContext;
 import javax.security.enterprise.identitystore.CredentialValidationResult;
 import javax.security.enterprise.identitystore.IdentityStore;
-
-import net.minidev.json.JSONArray;
 
 /**
  * Identity store validates the identity token & access toekn and returns the
@@ -82,6 +81,7 @@ public class OpenIdIdentityStore implements IdentityStore {
     @Inject
     private UserInfoController userInfoController;
 
+    @SuppressWarnings("unused") // IdentityStore calls overloads
     public CredentialValidationResult validate(OpenIdCredential credential) {
         HttpMessageContext httpContext = credential.getHttpContext();
         OpenIdConfiguration configuration = credential.getConfiguration();
@@ -143,10 +143,12 @@ public class OpenIdIdentityStore implements IdentityStore {
         String callerGroupsClaim = configuration.getClaimsConfiguration().getCallerGroupsClaim();
         JsonArray groupsUserinfoClaim
                 = context.getClaimsJson().getJsonArray(callerGroupsClaim);
-        JSONArray groupsIdentityClaim
-                = (JSONArray) context.getIdentityToken().getClaim(callerGroupsClaim);
-        JSONArray groupsAccessClaim
-                = (JSONArray) context.getAccessToken().getClaim(callerGroupsClaim);
+        @SuppressWarnings("unchecked")
+        List<Object> groupsIdentityClaim
+                = (List<Object>) context.getIdentityToken().getClaim(callerGroupsClaim);
+        @SuppressWarnings("unchecked")
+        List<Object> groupsAccessClaim
+                = (List<Object>) context.getAccessToken().getClaim(callerGroupsClaim);
         if (nonNull(groupsUserinfoClaim)) {
             for (int i = 0; i < groupsUserinfoClaim.size(); i++) {
                 JsonValue value = groupsUserinfoClaim.get(i);
