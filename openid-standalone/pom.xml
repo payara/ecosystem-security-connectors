@@ -49,7 +49,7 @@
 
     <artifactId>openid-standalone</artifactId>
 
-    <licenses combine.self="append">
+    <licenses>
         <license>
             <name>CDDL + GPLv2 with classpath exception</name>
             <url>https://raw.githubusercontent.com/payara/Payara/master/LICENSE.txt</url>
@@ -74,11 +74,6 @@
         <dependency>
             <groupId>com.nimbusds</groupId>
             <artifactId>nimbus-jose-jwt</artifactId>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>net.minidev</groupId>
-            <artifactId>accessors-smart</artifactId>
             <scope>compile</scope>
         </dependency>
     </dependencies>
@@ -112,7 +107,6 @@
                                 <include>com.nimbusds.*</include>
                                 <include>org.objectweb.*</include>
                                 <include>net.jcip.*</include>
-                                <include>net.minidev.*</include>
                             </includes>
                         </relocation>
                     </relocations>
