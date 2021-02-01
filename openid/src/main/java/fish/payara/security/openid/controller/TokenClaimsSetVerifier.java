@@ -141,6 +141,8 @@ public abstract class TokenClaimsSetVerifier implements JWTClaimsSetVerifier {
          * Claim.
          *
          * The current time must be after the time represented by the iat Claim.
+         *
+         * The current time must be after the time represented by nbf claim
          */
         public void requireValidTimestamp() {
             long clockSkewInMillis = TimeUnit.MINUTES.toMillis(1);
@@ -159,6 +161,11 @@ public abstract class TokenClaimsSetVerifier implements JWTClaimsSetVerifier {
             }
             if ((iat.getTime() - clockSkewInMillis) > currentTime) {
                 throw new IllegalStateException("Issue time must be after current time " + iat);
+            }
+
+            Date nbf = claims.getNotBeforeTime();
+            if (!isNull(nbf) && (nbf.getTime() - clockSkewInMillis) > currentTime) {
+                throw new IllegalStateException("Token is not valid before " + nbf);
             }
         }
     }
