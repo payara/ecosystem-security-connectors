@@ -76,12 +76,13 @@ public class AccessTokenIdentityStore implements IdentityStore {
         try {
             AccessTokenImpl accessToken = AccessTokenImpl.forBearerToken(credential.getConfiguration(),
                     credential.getAccessToken(),
-                    new BearerAuthenticator(credential.getConfiguration()));
+                    new BearerVerifier(credential.getConfiguration()));
             context.setAccessToken(accessToken);
             // for setClaims we'd need to invoke userinfo. That should be lazy unless required
             // credential.getConfiguration().getClaimsConfiguration().getCallerNameClaim() might be better to use,
             // but there's no guarantee it's present in access token, usually only sub is.
             context.setCallerName((String) accessToken.getClaim(OpenIdConstant.SUBJECT_IDENTIFIER));
+
             return new CredentialValidationResult(new AccessTokenCallerPrincipal(accessToken));
         } catch (ParseException e) {
             LOGGER.log(Level.WARNING, "Cannot parse access token", e);
@@ -89,8 +90,8 @@ public class AccessTokenIdentityStore implements IdentityStore {
         return CredentialValidationResult.INVALID_RESULT;
     }
 
-    static class BearerAuthenticator extends TokenClaimsSetVerifier {
-        public BearerAuthenticator(OpenIdConfiguration configuration) {
+    static class BearerVerifier extends TokenClaimsSetVerifier {
+        public BearerVerifier(OpenIdConfiguration configuration) {
             super(configuration);
         }
 
