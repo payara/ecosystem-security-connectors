@@ -42,6 +42,10 @@ import javax.security.enterprise.CallerPrincipal;
 
 import fish.payara.security.openid.api.AccessToken;
 
+/**
+ * Principal representing JWT Access token passed via HTTP Header {@code Authentication: Bearer}.
+ *
+ */
 public class AccessTokenCallerPrincipal extends CallerPrincipal {
     private final AccessToken accessToken;
 
@@ -50,7 +54,28 @@ public class AccessTokenCallerPrincipal extends CallerPrincipal {
         this.accessToken = token;
     }
 
+    /**
+     * Underyling access token.
+     * @return
+     */
     public AccessToken getAccessToken() {
         return accessToken;
+    }
+
+    /**
+     * JWT Claims of access token
+     * @return
+     */
+    public JwtClaims getClaims() {
+        return accessToken.getJwtClaims();
+    }
+
+    /**
+     * Check whether specific audience string is present in the token
+     * @param audience audience to look for
+     * @return true if audience is present in access token's JWT claims
+     */
+    public boolean hasAudience(String audience) {
+        return getClaims().getAudience().contains(audience);
     }
 }
