@@ -41,15 +41,20 @@ import com.nimbusds.jwt.EncryptedJWT;
 import com.nimbusds.jwt.JWT;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.JWTParser;
+import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.jwt.proc.JWTClaimsSetVerifier;
 import fish.payara.security.openid.api.AccessToken;
 import java.text.ParseException;
 import static java.util.Collections.emptyMap;
 import java.util.Map;
+
+import fish.payara.security.openid.api.JwtClaims;
 import fish.payara.security.openid.api.Scope;
 import fish.payara.security.openid.api.OpenIdConstant;
 
 import java.util.Date;
+import java.util.Optional;
+
 import static java.util.Objects.nonNull;
 
 /**
@@ -61,6 +66,8 @@ public class AccessTokenImpl implements AccessToken {
     private final String token;
 
     private final AccessToken.Type type;
+
+    private final JwtClaims jwtClaims;
 
     private JWT tokenJWT;
 
@@ -77,32 +84,38 @@ public class AccessTokenImpl implements AccessToken {
     public AccessTokenImpl(OpenIdConfiguration configuration, String tokenType, String token, Long expiresIn, String scopeValue) {
         this.configuration = configuration;
         this.token = token;
+        JWTClaimsSet jwtClaimsSet = null;
         try {
             this.tokenJWT = JWTParser.parse(token);
-            this.claims = tokenJWT.getJWTClaimsSet().getClaims();
+            jwtClaimsSet = tokenJWT.getJWTClaimsSet();
+            this.claims = jwtClaimsSet.getClaims();
         } catch (ParseException ex) {
+            // Access token doesn't need to be JWT at all
         }
+        this.jwtClaims = NimbusJwtClaims.ifPresent(jwtClaimsSet);
+
         this.type = Type.valueOf(tokenType.toUpperCase());
         this.expiresIn = expiresIn;
         this.createdAt = System.currentTimeMillis();
         this.scope = Scope.parse(scopeValue);
     }
 
-    private AccessTokenImpl(OpenIdConfiguration configuration,JWT token, Map<String,Object> claims) throws ParseException {
+    private AccessTokenImpl(OpenIdConfiguration configuration, JWT token, JWTClaimsSet claims) {
         this.configuration = configuration;
         this.token = token.getParsedString();
         this.tokenJWT = token;
-        this.claims = claims;
+        this.claims = claims.getClaims();
+        this.jwtClaims = NimbusJwtClaims.ifPresent(claims);
         this.type = Type.BEARER;
         this.expiresIn = null;
         this.createdAt = System.currentTimeMillis();
-        this.scope = Scope.parse((String) claims.get(OpenIdConstant.SCOPE));
+        this.scope = jwtClaims.getStringClaim(OpenIdConstant.SCOPE).map(Scope::parse).orElse(null);
     }
 
     public static AccessTokenImpl forBearerToken(OpenIdConfiguration configuration, String rawToken, JWTClaimsSetVerifier validator) throws ParseException {
         JWT token = JWTParser.parse(rawToken);
         JWTClaimsSet claims = configuration.getJWTValidator().validateBearerToken(token, validator);
-        return new AccessTokenImpl(configuration, token, claims.getClaims());
+        return new AccessTokenImpl(configuration, token, claims);
     }
 
     public JWT getTokenJWT() {
@@ -160,12 +173,22 @@ public class AccessTokenImpl implements AccessToken {
         return scope;
     }
 
+    @Override
+    public boolean isJWT() {
+        return tokenJWT != null;
+    }
+
+    @Override
+    public JwtClaims getJwtClaims() {
+        return jwtClaims;
+    }
+
     public boolean isEncrypted() {
-        return tokenJWT != null && tokenJWT instanceof EncryptedJWT;
+        return isJWT() && tokenJWT instanceof EncryptedJWT;
     }
 
     public boolean isSigned() {
-        return tokenJWT != null && tokenJWT instanceof EncryptedJWT;
+        return isJWT() && tokenJWT instanceof SignedJWT;
     }
 
     @Override

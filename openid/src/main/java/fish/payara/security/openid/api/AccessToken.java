@@ -38,6 +38,7 @@
 package fish.payara.security.openid.api;
 
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * The Access Token is used by an application to access protected resources.
@@ -52,22 +53,38 @@ public interface AccessToken {
     public String getToken();
 
     /**
+     * Signify, if access token is JWT based, or opaque.
+     * @return true if access token is JWT token.
+     */
+    boolean isJWT();
+
+    /**
+     * Access token's claims
+     * @return access token claims if it is a JWT Token, {@link JwtClaims#NONE} otherwise.
+     */
+    JwtClaims getJwtClaims();
+
+    /**
      * @return the access token's claims that was received from the OpenId Connect
      * provider
+     * @deprecated in favor of {@link #getJwtClaims()}
      */
+    @Deprecated
     Map<String, Object> getClaims();
 
     /**
      * @param key the claim key
-     * @return the identity token's claim based on requested key type.
+     * @return the identity token's claim based on requested key type or null if not provided
+     * @deprecated in favor of {@link #getJwtClaims()}
      */
+    @Deprecated
     Object getClaim(String key);
 
     /**
      * Optional. Expiration time of the Access Token in seconds since the
      * response was generated.
      *
-     * @return the expiration time of the Access Token
+     * @return the expiration time of the Access Token or null if expiration time is not known
      */
     Long getExpirationTime();
 

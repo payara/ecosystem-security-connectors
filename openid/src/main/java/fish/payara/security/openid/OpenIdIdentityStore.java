@@ -103,12 +103,9 @@ public class OpenIdIdentityStore implements IdentityStore {
 
         AccessTokenImpl accessToken = (AccessTokenImpl) credential.getAccessToken();
         if (nonNull(accessToken)) {
-            Map<String, Object> accesTokenClaims = tokenController.validateAccessToken(
+            tokenController.validateAccessToken(
                     accessToken, idTokenAlgorithm, context.getIdentityToken().getClaims(), configuration
             );
-            if (accessToken.isEncrypted()) {
-                accessToken.setClaims(accesTokenClaims);
-            }
             context.setAccessToken(accessToken);
             JsonObject userInfo = userInfoController.getUserInfo(configuration, accessToken);
             context.setClaims(userInfo);
