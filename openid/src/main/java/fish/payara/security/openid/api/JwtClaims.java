@@ -44,6 +44,9 @@ import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.OptionalDouble;
+import java.util.OptionalInt;
+import java.util.OptionalLong;
 import java.util.Set;
 
 /**
@@ -104,7 +107,7 @@ public interface JwtClaims {
      * @return
      */
     default Optional<Instant> getNotBeforeTime() {
-        return getNumericDateClaim("iat");
+        return getNumericDateClaim("nbf");
     }
 
     /**
@@ -169,6 +172,30 @@ public interface JwtClaims {
     List<String> getArrayStringClaim(String name);
 
     /**
+     * Get integer claim of given name
+     * @param name
+     * @return value, or empty optional if not present
+     * @throws IllegalArgumentException when value of claim is not a number
+     */
+    OptionalInt getIntClaim(String name);
+
+    /**
+     * Get long claim of given name
+     * @param name
+     * @return value, or empty optional if not present
+     * @throws IllegalArgumentException when value of claim is not a number
+     */
+    OptionalLong getLongClaim(String name);
+
+    /**
+     * Get double claim of given name
+     * @param name
+     * @return value, or empty optional if not present
+     * @throws IllegalArgumentException when value of claim is not a number
+     */
+    OptionalDouble getDoubleClaim(String name);
+
+    /**
      * Singleton instance representing no claims
      */
     JwtClaims NONE = new JwtClaims() {
@@ -185,6 +212,21 @@ public interface JwtClaims {
         @Override
         public List<String> getArrayStringClaim(String name) {
             return Collections.emptyList();
+        }
+
+        @Override
+        public OptionalInt getIntClaim(String name) {
+            return OptionalInt.empty();
+        }
+
+        @Override
+        public OptionalLong getLongClaim(String name) {
+            return OptionalLong.empty();
+        }
+
+        @Override
+        public OptionalDouble getDoubleClaim(String name) {
+            return OptionalDouble.empty();
         }
     };
 }

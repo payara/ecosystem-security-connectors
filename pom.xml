@@ -96,6 +96,8 @@
         <javax.security.enterprise.version>1.1-b01.payara-p4</javax.security.enterprise.version>
         <nimbus-jose-jwt.version>9.2</nimbus-jose-jwt.version>
         <accessors-smart.version>1.2.payara-p2</accessors-smart.version>
+        <maven.compiler.source>8</maven.compiler.source>
+        <maven.compiler.target>8</maven.compiler.target>
     </properties>
 
     <dependencyManagement>
@@ -128,6 +130,37 @@
                 <groupId>net.minidev</groupId>
                 <artifactId>accessors-smart</artifactId>
                 <version>${accessors-smart.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.junit</groupId>
+                <artifactId>junit-bom</artifactId>
+                <version>5.7.0</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>junit</groupId>
+                <artifactId>junit</artifactId>
+                <version>4.13</version>
+                <scope>test</scope>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.hamcrest</groupId>
+                        <artifactId>*</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+            <dependency>
+                <groupId>org.hamcrest</groupId>
+                <artifactId>hamcrest</artifactId>
+                <version>2.2</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.assertj</groupId>
+                <artifactId>assertj-core</artifactId>
+                <version>3.19.0</version>
+                <scope>test</scope>
             </dependency>
         </dependencies>
     </dependencyManagement>
@@ -193,6 +226,11 @@
                         </configuration>
                     </execution>
                 </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.0.0-M5</version>
             </plugin>
         </plugins>
     </build>

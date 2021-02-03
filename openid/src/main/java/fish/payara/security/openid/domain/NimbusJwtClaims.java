@@ -44,6 +44,9 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+import java.util.OptionalDouble;
+import java.util.OptionalInt;
+import java.util.OptionalLong;
 
 import com.nimbusds.jwt.JWTClaimsSet;
 import fish.payara.security.openid.api.JwtClaims;
@@ -88,6 +91,39 @@ class NimbusJwtClaims implements JwtClaims {
         } catch (ParseException e) {
             throw new IllegalArgumentException("Cannot parse "+name+" as a string array", e);
         }
+    }
+
+    @Override
+    public OptionalInt getIntClaim(String name) {
+        Integer value = null;
+        try {
+            value = claimsSet.getIntegerClaim(name);
+        } catch (ParseException e) {
+            throw new IllegalArgumentException("Cannot parse "+name+" as number");
+        }
+        return value == null ? OptionalInt.empty() : OptionalInt.of(value);
+    }
+
+    @Override
+    public OptionalLong getLongClaim(String name) {
+        Long value = null;
+        try {
+            value = claimsSet.getLongClaim(name);
+        } catch (ParseException e) {
+            throw new IllegalArgumentException("Cannot parse "+name+" as number");
+        }
+        return value == null ? OptionalLong.empty() : OptionalLong.of(value);
+    }
+
+    @Override
+    public OptionalDouble getDoubleClaim(String name) {
+        Double value = null;
+        try {
+            value = claimsSet.getDoubleClaim(name);
+        } catch (ParseException e) {
+            throw new IllegalArgumentException("Cannot parse "+name+" as number");
+        }
+        return value == null ? OptionalDouble.empty() : OptionalDouble.of(value);
     }
 
     @Override
