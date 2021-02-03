@@ -50,19 +50,29 @@ public interface IdentityToken {
     /**
      * @return the identity token
      */
-    public String getToken();
+    String getToken();
 
     /**
      * @return the identity token's claims that was received from the OpenId
      * Connect provider
+     * @deprecated use {@link #getJwtClaims()}
      */
+    @Deprecated
     Map<String, Object> getClaims();
 
     /**
      * @param key the claim key
      * @return the identity token's claim based on requested key type.
+     * @deprecated use {@link #getJwtClaims()}
      */
+    @Deprecated
     Object getClaim(String key);
+
+    /**
+     * Claims of this token
+     * @return claims of this token
+     */
+    JwtClaims getJwtClaims();
 
     /**
      * Checks if the Identity Token is expired.

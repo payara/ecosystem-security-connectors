@@ -38,30 +38,7 @@
 package fish.payara.security.openid.controller;
 
 import com.nimbusds.jose.Algorithm;
-import com.nimbusds.jose.EncryptionMethod;
-import com.nimbusds.jose.JOSEException;
-import com.nimbusds.jose.JWEAlgorithm;
-import com.nimbusds.jose.JWEHeader;
-import com.nimbusds.jose.JWSAlgorithm;
-import com.nimbusds.jose.JWSHeader;
-import com.nimbusds.jose.jwk.source.ImmutableSecret;
-import com.nimbusds.jose.jwk.source.JWKSource;
-import com.nimbusds.jose.jwk.source.RemoteJWKSet;
-import static com.nimbusds.jose.jwk.source.RemoteJWKSet.DEFAULT_HTTP_SIZE_LIMIT;
-import com.nimbusds.jose.proc.BadJOSEException;
-import com.nimbusds.jose.proc.JWEDecryptionKeySelector;
-import com.nimbusds.jose.proc.JWEKeySelector;
-import com.nimbusds.jose.proc.JWSKeySelector;
-import com.nimbusds.jose.proc.JWSVerificationKeySelector;
-import com.nimbusds.jose.util.DefaultResourceRetriever;
-import com.nimbusds.jose.util.ResourceRetriever;
-import com.nimbusds.jwt.EncryptedJWT;
-import com.nimbusds.jwt.JWT;
 import com.nimbusds.jwt.JWTClaimsSet;
-import com.nimbusds.jwt.PlainJWT;
-import com.nimbusds.jwt.SignedJWT;
-import com.nimbusds.jwt.proc.ConfigurableJWTProcessor;
-import com.nimbusds.jwt.proc.DefaultJWTProcessor;
 import com.nimbusds.jwt.proc.JWTClaimsSetVerifier;
 import fish.payara.security.openid.api.IdentityToken;
 import fish.payara.security.openid.api.RefreshToken;
@@ -71,11 +48,9 @@ import fish.payara.security.openid.domain.OpenIdConfiguration;
 import fish.payara.security.openid.domain.OpenIdNonce;
 import fish.payara.security.openid.api.OpenIdConstant;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
-import java.text.ParseException;
 import static java.util.Collections.emptyMap;
 import java.util.Map;
-import static java.util.Objects.isNull;
+
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.security.enterprise.authentication.mechanism.http.HttpMessageContext;
@@ -147,7 +122,7 @@ public class TokenController {
      * @param configuration the OpenId Connect client configuration configuration
      * @return JWT Claims
      */
-    public Map<String, Object> validateIdToken(IdentityTokenImpl idToken, HttpMessageContext httpContext, OpenIdConfiguration configuration) {
+    public JWTClaimsSet validateIdToken(IdentityTokenImpl idToken, HttpMessageContext httpContext, OpenIdConfiguration configuration) {
         JWTClaimsSet claimsSet;
         HttpServletRequest request = httpContext.getRequest();
         HttpServletResponse response = httpContext.getResponse();
@@ -169,7 +144,7 @@ public class TokenController {
             nonceController.remove(configuration, request, response);
         }
 
-        return claimsSet.getClaims();
+        return claimsSet;
     }
 
     /**
@@ -181,10 +156,10 @@ public class TokenController {
      * @param configuration the OpenId Connect client configuration configuration
      * @return JWT Claims
      */
-    public Map<String, Object> validateRefreshedIdToken(IdentityToken previousIdToken, IdentityTokenImpl newIdToken, HttpMessageContext httpContext, OpenIdConfiguration configuration) {
+    public JWTClaimsSet validateRefreshedIdToken(IdentityToken previousIdToken, IdentityTokenImpl newIdToken, HttpMessageContext httpContext, OpenIdConfiguration configuration) {
         JWTClaimsSetVerifier jwtVerifier = new RefreshedIdTokenClaimsSetVerifier(previousIdToken, configuration);
         JWTClaimsSet claimsSet = configuration.getJWTValidator().validateBearerToken(newIdToken.getTokenJWT(), jwtVerifier);
-        return claimsSet.getClaims();
+        return claimsSet;
     }
 
     /**

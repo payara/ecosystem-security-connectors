@@ -38,6 +38,7 @@
 package fish.payara.security.openid;
 
 import com.nimbusds.jose.Algorithm;
+import com.nimbusds.jwt.JWTClaimsSet;
 import fish.payara.security.openid.api.OpenIdConstant;
 import fish.payara.security.openid.controller.TokenController;
 import fish.payara.security.openid.controller.UserInfoController;
@@ -92,17 +93,14 @@ public class OpenIdIdentityStore implements IdentityStore {
         
         Algorithm idTokenAlgorithm = idToken.getTokenJWT().getHeader().getAlgorithm();
         
-        Map<String, Object> idTokenClaims;
+        JWTClaimsSet idTokenClaims;
         if (isNull(context.getIdentityToken())) {
             idTokenClaims = tokenController.validateIdToken(idToken, httpContext, configuration);
         } else {
             // If an ID Token is returned as a result of a token refresh request
             idTokenClaims = tokenController.validateRefreshedIdToken(context.getIdentityToken(), idToken, httpContext, configuration);
         }
-        if (idToken.isEncrypted()) {
-            idToken.setClaims(idTokenClaims);
-        }
-        context.setIdentityToken(idToken);
+        context.setIdentityToken(idToken.withClaims(idTokenClaims));
 
         AccessTokenImpl accessToken = (AccessTokenImpl) credential.getAccessToken();
         if (nonNull(accessToken)) {
@@ -126,12 +124,12 @@ public class OpenIdIdentityStore implements IdentityStore {
         if (OpenIdConstant.SUBJECT_IDENTIFIER.equals(callerNameClaim)) {
             return context.getSubject();
         }
-        String callerName = (String) context.getIdentityToken().getClaim(callerNameClaim);
+        String callerName = (String) context.getIdentityToken().getJwtClaims().getStringClaim(callerNameClaim).orElse(null);
         if (callerName == null) {
-            callerName = (String) context.getAccessToken().getClaim(callerNameClaim);
+            callerName = (String) context.getAccessToken().getJwtClaims().getStringClaim(callerNameClaim).orElse(null);
         }
         if (callerName == null) {
-            callerName = context.getClaimsJson().getString(callerNameClaim, null);
+            callerName = context.getClaims().getStringClaim(callerNameClaim).orElse(null);
         }
         if (callerName == null) {
             callerName = context.getSubject();
@@ -141,27 +139,24 @@ public class OpenIdIdentityStore implements IdentityStore {
 
     private Set<String> getCallerGroups(OpenIdConfiguration configuration) {
         String callerGroupsClaim = configuration.getClaimsConfiguration().getCallerGroupsClaim();
-        JsonArray groupsUserinfoClaim
-                = context.getClaimsJson().getJsonArray(callerGroupsClaim);
-        @SuppressWarnings("unchecked")
-        List<Object> groupsIdentityClaim
-                = (List<Object>) context.getIdentityToken().getClaim(callerGroupsClaim);
-        @SuppressWarnings("unchecked")
         List<String> groupsAccessClaim
                 = context.getAccessToken().getJwtClaims().getArrayStringClaim(callerGroupsClaim);
-
-        if (nonNull(groupsAccessClaim)) {
+        if (!groupsAccessClaim.isEmpty()) {
             return new HashSet<>(groupsAccessClaim);
-        } else if (nonNull(groupsIdentityClaim)) {
-            return groupsIdentityClaim.stream()
-                    .map(Object::toString)
-                    .collect(toSet());
-        } else if (nonNull(groupsUserinfoClaim)) {
-            return groupsUserinfoClaim.stream()
-                    .filter(value -> value.getValueType() == JsonValue.ValueType.STRING)
-                    .map(JsonValue::toString)
-                    .collect(toSet());
         }
+
+        List<String> groupsIdentityClaim
+                = context.getIdentityToken().getJwtClaims().getArrayStringClaim(callerGroupsClaim);
+        if (!groupsIdentityClaim.isEmpty()) {
+            return new HashSet<>(groupsIdentityClaim);
+        }
+
+        List<String> groupsUserinfoClaim
+                = context.getClaims().getArrayStringClaim(callerGroupsClaim);
+        if (!groupsUserinfoClaim.isEmpty()) {
+            return new HashSet<>(groupsUserinfoClaim);
+        }
+
         return Collections.emptySet();
     }
 
