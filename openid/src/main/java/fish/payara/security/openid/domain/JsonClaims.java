@@ -38,106 +38,111 @@
 
 package fish.payara.security.openid.domain;
 
-import java.text.ParseException;
 import java.time.Instant;
 import java.util.Collections;
-import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.OptionalDouble;
 import java.util.OptionalInt;
 import java.util.OptionalLong;
+import java.util.stream.Collectors;
 
-import com.nimbusds.jwt.JWTClaimsSet;
+import javax.json.JsonNumber;
+import javax.json.JsonObject;
+import javax.json.JsonValue;
+
 import fish.payara.security.openid.api.Claims;
-import fish.payara.security.openid.api.JwtClaims;
+import fish.payara.security.openid.api.OpenIdClaims;
 
-class NimbusJwtClaims implements JwtClaims {
-    private final JWTClaimsSet claimsSet;
+class JsonClaims implements OpenIdClaims {
+    private final JsonObject claims;
 
-    NimbusJwtClaims(JWTClaimsSet claimsSet) {
-        this.claimsSet = claimsSet;
+    JsonClaims(JsonObject claims) {
+        this.claims = claims;
     }
 
     @Override
     public Optional<String> getStringClaim(String name) {
-        try {
-            return Optional.ofNullable(claimsSet.getStringClaim(name));
-        } catch (ParseException e) {
-            throw new IllegalArgumentException("Cannot parse "+name+" as string", e);
-        }
+        return Optional.ofNullable(claims.getString(name, null));
     }
 
     @Override
     public Optional<Instant> getNumericDateClaim(String name) {
-        try {
-            return Optional.ofNullable(claimsSet.getDateClaim(name)).map(Date::toInstant);
-        } catch (ParseException e) {
-            throw new IllegalArgumentException("Cannot parse "+name+" as numeric date", e);
-        }
+        return Optional.ofNullable(getNumber(name))
+                .map(n -> Instant.ofEpochSecond(n.longValue()));
     }
 
     @Override
     public List<String> getArrayStringClaim(String name) {
-        Object audValue = claimsSet.getClaim(name);
-        if (audValue == null) {
+        JsonValue value = claims.get(name);
+        if (value == null) {
             return Collections.emptyList();
         }
-        if (audValue instanceof String) {
-            return Collections.singletonList((String)audValue);
+        if (value.getValueType() == JsonValue.ValueType.STRING) {
+            return Collections.singletonList(value.toString());
         }
-        List<String> aud;
+        if (value.getValueType() == JsonValue.ValueType.ARRAY) {
+            return value.asJsonArray().stream().map(JsonValue::toString).collect(Collectors.toList());
+        }
+        throw new IllegalArgumentException("Cannot interpret "+name+" as string array");
+    }
+
+    private JsonNumber getNumber(String name) {
         try {
-            return claimsSet.getStringListClaim(name);
-        } catch (ParseException e) {
-            throw new IllegalArgumentException("Cannot parse "+name+" as a string array", e);
+            return claims.getJsonNumber(name);
+        } catch (ClassCastException cce) {
+            throw new IllegalArgumentException("Cannot interpret "+name+" as number", cce);
         }
     }
 
     @Override
     public OptionalInt getIntClaim(String name) {
-        Integer value = null;
-        try {
-            value = claimsSet.getIntegerClaim(name);
-        } catch (ParseException e) {
-            throw new IllegalArgumentException("Cannot parse "+name+" as number");
-        }
-        return value == null ? OptionalInt.empty() : OptionalInt.of(value);
+        JsonNumber value = getNumber(name);
+        return value == null ? OptionalInt.empty() : OptionalInt.of(value.intValue());
     }
 
     @Override
     public OptionalLong getLongClaim(String name) {
-        Long value = null;
-        try {
-            value = claimsSet.getLongClaim(name);
-        } catch (ParseException e) {
-            throw new IllegalArgumentException("Cannot parse "+name+" as number");
-        }
-        return value == null ? OptionalLong.empty() : OptionalLong.of(value);
+        JsonNumber value = getNumber(name);
+        return value == null ? OptionalLong.empty() : OptionalLong.of(value.longValue());
     }
 
     @Override
     public OptionalDouble getDoubleClaim(String name) {
-        Double value = null;
-        try {
-            value = claimsSet.getDoubleClaim(name);
-        } catch (ParseException e) {
-            throw new IllegalArgumentException("Cannot parse "+name+" as number");
-        }
-        return value == null ? OptionalDouble.empty() : OptionalDouble.of(value);
+        JsonNumber value = getNumber(name);
+        return value == null ? OptionalDouble.empty() : OptionalDouble.of(value.doubleValue());
     }
 
     @Override
-    public Optional<Claims> getNested(String name) {
-        return Optional.empty();
+    public Optional<Claims> getNested(String claimName) {
+        return Optional.ofNullable(claims.getJsonObject(claimName)).map(JsonClaims::new);
     }
 
     @Override
     public String toString() {
-        return claimsSet.toString();
-    }
+        return getClass().getSimpleName()
+                + "{"
+                + "subject=" + getSubject()
+                + ",name=" + getName()
+                + ", familyName=" + getFamilyName()
+                + ", givenName=" + getGivenName()
+                + ", middleName=" + getMiddleName()
+                + ", nickname=" + getNickname()
+                + ", preferredUsername=" + getPreferredUsername()
+                + ", profile=" + getProfile()
+                + ", picture=" + getPicture()
+                + ", website=" + getWebsite()
+                + ", gender=" + getGender()
+                + ", birthdate=" + getBirthdate()
+                + ", zoneinfo=" + getZoneinfo()
+                + ", locale=" + getLocale()
+                + ", updatedAt=" + getUpdatedAt()
+                + ", email=" + getEmail()
+                + ", emailVerified=" + getEmailVerified()
+                + ", address=" + getAddress()
+                + ", phoneNumber=" + getPhoneNumber()
+                + ", phoneNumberVerified=" + getPhoneNumberVerified()
+                + '}';
 
-    static JwtClaims ifPresent(JWTClaimsSet claimsSet) {
-        return claimsSet == null ? JwtClaims.NONE : new NimbusJwtClaims(claimsSet);
     }
 }

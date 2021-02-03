@@ -170,7 +170,7 @@ public class OpenIdContextImpl implements OpenIdContext {
 
     @Override
     public OpenIdClaims getClaims() {
-        return new OpenIdClaims(getClaimsJson());
+        return new JsonClaims(getClaimsJson());
     }
 
     @Override

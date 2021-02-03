@@ -3,6 +3,7 @@
 # Version 2.0.0
 _Next release_
 
+* **BREAKING:** `OpenIdClaims` is now read-only interface with all returned claims being `Optional`.
 * Call OpenID userinfo endpoint lazily
 * Do not fail with NPE when logout is invoked on session that's not logged in via OpenID connect
 * Support Bearer Authentication for OpenID Connect

@@ -54,7 +54,7 @@ import java.util.Set;
  *
  *
  */
-public interface JwtClaims {
+public interface JwtClaims extends Claims {
     /**
      * The principal that issued the JWT
      * @return value of {@code iss} claim
@@ -148,54 +148,6 @@ public interface JwtClaims {
     }
 
     /**
-     * Get String claim of given name
-     * @param name
-     * @return value, or empty optional if not present
-     * @throws IllegalArgumentException when value of claim is not a string
-     */
-    Optional<String> getStringClaim(String name);
-
-    /**
-     * Get Numeric Date claim of given name
-     * @param name
-     * @return value, or empty optional if not present
-     * @throws IllegalArgumentException when value of claim is not a number that represents an epoch seconds
-     */
-    Optional<Instant> getNumericDateClaim(String name);
-
-    /**
-     * Get String List claim of given name
-     * @param name
-     * @return a list with values of the claim, or empty list if value is not present.
-     * @throws IllegalArgumentException when value of claim is neither string or array of strings
-     */
-    List<String> getArrayStringClaim(String name);
-
-    /**
-     * Get integer claim of given name
-     * @param name
-     * @return value, or empty optional if not present
-     * @throws IllegalArgumentException when value of claim is not a number
-     */
-    OptionalInt getIntClaim(String name);
-
-    /**
-     * Get long claim of given name
-     * @param name
-     * @return value, or empty optional if not present
-     * @throws IllegalArgumentException when value of claim is not a number
-     */
-    OptionalLong getLongClaim(String name);
-
-    /**
-     * Get double claim of given name
-     * @param name
-     * @return value, or empty optional if not present
-     * @throws IllegalArgumentException when value of claim is not a number
-     */
-    OptionalDouble getDoubleClaim(String name);
-
-    /**
      * Singleton instance representing no claims
      */
     JwtClaims NONE = new JwtClaims() {
@@ -227,6 +179,11 @@ public interface JwtClaims {
         @Override
         public OptionalDouble getDoubleClaim(String name) {
             return OptionalDouble.empty();
+        }
+
+        @Override
+        public Optional<Claims> getNested(String name) {
+            return Optional.empty();
         }
     };
 }
