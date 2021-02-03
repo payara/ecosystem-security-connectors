@@ -191,6 +191,10 @@ public class OpenIdContextImpl implements OpenIdContext {
             session.invalidate();
         }
 
+        if (logout == null) {
+            LOGGER.log(WARNING, "Logout invoked on session without OpenID session");
+            redirect(response, request.getContextPath());
+        }
         /**
          * See section 5. RP-Initiated Logout
          * https://openid.net/specs/openid-connect-session-1_0.html#RPLogout
@@ -203,20 +207,20 @@ public class OpenIdContextImpl implements OpenIdContext {
                 // User Agent redirected to POST_LOGOUT_REDIRECT_URI after a logout operation performed in OP.
                 logoutURI.queryParam(OpenIdConstant.POST_LOGOUT_REDIRECT_URI, logout.buildRedirectURI(request));
             }
-            try {
-                response.sendRedirect(logoutURI.toString());
-            } catch (IOException e) {
-                throw new IllegalStateException(e);
-            }
+            redirect(response, logoutURI.toString());
         } else if (!OpenIdUtil.isEmpty(logout.getRedirectURI())) {
-            try {
-                response.sendRedirect(logout.buildRedirectURI(request));
-            } catch (IOException e) {
-                throw new IllegalStateException(e);
-            }
+            redirect(response, logout.buildRedirectURI(request));
         } else {
             // Redirect user to OpenID connect provider for re-authentication
             authenticationController.authenticateUser(configuration, request, response);
+        }
+    }
+
+    private static void redirect(HttpServletResponse response, String uri) {
+        try {
+            response.sendRedirect(uri);
+        } catch (IOException e) {
+            throw new IllegalStateException(e);
         }
     }
 
