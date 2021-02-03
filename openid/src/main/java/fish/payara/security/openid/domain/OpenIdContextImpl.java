@@ -45,6 +45,7 @@ import fish.payara.security.openid.api.RefreshToken;
 import fish.payara.security.openid.controller.AuthenticationController;
 import fish.payara.security.openid.OpenIdUtil;
 import fish.payara.security.openid.api.OpenIdConstant;
+import fish.payara.security.openid.controller.UserInfoController;
 
 import java.io.IOException;
 import java.util.Optional;
@@ -69,6 +70,8 @@ import javax.ws.rs.core.UriBuilder;
  */
 @SessionScoped
 public class OpenIdContextImpl implements OpenIdContext {
+    @Inject
+    UserInfoController userInfoController;
 
     private String callerName;
     private Set<String> callerGroups;
@@ -156,7 +159,11 @@ public class OpenIdContextImpl implements OpenIdContext {
     @Override
     public JsonObject getClaimsJson() {
         if (claims == null) {
-            return Json.createObjectBuilder().build();
+            if (configuration != null && accessToken != null) {
+                claims = userInfoController.getUserInfo(configuration, accessToken);
+            } else {
+                claims = Json.createObjectBuilder().build();
+            }
         }
         return claims;
     }
@@ -164,10 +171,6 @@ public class OpenIdContextImpl implements OpenIdContext {
     @Override
     public OpenIdClaims getClaims() {
         return new OpenIdClaims(getClaimsJson());
-    }
-
-    public void setClaims(JsonObject claims) {
-        this.claims = claims;
     }
 
     @Override

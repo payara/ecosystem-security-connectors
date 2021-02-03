@@ -3,7 +3,9 @@
 # Version 2.0.0
 _Next release_
 
-* Support Bearer Authentication
+* Call OpenID userinfo endpoint lazily
+* Do not fail with NPE when logout is invoked on session that's not logged in via OpenID connect
+* Support Bearer Authentication for OpenID Connect
 * Bump nimbus-jose-jwt to 9.2
 * Add standalone distribution of OpenID Connect connector. Uses different API package names
 

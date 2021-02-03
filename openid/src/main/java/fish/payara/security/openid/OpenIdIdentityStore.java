@@ -107,8 +107,6 @@ public class OpenIdIdentityStore implements IdentityStore {
                     accessToken, idTokenAlgorithm, context.getIdentityToken().getClaims(), configuration
             );
             context.setAccessToken(accessToken);
-            JsonObject userInfo = userInfoController.getUserInfo(configuration, accessToken);
-            context.setClaims(userInfo);
         }
 
         context.setCallerName(getCallerName(configuration));
