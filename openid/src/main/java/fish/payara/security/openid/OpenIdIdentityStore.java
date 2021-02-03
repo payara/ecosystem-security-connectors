@@ -38,12 +38,15 @@
 package fish.payara.security.openid;
 
 import com.nimbusds.jose.Algorithm;
+import fish.payara.security.openid.api.OpenIdConstant;
 import fish.payara.security.openid.controller.TokenController;
 import fish.payara.security.openid.controller.UserInfoController;
 import fish.payara.security.openid.domain.AccessTokenImpl;
 import fish.payara.security.openid.domain.IdentityTokenImpl;
 import fish.payara.security.openid.domain.OpenIdConfiguration;
 import fish.payara.security.openid.domain.OpenIdContextImpl;
+
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -120,12 +123,15 @@ public class OpenIdIdentityStore implements IdentityStore {
 
     private String getCallerName(OpenIdConfiguration configuration) {
         String callerNameClaim = configuration.getClaimsConfiguration().getCallerNameClaim();
-        String callerName = context.getClaimsJson().getString(callerNameClaim, null);
-        if (callerName == null) {
-            callerName = (String) context.getIdentityToken().getClaim(callerNameClaim);
+        if (OpenIdConstant.SUBJECT_IDENTIFIER.equals(callerNameClaim)) {
+            return context.getSubject();
         }
+        String callerName = (String) context.getIdentityToken().getClaim(callerNameClaim);
         if (callerName == null) {
             callerName = (String) context.getAccessToken().getClaim(callerNameClaim);
+        }
+        if (callerName == null) {
+            callerName = context.getClaimsJson().getString(callerNameClaim, null);
         }
         if (callerName == null) {
             callerName = context.getSubject();
@@ -134,7 +140,6 @@ public class OpenIdIdentityStore implements IdentityStore {
     }
 
     private Set<String> getCallerGroups(OpenIdConfiguration configuration) {
-        Set<String> groups = new HashSet<>();
         String callerGroupsClaim = configuration.getClaimsConfiguration().getCallerGroupsClaim();
         JsonArray groupsUserinfoClaim
                 = context.getClaimsJson().getJsonArray(callerGroupsClaim);
@@ -142,25 +147,22 @@ public class OpenIdIdentityStore implements IdentityStore {
         List<Object> groupsIdentityClaim
                 = (List<Object>) context.getIdentityToken().getClaim(callerGroupsClaim);
         @SuppressWarnings("unchecked")
-        List<Object> groupsAccessClaim
-                = (List<Object>) context.getAccessToken().getClaim(callerGroupsClaim);
-        if (nonNull(groupsUserinfoClaim)) {
-            for (int i = 0; i < groupsUserinfoClaim.size(); i++) {
-                JsonValue value = groupsUserinfoClaim.get(i);
-                if (value.getValueType() == JsonValue.ValueType.STRING) {
-                    groups.add(groupsUserinfoClaim.getString(i));
-                }
-            }
+        List<String> groupsAccessClaim
+                = context.getAccessToken().getJwtClaims().getArrayStringClaim(callerGroupsClaim);
+
+        if (nonNull(groupsAccessClaim)) {
+            return new HashSet<>(groupsAccessClaim);
         } else if (nonNull(groupsIdentityClaim)) {
-            groups = groupsIdentityClaim.stream()
+            return groupsIdentityClaim.stream()
                     .map(Object::toString)
                     .collect(toSet());
-        } else if (nonNull(groupsAccessClaim)) {
-            groups = groupsAccessClaim.stream()
-                    .map(Object::toString)
+        } else if (nonNull(groupsUserinfoClaim)) {
+            return groupsUserinfoClaim.stream()
+                    .filter(value -> value.getValueType() == JsonValue.ValueType.STRING)
+                    .map(JsonValue::toString)
                     .collect(toSet());
         }
-        return groups;
+        return Collections.emptySet();
     }
 
 }
