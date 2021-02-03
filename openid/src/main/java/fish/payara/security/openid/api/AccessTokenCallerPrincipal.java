@@ -38,6 +38,8 @@
 
 package fish.payara.security.openid.api;
 
+import java.util.function.Supplier;
+
 import javax.security.enterprise.CallerPrincipal;
 
 import fish.payara.security.openid.api.AccessToken;
@@ -48,10 +50,12 @@ import fish.payara.security.openid.api.AccessToken;
  */
 public class AccessTokenCallerPrincipal extends CallerPrincipal {
     private final AccessToken accessToken;
+    private final Supplier<OpenIdClaims> userInfoSupplier;
 
-    public AccessTokenCallerPrincipal(AccessToken token) {
+    public AccessTokenCallerPrincipal(AccessToken token, Supplier<OpenIdClaims> userInfoSupplier) {
         super((String) token.getClaim("sub"));
         this.accessToken = token;
+        this.userInfoSupplier = userInfoSupplier;
     }
 
     /**
@@ -77,5 +81,14 @@ public class AccessTokenCallerPrincipal extends CallerPrincipal {
      */
     public boolean hasAudience(String audience) {
         return getClaims().getAudience().contains(audience);
+    }
+
+    /**
+     * Claims returned by userinfo endpoint. First call to this method will invoke userinfo endpoint of the provider
+     * to fetch the data
+     * @return user's identity claims.
+     */
+    public OpenIdClaims getUserInfoClaims() {
+        return userInfoSupplier.get();
     }
 }

@@ -83,7 +83,7 @@ public class AccessTokenIdentityStore implements IdentityStore {
             // but there's no guarantee it's present in access token, usually only sub is.
             context.setCallerName((String) accessToken.getClaim(OpenIdConstant.SUBJECT_IDENTIFIER));
 
-            return new CredentialValidationResult(new AccessTokenCallerPrincipal(accessToken));
+            return new CredentialValidationResult(new AccessTokenCallerPrincipal(accessToken, context::getClaims));
         } catch (ParseException e) {
             LOGGER.log(Level.WARNING, "Cannot parse access token", e);
         }
