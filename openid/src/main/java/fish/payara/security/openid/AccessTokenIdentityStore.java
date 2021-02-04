@@ -79,9 +79,13 @@ public class AccessTokenIdentityStore implements IdentityStore {
                     new BearerVerifier(credential.getConfiguration()));
             context.setAccessToken(accessToken);
             // for setClaims we'd need to invoke userinfo. That should be lazy unless required
-            // credential.getConfiguration().getClaimsConfiguration().getCallerNameClaim() might be better to use,
-            // but there's no guarantee it's present in access token, usually only sub is.
-            context.setCallerName((String) accessToken.getClaim(OpenIdConstant.SUBJECT_IDENTIFIER));
+            context.setCallerName(
+                    // use configured caller name claim if present in access token
+                    accessToken.getJwtClaims().getStringClaim(
+                            credential.getConfiguration().getClaimsConfiguration().getCallerNameClaim())
+                            // or subject, which is more likely present, but is still optional per JWT spec
+                            .orElse(accessToken.getJwtClaims().getSubject()
+                                    .orElse(null)));
 
             return new CredentialValidationResult(new AccessTokenCallerPrincipal(accessToken, context::getClaims));
         } catch (ParseException e) {
@@ -102,7 +106,8 @@ public class AccessTokenIdentityStore implements IdentityStore {
             standardVerifications.requireSameIssuer();
             standardVerifications.requireSubject();
             standardVerifications.requireValidTimestamp();
-            // TODO: validate audience
+            // Validating audience is left to application now. We generally expect that we'll accept the token from
+            // issuer, worst case no groups will be assigned
         }
 
         @Override
