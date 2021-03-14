@@ -46,6 +46,8 @@ import fish.payara.security.annotations.OpenIdProviderMetadata;
 
 import static fish.payara.security.openid.OpenIdUtil.getConfiguredValue;
 import static fish.payara.security.openid.OpenIdUtil.isEmpty;
+
+import fish.payara.security.openid.api.ClientAuthenticationMethod;
 import fish.payara.security.openid.api.DisplayType;
 import fish.payara.security.openid.api.PromptType;
 import java.lang.annotation.Annotation;
@@ -98,6 +100,11 @@ public class AzureDefinitionConverter {
             @Override
             public String clientSecret() {
                 return azureDefinition.clientSecret();
+            }
+
+            @Override
+            public ClientAuthenticationMethod clientAuthentication() {
+                return azureDefinition.clientAuthentication();
             }
 
             @Override

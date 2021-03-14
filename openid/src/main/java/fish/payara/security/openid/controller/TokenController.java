@@ -47,7 +47,6 @@ import com.nimbusds.jose.JWSHeader;
 import com.nimbusds.jose.jwk.source.ImmutableSecret;
 import com.nimbusds.jose.jwk.source.JWKSource;
 import com.nimbusds.jose.jwk.source.RemoteJWKSet;
-import static com.nimbusds.jose.jwk.source.RemoteJWKSet.DEFAULT_HTTP_SIZE_LIMIT;
 import com.nimbusds.jose.proc.BadJOSEException;
 import com.nimbusds.jose.proc.JWEDecryptionKeySelector;
 import com.nimbusds.jose.proc.JWEKeySelector;
@@ -64,18 +63,13 @@ import com.nimbusds.jwt.proc.ConfigurableJWTProcessor;
 import com.nimbusds.jwt.proc.DefaultJWTProcessor;
 import com.nimbusds.jwt.proc.JWTClaimsSetVerifier;
 import fish.payara.security.openid.api.IdentityToken;
+import fish.payara.security.openid.api.OpenIdConstant;
 import fish.payara.security.openid.api.RefreshToken;
 import fish.payara.security.openid.domain.AccessTokenImpl;
 import fish.payara.security.openid.domain.IdentityTokenImpl;
 import fish.payara.security.openid.domain.OpenIdConfiguration;
 import fish.payara.security.openid.domain.OpenIdNonce;
-import fish.payara.security.openid.api.OpenIdConstant;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
-import java.text.ParseException;
-import static java.util.Collections.emptyMap;
-import java.util.Map;
-import static java.util.Objects.isNull;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.security.enterprise.authentication.mechanism.http.HttpMessageContext;
@@ -84,10 +78,19 @@ import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.Invocation;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Form;
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.text.ParseException;
+import java.util.Map;
+
+import static com.nimbusds.jose.jwk.source.RemoteJWKSet.DEFAULT_HTTP_SIZE_LIMIT;
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.Collections.emptyMap;
+import static java.util.Objects.isNull;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
 /**
  * Controller for Token endpoint
@@ -105,7 +108,7 @@ public class TokenController {
      * Provider responds with an ID Token and an Access Token.
      *
      * @param configuration the OpenId Connect client configuration configuration
-     * @param request
+     * @param request       the HTTP request
      * @return a JSON object representation of OpenID Connect token response
      * from the Token endpoint.
      */
@@ -125,18 +128,12 @@ public class TokenController {
          * initial authorization request's redirect_uri parameter value.
          */
         Form form = new Form()
-                .param(OpenIdConstant.CLIENT_ID, configuration.getClientId())
-                .param(OpenIdConstant.CLIENT_SECRET, new String(configuration.getClientSecret()))
                 .param(OpenIdConstant.GRANT_TYPE, OpenIdConstant.AUTHORIZATION_CODE)
                 .param(OpenIdConstant.CODE, authorizationCode)
                 .param(OpenIdConstant.REDIRECT_URI, configuration.buildRedirectURI(request));
 
         //  ID Token and Access Token Request
-        Client client = ClientBuilder.newClient();
-        WebTarget target = client.target(configuration.getProviderMetadata().getTokenEndpoint());
-        return target.request()
-                .accept(APPLICATION_JSON)
-                .post(Entity.form(form));
+        return postTokenRequest(form, configuration);
     }
 
     /**
@@ -178,7 +175,7 @@ public class TokenController {
      * @param previousIdToken
      * @param newIdToken
      * @param httpContext
-     * @param configuration the OpenId Connect client configuration configuration
+     * @param configuration   the OpenId Connect client configuration configuration
      * @return JWT Claims
      */
     public Map<String, Object> validateRefreshedIdToken(IdentityToken previousIdToken, IdentityTokenImpl newIdToken, HttpMessageContext httpContext, OpenIdConfiguration configuration) {
@@ -193,7 +190,7 @@ public class TokenController {
      * @param accessToken
      * @param idTokenAlgorithm
      * @param idTokenClaims
-     * @param configuration the OpenId Connect client configuration configuration
+     * @param configuration    the OpenId Connect client configuration configuration
      * @return JWT Claims
      */
     public Map<String, Object> validateAccessToken(AccessTokenImpl accessToken, Algorithm idTokenAlgorithm, Map<String, Object> idTokenClaims, OpenIdConfiguration configuration) {
@@ -211,7 +208,7 @@ public class TokenController {
 //            JWTClaimsSet claimsSet = validateBearerToken(accessToken.getTokenJWT(), jwtVerifier, configuration);
 //            claims = claimsSet.getClaims();
 //        } else {
-            jwtVerifier.validateAccessToken();
+        jwtVerifier.validateAccessToken();
 //        }
 
         return claims;
@@ -222,23 +219,38 @@ public class TokenController {
      * responds with a new (updated) Access Token and Refreshs Token.
      *
      * @param configuration the OpenId Connect client configuration configuration
-     * @param refreshToken Refresh Token received from previous token request.
+     * @param refreshToken  Refresh Token received from previous token request.
      * @return a JSON object representation of OpenID Connect token response
      * from the Token endpoint.
      */
     public Response refreshTokens(OpenIdConfiguration configuration, RefreshToken refreshToken) {
-
-        Form form = new Form()
-                .param(OpenIdConstant.CLIENT_ID, configuration.getClientId())
-                .param(OpenIdConstant.CLIENT_SECRET, new String(configuration.getClientSecret()))
+        final Form form = new Form()
                 .param(OpenIdConstant.GRANT_TYPE, OpenIdConstant.REFRESH_TOKEN)
                 .param(OpenIdConstant.REFRESH_TOKEN, refreshToken.getToken());
 
-        // Access Token and RefreshToken Request
-        Client client = ClientBuilder.newClient();
-        WebTarget target = client.target(configuration.getProviderMetadata().getTokenEndpoint());
-        return target.request()
-                .accept(APPLICATION_JSON)
+        // Add client authentication request parameters, if any
+        return postTokenRequest(form, configuration);
+    }
+
+    /**
+     * Perform the HTTP POST token request
+     *
+     * @param form          the form parameters
+     * @param configuration the OpenId Connect client configuration configuration
+     * @return the HTTP response
+     */
+    private Response postTokenRequest(final Form form, final OpenIdConfiguration configuration) {
+        // Add client authentication parameters to the form, if any
+        configuration.getClientAuthentication().getRequestParameters().forEach(form::param);
+
+        final Client client = ClientBuilder.newClient();
+        final WebTarget target = client.target(configuration.getProviderMetadata().getTokenEndpoint());
+        final Invocation.Builder request = target.request();
+        // Or, add client authentication parameters in the header, if any
+        configuration.getClientAuthentication().getRequestHeaders().forEach(request::header);
+        // Perform the HTTP POST request
+        return request
+                .accept(MediaType.APPLICATION_JSON)
                 .post(Entity.form(form));
     }
 
@@ -292,8 +304,7 @@ public class TokenController {
      * property.
      *
      * @param configuration the OpenId Connect client configuration configuration
-     * @param alg the algorithm for the key
-     * @param kid the unique identifier for the key
+     * @param alg           the algorithm for the key
      * @return the JSON Web Signing (JWS) key selector
      */
     private JWSKeySelector getJWSKeySelector(OpenIdConfiguration configuration, String alg) {
