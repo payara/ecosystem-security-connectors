@@ -71,8 +71,6 @@ public class UserInfoController {
     private OpenIdContext context;
 
     private static final String APPLICATION_JWT = "application/jwt";
-    private static final String AUTHORIZATION_HEADER = "Authorization";
-    private static final String BEARER_TYPE = "Bearer ";
 
     private static final Logger LOGGER = Logger.getLogger(UserInfoController.class.getName());
 
@@ -81,7 +79,7 @@ public class UserInfoController {
      * and requests the claims about the End-User.
      *
      * @param configuration the OpenId Connect client configuration configuration
-     * @param accessToken
+     * @param accessToken the Access Token
      * @return the claims json object
      */
     public JsonObject getUserInfo(OpenIdConfiguration configuration, AccessToken accessToken) {
@@ -92,7 +90,7 @@ public class UserInfoController {
         WebTarget target = client.target(configuration.getProviderMetadata().getUserinfoEndpoint());
         Response response = target.request()
                 .accept(APPLICATION_JSON)
-                .header(AUTHORIZATION_HEADER, BEARER_TYPE + accessToken)
+                .header(OpenIdConstant.AUTHORIZATION_HEADER, OpenIdConstant.BEARER_TYPE + accessToken)
                 // 5.5.  Requesting Claims using the "claims" Request Parameter ??
                 .get();
 
