@@ -37,6 +37,8 @@
  */
 package fish.payara.security.openid.domain;
 
+import fish.payara.security.openid.controller.ClientAuthentication;
+
 import java.util.Arrays;
 import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
@@ -67,6 +69,7 @@ public class OpenIdConfiguration {
     private LogoutConfiguration logoutConfiguration;
     private boolean tokenAutoRefresh;
     private int tokenMinValidity;
+    private ClientAuthentication clientAuthentication;
     private JWTValidator validator;
 
     static final String BASE_URL_EXPRESSION = "${baseURL}";
@@ -251,6 +254,22 @@ public class OpenIdConfiguration {
         return this;
     }
 
+    public ClientAuthentication getClientAuthentication() {
+        return clientAuthentication;
+    }
+
+    public OpenIdConfiguration setClientAuthentication(ClientAuthentication clientAuthentication) {
+        this.clientAuthentication = clientAuthentication;
+        return this;
+    }
+
+    public JWTValidator getJWTValidator() {
+        if (this.validator == null) {
+            this.validator = new JWTValidator(this);
+        }
+        return this.validator;
+    }
+
     @Override
     public String toString() {
         return OpenIdConfiguration.class.getSimpleName()
@@ -271,13 +290,7 @@ public class OpenIdConfiguration {
                 + ", encryptionMetadata=" + encryptionMetadata
                 + ", tokenAutoRefresh=" + tokenAutoRefresh
                 + ", tokenMinValidity=" + tokenMinValidity
+                + ", clientAuthentication=" + clientAuthentication
                 + '}';
-    }
-
-    public JWTValidator getJWTValidator() {
-        if (this.validator == null) {
-            this.validator = new JWTValidator(this);
-        }
-        return this.validator;
     }
 }

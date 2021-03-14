@@ -37,13 +37,24 @@
  */
 package fish.payara.security.openid.controller;
 
+import fish.payara.security.annotations.ClaimsDefinition;
+import fish.payara.security.annotations.LogoutDefinition;
 import fish.payara.security.annotations.OpenIdAuthenticationDefinition;
 import fish.payara.security.annotations.OpenIdProviderMetadata;
+import fish.payara.security.openid.OpenIdUtil;
+import fish.payara.security.openid.api.ClientAuthenticationMethod;
+import fish.payara.security.openid.api.OpenIdConstant;
 import fish.payara.security.openid.api.PromptType;
 import fish.payara.security.openid.domain.ClaimsConfiguration;
 import fish.payara.security.openid.domain.LogoutConfiguration;
 import fish.payara.security.openid.domain.OpenIdConfiguration;
 import fish.payara.security.openid.domain.OpenIdTokenEncryptionMetadata;
+import org.eclipse.microprofile.config.Config;
+import org.eclipse.microprofile.config.ConfigProvider;
+
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
+import javax.json.JsonObject;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -52,17 +63,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import static java.util.stream.Collectors.joining;
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
-import javax.json.JsonObject;
 
-import fish.payara.security.annotations.ClaimsDefinition;
-import fish.payara.security.annotations.LogoutDefinition;
-import fish.payara.security.openid.OpenIdUtil;
-import fish.payara.security.openid.api.OpenIdConstant;
-import org.eclipse.microprofile.config.Config;
-import org.eclipse.microprofile.config.ConfigProvider;
+import static java.util.stream.Collectors.joining;
 
 /**
  * Build and validate the OpenId Connect client configuration
@@ -147,9 +149,9 @@ public class ConfigurationController {
         String responseType = OpenIdUtil.getConfiguredValue(String.class, definition.responseType(), provider, OpenIdAuthenticationDefinition.OPENID_MP_RESPONSE_TYPE);
         responseType
                 = Arrays.stream(responseType.trim().split(SPACE_SEPARATOR))
-                        .map(String::toLowerCase)
-                        .sorted()
-                        .collect(joining(SPACE_SEPARATOR));
+                .map(String::toLowerCase)
+                .sorted()
+                .collect(joining(SPACE_SEPARATOR));
 
         String responseMode = OpenIdUtil.getConfiguredValue(String.class, definition.responseMode(), provider, OpenIdAuthenticationDefinition.OPENID_MP_RESPONSE_MODE);
 
@@ -191,7 +193,32 @@ public class ConfigurationController {
         boolean tokenAutoRefresh = OpenIdUtil.getConfiguredValue(Boolean.class, definition.tokenAutoRefresh(), provider, OpenIdAuthenticationDefinition.OPENID_MP_TOKEN_AUTO_REFRESH);
         int tokenMinValidity = OpenIdUtil.getConfiguredValue(Integer.class, definition.tokenMinValidity(), provider, OpenIdAuthenticationDefinition.OPENID_MP_TOKEN_MIN_VALIDITY);
 
-        OpenIdConfiguration configuration = new OpenIdConfiguration()
+        // Get the client authentication method
+        final String clientAuthenticationMethodProvided = OpenIdUtil.getConfiguredValue(String.class,
+                definition.clientAuthentication().toString().toLowerCase(), provider,
+                OpenIdAuthenticationDefinition.OPENID_MP_CLIENT_AUTHENTICATION);
+        // Convert string value into a enum
+        final ClientAuthenticationMethod clientAuthenticationMethod =
+                ClientAuthenticationMethod.fromName(clientAuthenticationMethodProvided);
+
+        final ClientAuthentication clientAuthentication;
+        if (clientAuthenticationMethod == null) {
+            // Client authentication method is not supported by Payara OpenID implementation.
+            // Make it fail during validation of client configuration.
+            clientAuthentication = new NotSupportedClientAuthentication(clientAuthenticationMethodProvided);
+        } else {
+            switch (clientAuthenticationMethod) {
+                case CLIENT_SECRET_BASIC:
+                    clientAuthentication = new ClientSecretBasic(clientId, clientSecret);
+                    break;
+                case CLIENT_SECRET_POST:
+                default:
+                    clientAuthentication = new ClientSecretPost(clientId, clientSecret);
+                    break;
+            }
+        }
+
+        final OpenIdConfiguration configuration = new OpenIdConfiguration()
                 .setProviderMetadata(
                         new fish.payara.security.openid.domain.OpenIdProviderMetadata(providerDocument)
                                 .setAuthorizationEndpoint(authorizationEndpoint)
@@ -231,7 +258,8 @@ public class ConfigurationController {
                 .setJwksConnectTimeout(jwksConnectTimeout)
                 .setJwksReadTimeout(jwksReadTimeout)
                 .setTokenAutoRefresh(tokenAutoRefresh)
-                .setTokenMinValidity(tokenMinValidity);
+                .setTokenMinValidity(tokenMinValidity)
+                .setClientAuthentication(clientAuthentication);
 
         validateConfiguration(configuration);
 
@@ -294,7 +322,6 @@ public class ConfigurationController {
         if (configuration.getJwksReadTimeout() <= 0) {
             errorMessages.add("jwksReadTimeout value is not valid");
         }
-
         if (OpenIdUtil.isEmpty(configuration.getResponseType())) {
             errorMessages.add("The response type must contain at least one value");
         } else if (!configuration.getProviderMetadata().getResponseTypeSupported().contains(configuration.getResponseType())
@@ -316,7 +343,10 @@ public class ConfigurationController {
                 }
             }
         }
-
+        if (configuration.getClientAuthentication().getAuthenticationMethod() == null) {
+            errorMessages.add(String.format("client_authentication_method value is not valid: %s",
+                    configuration.getClientAuthentication()));
+        }
         return errorMessages;
     }
 

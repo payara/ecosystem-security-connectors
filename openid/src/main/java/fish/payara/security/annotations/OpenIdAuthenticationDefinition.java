@@ -37,6 +37,7 @@
  */
 package fish.payara.security.annotations;
 
+import fish.payara.security.openid.api.ClientAuthenticationMethod;
 import fish.payara.security.openid.api.DisplayType;
 import fish.payara.security.openid.api.PromptType;
 import fish.payara.security.openid.api.OpenIdConstant;
@@ -116,6 +117,25 @@ public @interface OpenIdAuthenticationDefinition {
      * Password Aliases Documentation</a>
      */
     String clientSecret() default "";
+
+    /**
+     * Optional. Client Authentication method used by Clients to authenticate
+     * to the Authorization Server when using the Token Endpoint.
+     * During Client Registration, the RP (Client) MAY register a Client Authentication method.
+     * If no method is registered, the default method is client_secret_basic.
+     * <p>
+     * Remark: Previous versions implemented only "client_secret_post".
+     * The same value will be kept as default to avoid behaviour changes when introducing this change.
+     *
+     * @return the client authentication method
+     *
+     * @see "OpenID Connect Core 1.0, Section 9.
+     * <https://openid.net/specs/openid-connect-core-1_0.html#ClientAuthentication>"
+     * @see "OAuth 2.0 Authorization Framework RFC 6749, Section 2.3.1
+     * <https://tools.ietf.org/html/rfc6749#section-3.2.1>"
+     */
+    ClientAuthenticationMethod clientAuthentication() default ClientAuthenticationMethod.CLIENT_SECRET_POST;
+
 
     /**
      * The redirect URI to which the response will be sent by OpenId Connect
@@ -355,4 +375,8 @@ public @interface OpenIdAuthenticationDefinition {
      */
     String OPENID_MP_TOKEN_MIN_VALIDITY = "payara.security.openid.token.minValidity";
 
+    /**
+     * The Microprofile Config key for the client authentication is <code>{@value}</code>
+     */
+    String OPENID_MP_CLIENT_AUTHENTICATION = "payara.security.openid.clientAuthentication";
 }
