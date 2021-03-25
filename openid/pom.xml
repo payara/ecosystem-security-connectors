@@ -80,8 +80,9 @@
             <artifactId>nimbus-jose-jwt</artifactId>
         </dependency>
         <dependency>
-            <groupId>net.minidev</groupId>
-            <artifactId>accessors-smart</artifactId>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 

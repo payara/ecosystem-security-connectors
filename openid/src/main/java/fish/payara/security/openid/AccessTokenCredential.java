@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Payara Foundation and/or its affiliates. All rights reserved.
+ * Copyright (c) 2021 Payara Foundation and/or its affiliates. All rights reserved.
  *
  *  The contents of this file are subject to the terms of either the GNU
  *  General Public License Version 2 only ("GPL") or the Common Development
@@ -35,50 +35,27 @@
  *  only if the new code is made subject to such option by the copyright
  *  holder.
  */
-package fish.payara.security.openid.api;
 
-import java.util.Map;
+package fish.payara.security.openid;
 
-/**
- * Identity tokens is a security token that issued in authentication flow
- * process.
- *
- * @author jGauravGupta
- */
-public interface IdentityToken {
+import javax.security.enterprise.credential.Credential;
 
-    /**
-     * @return the identity token
-     */
-    String getToken();
+import fish.payara.security.openid.domain.OpenIdConfiguration;
 
-    /**
-     * @return the identity token's claims that was received from the OpenId
-     * Connect provider
-     * @deprecated use {@link #getJwtClaims()}
-     */
-    @Deprecated
-    Map<String, Object> getClaims();
+public class AccessTokenCredential implements Credential {
+    private final OpenIdConfiguration configuration;
+    private final String accessToken;
 
-    /**
-     * @param key the claim key
-     * @return the identity token's claim based on requested key type.
-     * @deprecated use {@link #getJwtClaims()}
-     */
-    @Deprecated
-    Object getClaim(String key);
+    AccessTokenCredential(OpenIdConfiguration configuration, String accessToken) {
+        this.configuration = configuration;
+        this.accessToken = accessToken;
+    }
 
-    /**
-     * Claims of this token
-     * @return claims of this token
-     */
-    JwtClaims getJwtClaims();
+    public String getAccessToken() {
+        return accessToken;
+    }
 
-    /**
-     * Checks if the Identity Token is expired.
-     *
-     * @return {@code true}, if identity token is expired or it will be expired in
-     * the next X milliseconds configured by user.
-     */
-    boolean isExpired();
+    OpenIdConfiguration getConfiguration() {
+        return configuration;
+    }
 }

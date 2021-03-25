@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Payara Foundation and/or its affiliates. All rights reserved.
+ * Copyright (c) 2021 Payara Foundation and/or its affiliates. All rights reserved.
  *
  *  The contents of this file are subject to the terms of either the GNU
  *  General Public License Version 2 only ("GPL") or the Common Development
@@ -35,82 +35,60 @@
  *  only if the new code is made subject to such option by the copyright
  *  holder.
  */
+
 package fish.payara.security.openid.api;
 
-import java.util.Map;
-import java.util.Optional;
+import java.util.function.Supplier;
+
+import javax.security.enterprise.CallerPrincipal;
+
+import fish.payara.security.openid.api.AccessToken;
 
 /**
- * The Access Token is used by an application to access protected resources.
+ * Principal representing JWT Access token passed via HTTP Header {@code Authentication: Bearer}.
  *
- * @author jGauravGupta
  */
-public interface AccessToken {
+public class AccessTokenCallerPrincipal extends CallerPrincipal {
+    private final AccessToken accessToken;
+    private final Supplier<OpenIdClaims> userInfoSupplier;
+
+    public AccessTokenCallerPrincipal(AccessToken token, Supplier<OpenIdClaims> userInfoSupplier) {
+        super((String) token.getClaim("sub"));
+        this.accessToken = token;
+        this.userInfoSupplier = userInfoSupplier;
+    }
 
     /**
-     * @return The access token
+     * Underyling access token.
+     * @return
      */
-    public String getToken();
+    public AccessToken getAccessToken() {
+        return accessToken;
+    }
 
     /**
-     * Signify, if access token is JWT based, or opaque.
-     * @return true if access token is JWT token.
+     * JWT Claims of access token
+     * @return
      */
-    boolean isJWT();
+    public JwtClaims getClaims() {
+        return accessToken.getJwtClaims();
+    }
 
     /**
-     * Access token's claims
-     * @return access token claims if it is a JWT Token, {@link JwtClaims#NONE} otherwise.
+     * Check whether specific audience string is present in the token
+     * @param audience audience to look for
+     * @return true if audience is present in access token's JWT claims
      */
-    JwtClaims getJwtClaims();
+    public boolean hasAudience(String audience) {
+        return getClaims().getAudience().contains(audience);
+    }
 
     /**
-     * @return the access token's claims that was received from the OpenId Connect
-     * provider
-     * @deprecated in favor of {@link #getJwtClaims()}
+     * Claims returned by userinfo endpoint. First call to this method will invoke userinfo endpoint of the provider
+     * to fetch the data
+     * @return user's identity claims.
      */
-    @Deprecated
-    Map<String, Object> getClaims();
-
-    /**
-     * @param key the claim key
-     * @return the identity token's claim based on requested key type or null if not provided
-     * @deprecated in favor of {@link #getJwtClaims()}
-     */
-    @Deprecated
-    Object getClaim(String key);
-
-    /**
-     * Optional. Expiration time of the Access Token in seconds since the
-     * response was generated.
-     *
-     * @return the expiration time of the Access Token or null if expiration time is not known
-     */
-    Long getExpirationTime();
-
-    /**
-     * Checks if the Access Token is expired, taking into account the min
-     * validity time configured by the user.
-     *
-     * @return {@code true}, if access token is expired or it will be expired in
-     * the next X milliseconds configured by user.
-     */
-    boolean isExpired();
-
-    /**
-     * Optional. Scope of the Access Token.
-     *
-     * @return the scope of the Access Token
-     */
-    Scope getScope();
-
-    /**
-     * @return the Type of the Access Token
-     */
-    public Type getType();
-
-    enum Type {
-        BEARER, // Json Web Token (JWT) format
-        MAC; // Message Authentication Code format
+    public OpenIdClaims getUserInfoClaims() {
+        return userInfoSupplier.get();
     }
 }

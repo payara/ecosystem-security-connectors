@@ -38,30 +38,7 @@
 package fish.payara.security.openid.controller;
 
 import com.nimbusds.jose.Algorithm;
-import com.nimbusds.jose.EncryptionMethod;
-import com.nimbusds.jose.JOSEException;
-import com.nimbusds.jose.JWEAlgorithm;
-import com.nimbusds.jose.JWEHeader;
-import com.nimbusds.jose.JWSAlgorithm;
-import com.nimbusds.jose.JWSHeader;
-import com.nimbusds.jose.jwk.source.ImmutableSecret;
-import com.nimbusds.jose.jwk.source.JWKSource;
-import com.nimbusds.jose.jwk.source.RemoteJWKSet;
-import static com.nimbusds.jose.jwk.source.RemoteJWKSet.DEFAULT_HTTP_SIZE_LIMIT;
-import com.nimbusds.jose.proc.BadJOSEException;
-import com.nimbusds.jose.proc.JWEDecryptionKeySelector;
-import com.nimbusds.jose.proc.JWEKeySelector;
-import com.nimbusds.jose.proc.JWSKeySelector;
-import com.nimbusds.jose.proc.JWSVerificationKeySelector;
-import com.nimbusds.jose.util.DefaultResourceRetriever;
-import com.nimbusds.jose.util.ResourceRetriever;
-import com.nimbusds.jwt.EncryptedJWT;
-import com.nimbusds.jwt.JWT;
 import com.nimbusds.jwt.JWTClaimsSet;
-import com.nimbusds.jwt.PlainJWT;
-import com.nimbusds.jwt.SignedJWT;
-import com.nimbusds.jwt.proc.ConfigurableJWTProcessor;
-import com.nimbusds.jwt.proc.DefaultJWTProcessor;
 import com.nimbusds.jwt.proc.JWTClaimsSetVerifier;
 import fish.payara.security.openid.api.IdentityToken;
 import fish.payara.security.openid.api.RefreshToken;
@@ -71,11 +48,9 @@ import fish.payara.security.openid.domain.OpenIdConfiguration;
 import fish.payara.security.openid.domain.OpenIdNonce;
 import fish.payara.security.openid.api.OpenIdConstant;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
-import java.text.ParseException;
 import static java.util.Collections.emptyMap;
 import java.util.Map;
-import static java.util.Objects.isNull;
+
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.security.enterprise.authentication.mechanism.http.HttpMessageContext;
@@ -147,7 +122,7 @@ public class TokenController {
      * @param configuration the OpenId Connect client configuration configuration
      * @return JWT Claims
      */
-    public Map<String, Object> validateIdToken(IdentityTokenImpl idToken, HttpMessageContext httpContext, OpenIdConfiguration configuration) {
+    public JWTClaimsSet validateIdToken(IdentityTokenImpl idToken, HttpMessageContext httpContext, OpenIdConfiguration configuration) {
         JWTClaimsSet claimsSet;
         HttpServletRequest request = httpContext.getRequest();
         HttpServletResponse response = httpContext.getResponse();
@@ -164,12 +139,12 @@ public class TokenController {
 
         try {
             JWTClaimsSetVerifier jwtVerifier = new IdTokenClaimsSetVerifier(expectedNonceHash, configuration);
-            claimsSet = validateBearerToken(idToken.getTokenJWT(), jwtVerifier, configuration);
+            claimsSet = configuration.getJWTValidator().validateBearerToken(idToken.getTokenJWT(), jwtVerifier);
         } finally {
             nonceController.remove(configuration, request, response);
         }
 
-        return claimsSet.getClaims();
+        return claimsSet;
     }
 
     /**
@@ -181,10 +156,10 @@ public class TokenController {
      * @param configuration the OpenId Connect client configuration configuration
      * @return JWT Claims
      */
-    public Map<String, Object> validateRefreshedIdToken(IdentityToken previousIdToken, IdentityTokenImpl newIdToken, HttpMessageContext httpContext, OpenIdConfiguration configuration) {
+    public JWTClaimsSet validateRefreshedIdToken(IdentityToken previousIdToken, IdentityTokenImpl newIdToken, HttpMessageContext httpContext, OpenIdConfiguration configuration) {
         JWTClaimsSetVerifier jwtVerifier = new RefreshedIdTokenClaimsSetVerifier(previousIdToken, configuration);
-        JWTClaimsSet claimsSet = validateBearerToken(newIdToken.getTokenJWT(), jwtVerifier, configuration);
-        return claimsSet.getClaims();
+        JWTClaimsSet claimsSet = configuration.getJWTValidator().validateBearerToken(newIdToken.getTokenJWT(), jwtVerifier);
+        return claimsSet;
     }
 
     /**
@@ -242,114 +217,8 @@ public class TokenController {
                 .post(Entity.form(form));
     }
 
-    private JWTClaimsSet validateBearerToken(JWT token, JWTClaimsSetVerifier jwtVerifier, OpenIdConfiguration configuration) {
-        JWTClaimsSet claimsSet;
-        try {
-            if (token instanceof PlainJWT) {
-                PlainJWT plainToken = (PlainJWT) token;
-                claimsSet = plainToken.getJWTClaimsSet();
-                jwtVerifier.verify(claimsSet, null);
-            } else if (token instanceof SignedJWT) {
-                SignedJWT signedToken = (SignedJWT) token;
-                JWSHeader header = signedToken.getHeader();
-                String alg = header.getAlgorithm().getName();
-                if (isNull(alg)) {
-                    // set the default value
-                    alg = OpenIdConstant.DEFAULT_JWT_SIGNED_ALGORITHM;
-                }
-
-                ConfigurableJWTProcessor jwtProcessor = new DefaultJWTProcessor();
-                jwtProcessor.setJWSKeySelector(getJWSKeySelector(configuration, alg));
-                jwtProcessor.setJWTClaimsSetVerifier(jwtVerifier);
-                claimsSet = jwtProcessor.process(signedToken, null);
-            } else if (token instanceof EncryptedJWT) {
-                /**
-                 * If ID Token is encrypted, decrypt it using the keys and
-                 * algorithms
-                 */
-                EncryptedJWT encryptedToken = (EncryptedJWT) token;
-                JWEHeader header = encryptedToken.getHeader();
-                String alg = header.getAlgorithm().getName();
-
-                ConfigurableJWTProcessor jwtProcessor = new DefaultJWTProcessor();
-                jwtProcessor.setJWSKeySelector(getJWSKeySelector(configuration, alg));
-                jwtProcessor.setJWEKeySelector(getJWEKeySelector(configuration));
-                jwtProcessor.setJWTClaimsSetVerifier(jwtVerifier);
-                claimsSet = jwtProcessor.process(encryptedToken, null);
-            } else {
-                throw new IllegalStateException("Unexpected JWT type : " + token.getClass());
-            }
-        } catch (ParseException | BadJOSEException | JOSEException ex) {
-            throw new IllegalStateException(ex);
-        }
-        return claimsSet;
-    }
 
 
-    /**
-     * JWSKeySelector finds the JSON Web Key Set (JWKS) from jwks_uri endpoint
-     * and filter for potential signing keys in the JWKS with a matching kid
-     * property.
-     *
-     * @param configuration the OpenId Connect client configuration configuration
-     * @param alg the algorithm for the key
-     * @param kid the unique identifier for the key
-     * @return the JSON Web Signing (JWS) key selector
-     */
-    private JWSKeySelector getJWSKeySelector(OpenIdConfiguration configuration, String alg) {
-        JWKSource jwkSource;
-        JWSAlgorithm jWSAlgorithm = new JWSAlgorithm(alg);
-        if (Algorithm.NONE.equals(jWSAlgorithm)) {
-            throw new IllegalStateException("Unsupported JWS algorithm : " + jWSAlgorithm);
-        } else if (JWSAlgorithm.Family.RSA.contains(jWSAlgorithm)
-                || JWSAlgorithm.Family.EC.contains(jWSAlgorithm)) {
-            ResourceRetriever jwkSetRetriever = new DefaultResourceRetriever(
-                    configuration.getJwksConnectTimeout(),
-                    configuration.getJwksReadTimeout(),
-                    DEFAULT_HTTP_SIZE_LIMIT
-            );
-            jwkSource = new RemoteJWKSet(configuration.getProviderMetadata().getJwksURL(), jwkSetRetriever);
-        } else if (JWSAlgorithm.Family.HMAC_SHA.contains(jWSAlgorithm)) {
-            byte[] clientSecret = new String(configuration.getClientSecret()).getBytes(UTF_8);
-            if (isNull(clientSecret)) {
-                throw new IllegalStateException("Missing client secret");
-            }
-            jwkSource = new ImmutableSecret(clientSecret);
-        } else {
-            throw new IllegalStateException("Unsupported JWS algorithm : " + jWSAlgorithm);
-        }
-        return new JWSVerificationKeySelector(jWSAlgorithm, jwkSource);
-    }
 
-    /**
-     * JWEKeySelector selects the key to decrypt JSON Web Encryption (JWE) and
-     * validate encrypted JWT.
-     *
-     * @param configuration the OpenId Connect client configuration configuration
-     * @return the JSON Web Encryption (JWE) key selector
-     */
-    private JWEKeySelector getJWEKeySelector(OpenIdConfiguration configuration) {
-        JWEKeySelector jweKeySelector;
-
-        JWEAlgorithm jwsAlg = configuration.getEncryptionMetadata().getEncryptionAlgorithm();
-        EncryptionMethod jweEnc = configuration.getEncryptionMetadata().getEncryptionMethod();
-        JWKSource jwkSource = configuration.getEncryptionMetadata().getPrivateKeySource();
-
-        if (isNull(jwsAlg)) {
-            throw new IllegalStateException("Missing JWE encryption algorithm ");
-        }
-        if (!configuration.getProviderMetadata().getIdTokenEncryptionAlgorithmsSupported().contains(jwsAlg.getName())) {
-            throw new IllegalStateException("Unsupported ID tokens algorithm :" + jwsAlg.getName());
-        }
-        if (isNull(jweEnc)) {
-            throw new IllegalStateException("Missing JWE encryption method");
-        }
-        if (!configuration.getProviderMetadata().getIdTokenEncryptionMethodsSupported().contains(jweEnc.getName())) {
-            throw new IllegalStateException("Unsupported ID tokens encryption method :" + jweEnc.getName());
-        }
-
-        jweKeySelector = new JWEDecryptionKeySelector(jwsAlg, jweEnc, jwkSource);
-        return jweKeySelector;
-    }
 
 }

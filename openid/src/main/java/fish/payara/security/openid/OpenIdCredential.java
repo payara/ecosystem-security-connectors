@@ -63,7 +63,7 @@ public class OpenIdCredential implements Credential {
 
     private final OpenIdConfiguration configuration;
 
-    private final IdentityToken identityToken;
+    private final IdentityTokenImpl identityToken;
 
     private AccessToken accessToken;
 
@@ -85,6 +85,10 @@ public class OpenIdCredential implements Credential {
     }
 
     public IdentityToken getIdentityToken() {
+        return identityToken;
+    }
+
+    IdentityTokenImpl getIdentityTokenImpl() {
         return identityToken;
     }
 

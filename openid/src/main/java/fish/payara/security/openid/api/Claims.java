@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Payara Foundation and/or its affiliates. All rights reserved.
+ * Copyright (c) 2021 Payara Foundation and/or its affiliates. All rights reserved.
  *
  *  The contents of this file are subject to the terms of either the GNU
  *  General Public License Version 2 only ("GPL") or the Common Development
@@ -35,82 +35,76 @@
  *  only if the new code is made subject to such option by the copyright
  *  holder.
  */
+
 package fish.payara.security.openid.api;
 
-import java.util.Map;
+import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
+import java.util.OptionalDouble;
+import java.util.OptionalInt;
+import java.util.OptionalLong;
 
-/**
- * The Access Token is used by an application to access protected resources.
- *
- * @author jGauravGupta
- */
-public interface AccessToken {
-
+public interface Claims {
     /**
-     * @return The access token
-     */
-    public String getToken();
-
-    /**
-     * Signify, if access token is JWT based, or opaque.
-     * @return true if access token is JWT token.
-     */
-    boolean isJWT();
-
-    /**
-     * Access token's claims
-     * @return access token claims if it is a JWT Token, {@link JwtClaims#NONE} otherwise.
-     */
-    JwtClaims getJwtClaims();
-
-    /**
-     * @return the access token's claims that was received from the OpenId Connect
-     * provider
-     * @deprecated in favor of {@link #getJwtClaims()}
-     */
-    @Deprecated
-    Map<String, Object> getClaims();
-
-    /**
-     * @param key the claim key
-     * @return the identity token's claim based on requested key type or null if not provided
-     * @deprecated in favor of {@link #getJwtClaims()}
-     */
-    @Deprecated
-    Object getClaim(String key);
-
-    /**
-     * Optional. Expiration time of the Access Token in seconds since the
-     * response was generated.
+     * Get String claim of given name
      *
-     * @return the expiration time of the Access Token or null if expiration time is not known
+     * @param name
+     * @return value, or empty optional if not present
+     * @throws IllegalArgumentException when value of claim is not a string
      */
-    Long getExpirationTime();
+    Optional<String> getStringClaim(String name);
 
     /**
-     * Checks if the Access Token is expired, taking into account the min
-     * validity time configured by the user.
+     * Get Numeric Date claim of given name
      *
-     * @return {@code true}, if access token is expired or it will be expired in
-     * the next X milliseconds configured by user.
+     * @param name
+     * @return value, or empty optional if not present
+     * @throws IllegalArgumentException when value of claim is not a number that represents an epoch seconds
      */
-    boolean isExpired();
+    Optional<Instant> getNumericDateClaim(String name);
 
     /**
-     * Optional. Scope of the Access Token.
+     * Get String List claim of given name
      *
-     * @return the scope of the Access Token
+     * @param name
+     * @return a list with values of the claim, or empty list if value is not present.
+     * @throws IllegalArgumentException when value of claim is neither string or array of strings
      */
-    Scope getScope();
+    List<String> getArrayStringClaim(String name);
 
     /**
-     * @return the Type of the Access Token
+     * Get integer claim of given name
+     *
+     * @param name
+     * @return value, or empty optional if not present
+     * @throws IllegalArgumentException when value of claim is not a number
      */
-    public Type getType();
+    OptionalInt getIntClaim(String name);
 
-    enum Type {
-        BEARER, // Json Web Token (JWT) format
-        MAC; // Message Authentication Code format
-    }
+    /**
+     * Get long claim of given name
+     *
+     * @param name
+     * @return value, or empty optional if not present
+     * @throws IllegalArgumentException when value of claim is not a number
+     */
+    OptionalLong getLongClaim(String name);
+
+    /**
+     * Get double claim of given name
+     *
+     * @param name
+     * @return value, or empty optional if not present
+     * @throws IllegalArgumentException when value of claim is not a number
+     */
+    OptionalDouble getDoubleClaim(String name);
+
+    /**
+     * Get nested claims of given name.
+     * @param name
+     * @return Claims instance represented nested values within that claim, or empty optional if not present
+     * @throws IllegalArgumentException when value is not a nested object
+     */
+    Optional<Claims> getNested(String name);
 }

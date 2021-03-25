@@ -38,13 +38,18 @@
 package fish.payara.security.openid;
 
 import com.nimbusds.jose.Algorithm;
+import com.nimbusds.jwt.JWTClaimsSet;
+import fish.payara.security.openid.api.OpenIdConstant;
 import fish.payara.security.openid.controller.TokenController;
 import fish.payara.security.openid.controller.UserInfoController;
 import fish.payara.security.openid.domain.AccessTokenImpl;
 import fish.payara.security.openid.domain.IdentityTokenImpl;
 import fish.payara.security.openid.domain.OpenIdConfiguration;
 import fish.payara.security.openid.domain.OpenIdContextImpl;
+
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
@@ -60,8 +65,6 @@ import javax.json.JsonValue;
 import javax.security.enterprise.authentication.mechanism.http.HttpMessageContext;
 import javax.security.enterprise.identitystore.CredentialValidationResult;
 import javax.security.enterprise.identitystore.IdentityStore;
-
-import net.minidev.json.JSONArray;
 
 /**
  * Identity store validates the identity token & access toekn and returns the
@@ -82,36 +85,29 @@ public class OpenIdIdentityStore implements IdentityStore {
     @Inject
     private UserInfoController userInfoController;
 
+    @SuppressWarnings("unused") // IdentityStore calls overloads
     public CredentialValidationResult validate(OpenIdCredential credential) {
         HttpMessageContext httpContext = credential.getHttpContext();
         OpenIdConfiguration configuration = credential.getConfiguration();
-        IdentityTokenImpl idToken = (IdentityTokenImpl) credential.getIdentityToken();
+        IdentityTokenImpl idToken = credential.getIdentityTokenImpl();
         
         Algorithm idTokenAlgorithm = idToken.getTokenJWT().getHeader().getAlgorithm();
         
-        Map<String, Object> idTokenClaims;
+        JWTClaimsSet idTokenClaims;
         if (isNull(context.getIdentityToken())) {
             idTokenClaims = tokenController.validateIdToken(idToken, httpContext, configuration);
         } else {
             // If an ID Token is returned as a result of a token refresh request
             idTokenClaims = tokenController.validateRefreshedIdToken(context.getIdentityToken(), idToken, httpContext, configuration);
         }
-        if (idToken.isEncrypted()) {
-            idToken.setClaims(idTokenClaims);
-        }
-        context.setIdentityToken(idToken);
+        context.setIdentityToken(idToken.withClaims(idTokenClaims));
 
         AccessTokenImpl accessToken = (AccessTokenImpl) credential.getAccessToken();
         if (nonNull(accessToken)) {
-            Map<String, Object> accesTokenClaims = tokenController.validateAccessToken(
+            tokenController.validateAccessToken(
                     accessToken, idTokenAlgorithm, context.getIdentityToken().getClaims(), configuration
             );
-            if (accessToken.isEncrypted()) {
-                accessToken.setClaims(accesTokenClaims);
-            }
             context.setAccessToken(accessToken);
-            JsonObject userInfo = userInfoController.getUserInfo(configuration, accessToken);
-            context.setClaims(userInfo);
         }
 
         context.setCallerName(getCallerName(configuration));
@@ -125,12 +121,15 @@ public class OpenIdIdentityStore implements IdentityStore {
 
     private String getCallerName(OpenIdConfiguration configuration) {
         String callerNameClaim = configuration.getClaimsConfiguration().getCallerNameClaim();
-        String callerName = context.getClaimsJson().getString(callerNameClaim, null);
+        if (OpenIdConstant.SUBJECT_IDENTIFIER.equals(callerNameClaim)) {
+            return context.getSubject();
+        }
+        String callerName = (String) context.getIdentityToken().getJwtClaims().getStringClaim(callerNameClaim).orElse(null);
         if (callerName == null) {
-            callerName = (String) context.getIdentityToken().getClaim(callerNameClaim);
+            callerName = (String) context.getAccessToken().getJwtClaims().getStringClaim(callerNameClaim).orElse(null);
         }
         if (callerName == null) {
-            callerName = (String) context.getAccessToken().getClaim(callerNameClaim);
+            callerName = context.getClaims().getStringClaim(callerNameClaim).orElse(null);
         }
         if (callerName == null) {
             callerName = context.getSubject();
@@ -139,31 +138,26 @@ public class OpenIdIdentityStore implements IdentityStore {
     }
 
     private Set<String> getCallerGroups(OpenIdConfiguration configuration) {
-        Set<String> groups = new HashSet<>();
         String callerGroupsClaim = configuration.getClaimsConfiguration().getCallerGroupsClaim();
-        JsonArray groupsUserinfoClaim
-                = context.getClaimsJson().getJsonArray(callerGroupsClaim);
-        JSONArray groupsIdentityClaim
-                = (JSONArray) context.getIdentityToken().getClaim(callerGroupsClaim);
-        JSONArray groupsAccessClaim
-                = (JSONArray) context.getAccessToken().getClaim(callerGroupsClaim);
-        if (nonNull(groupsUserinfoClaim)) {
-            for (int i = 0; i < groupsUserinfoClaim.size(); i++) {
-                JsonValue value = groupsUserinfoClaim.get(i);
-                if (value.getValueType() == JsonValue.ValueType.STRING) {
-                    groups.add(groupsUserinfoClaim.getString(i));
-                }
-            }
-        } else if (nonNull(groupsIdentityClaim)) {
-            groups = groupsIdentityClaim.stream()
-                    .map(Object::toString)
-                    .collect(toSet());
-        } else if (nonNull(groupsAccessClaim)) {
-            groups = groupsAccessClaim.stream()
-                    .map(Object::toString)
-                    .collect(toSet());
+        List<String> groupsAccessClaim
+                = context.getAccessToken().getJwtClaims().getArrayStringClaim(callerGroupsClaim);
+        if (!groupsAccessClaim.isEmpty()) {
+            return new HashSet<>(groupsAccessClaim);
         }
-        return groups;
+
+        List<String> groupsIdentityClaim
+                = context.getIdentityToken().getJwtClaims().getArrayStringClaim(callerGroupsClaim);
+        if (!groupsIdentityClaim.isEmpty()) {
+            return new HashSet<>(groupsIdentityClaim);
+        }
+
+        List<String> groupsUserinfoClaim
+                = context.getClaims().getArrayStringClaim(callerGroupsClaim);
+        if (!groupsUserinfoClaim.isEmpty()) {
+            return new HashSet<>(groupsUserinfoClaim);
+        }
+
+        return Collections.emptySet();
     }
 
 }

@@ -37,259 +37,98 @@
  */
 package fish.payara.security.openid.api;
 
-import static fish.payara.security.openid.api.OpenIdConstant.ADDRESS;
-import static fish.payara.security.openid.api.OpenIdConstant.BIRTHDATE;
-import static fish.payara.security.openid.api.OpenIdConstant.EMAIL;
-import static fish.payara.security.openid.api.OpenIdConstant.EMAIL_VERIFIED;
-import static fish.payara.security.openid.api.OpenIdConstant.FAMILY_NAME;
-import static fish.payara.security.openid.api.OpenIdConstant.GENDER;
-import static fish.payara.security.openid.api.OpenIdConstant.GIVEN_NAME;
-import static fish.payara.security.openid.api.OpenIdConstant.LOCALE;
-import static fish.payara.security.openid.api.OpenIdConstant.MIDDLE_NAME;
-import static fish.payara.security.openid.api.OpenIdConstant.NAME;
-import static fish.payara.security.openid.api.OpenIdConstant.NICKNAME;
-import static fish.payara.security.openid.api.OpenIdConstant.PHONE_NUMBER;
-import static fish.payara.security.openid.api.OpenIdConstant.PHONE_NUMBER_VERIFIED;
-import static fish.payara.security.openid.api.OpenIdConstant.PICTURE;
-import static fish.payara.security.openid.api.OpenIdConstant.PREFERRED_USERNAME;
-import static fish.payara.security.openid.api.OpenIdConstant.PROFILE;
-import static fish.payara.security.openid.api.OpenIdConstant.UPDATED_AT;
-import static fish.payara.security.openid.api.OpenIdConstant.WEBSITE;
-import static fish.payara.security.openid.api.OpenIdConstant.ZONEINFO;
+import java.util.Optional;
+
 import javax.json.JsonObject;
+
+import static fish.payara.security.openid.api.OpenIdConstant.*;
 
 /**
  * User Claims received from the userinfo endpoint
  *
  * @author Gaurav Gupta
  */
-public class OpenIdClaims {
+public interface OpenIdClaims extends Claims {
 
-    // profile scope claims
-    private String name;
-    private String familyName;
-    private String givenName;
-    private String middleName;
-    private String nickname;
-    private String preferredUsername;
-    private String profile;
-    private String picture;
-    private String website;
-    private String gender;
-    private String birthdate;
-    private String zoneinfo;
-    private String locale;
-    private String updatedAt;
-
-    // email scope claims
-    private String email;
-    private String emailVerified;
-
-    // address scope claims
-    private String address;
-
-    // phone scope claims
-    private String phoneNumber;
-    private String phoneNumberVerified;
-
-    public OpenIdClaims(JsonObject claims) {
-        this.name = claims.getString(NAME, null);
-        this.familyName = claims.getString(FAMILY_NAME, null);
-        this.givenName = claims.getString(GIVEN_NAME, null);
-        this.middleName = claims.getString(MIDDLE_NAME, null);
-        this.nickname = claims.getString(NICKNAME, null);
-        this.preferredUsername = claims.getString(PREFERRED_USERNAME, null);
-        this.profile = claims.getString(PROFILE, null);
-        this.picture = claims.getString(PICTURE, null);
-        this.website = claims.getString(WEBSITE, null);
-        this.gender = claims.getString(GENDER, null);
-        this.birthdate = claims.getString(BIRTHDATE, null);
-        this.zoneinfo = claims.getString(ZONEINFO, null);
-        this.locale = claims.getString(LOCALE, null);
-        this.updatedAt = claims.getString(UPDATED_AT, null);
-        this.email = claims.getString(EMAIL, null);
-        this.emailVerified = claims.getString(EMAIL_VERIFIED, null);
-        this.address = claims.getString(ADDRESS, null);
-        this.phoneNumber = claims.getString(PHONE_NUMBER, null);
-        this.phoneNumberVerified = claims.getString(PHONE_NUMBER_VERIFIED, null);
+    default String getSubject() {
+        return getStringClaim(SUBJECT_IDENTIFIER).orElseThrow(() -> new IllegalArgumentException("Payload does not represent correct UserInfo response"));
     }
 
-    public String getName() {
-        return name;
+    default Optional<String> getName() {
+        return getStringClaim(NAME);
     }
 
-    public void setName(String name) {
-        this.name = name;
+    default Optional<String> getFamilyName() {
+        return getStringClaim(FAMILY_NAME);
     }
 
-    public String getFamilyName() {
-        return familyName;
+    default Optional<String> getGivenName() {
+        return getStringClaim(GIVEN_NAME);
     }
 
-    public void setFamilyName(String familyName) {
-        this.familyName = familyName;
+    default Optional<String> getMiddleName() {
+        return getStringClaim(MIDDLE_NAME);
     }
 
-    public String getGivenName() {
-        return givenName;
+    default Optional<String> getNickname() {
+        return getStringClaim(NICKNAME);
     }
 
-    public void setGivenName(String givenName) {
-        this.givenName = givenName;
+    default Optional<String> getPreferredUsername() {
+        return getStringClaim(PREFERRED_USERNAME);
     }
 
-    public String getMiddleName() {
-        return middleName;
+    default Optional<String> getProfile() {
+        return getStringClaim(PROFILE);
     }
 
-    public void setMiddleName(String middleName) {
-        this.middleName = middleName;
+    default Optional<String> getPicture() {
+        return getStringClaim(PICTURE);
     }
 
-    public String getNickname() {
-        return nickname;
+    default Optional<String> getGender() {
+        return getStringClaim(GENDER);
     }
 
-    public void setNickname(String nickname) {
-        this.nickname = nickname;
+    default Optional<String> getBirthdate() {
+        return getStringClaim(BIRTHDATE);
     }
 
-    public String getPreferredUsername() {
-        return preferredUsername;
+    default Optional<String> getZoneinfo() {
+        return getStringClaim(ZONEINFO);
     }
 
-    public void setPreferredUsername(String preferredUsername) {
-        this.preferredUsername = preferredUsername;
+    default Optional<String> getLocale() {
+        return getStringClaim(LOCALE);
     }
 
-    public String getProfile() {
-        return profile;
+    default Optional<String> getUpdatedAt() {
+        return getStringClaim(UPDATED_AT);
     }
 
-    public void setProfile(String profile) {
-        this.profile = profile;
+    default Optional<String> getEmail() {
+        return getStringClaim(EMAIL);
     }
 
-    public String getPicture() {
-        return picture;
+    default Optional<String> getEmailVerified() {
+        return getStringClaim(EMAIL_VERIFIED);
     }
 
-    public void setPicture(String picture) {
-        this.picture = picture;
+    default Optional<String> getAddress() {
+        return getStringClaim(ADDRESS);
     }
 
-    public String getWebsite() {
-        return website;
+    default Optional<String> getPhoneNumber() {
+        return getStringClaim(PHONE_NUMBER);
     }
 
-    public void setWebsite(String website) {
-        this.website = website;
+    default Optional<String> getPhoneNumberVerified() {
+        return getStringClaim(PHONE_NUMBER_VERIFIED);
     }
 
-    public String getGender() {
-        return gender;
+    default Optional<String> getWebsite() {
+        return getStringClaim(WEBSITE);
     }
 
-    public void setGender(String gender) {
-        this.gender = gender;
-    }
-
-    public String getBirthdate() {
-        return birthdate;
-    }
-
-    public void setBirthdate(String birthdate) {
-        this.birthdate = birthdate;
-    }
-
-    public String getZoneinfo() {
-        return zoneinfo;
-    }
-
-    public void setZoneinfo(String zoneinfo) {
-        this.zoneinfo = zoneinfo;
-    }
-
-    public String getLocale() {
-        return locale;
-    }
-
-    public void setLocale(String locale) {
-        this.locale = locale;
-    }
-
-    public String getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public void setUpdatedAt(String updatedAt) {
-        this.updatedAt = updatedAt;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    public String getEmailVerified() {
-        return emailVerified;
-    }
-
-    public void setEmailVerified(String emailVerified) {
-        this.emailVerified = emailVerified;
-    }
-
-    public String getAddress() {
-        return address;
-    }
-
-    public void setAddress(String address) {
-        this.address = address;
-    }
-
-    public String getPhoneNumber() {
-        return phoneNumber;
-    }
-
-    public void setPhoneNumber(String phoneNumber) {
-        this.phoneNumber = phoneNumber;
-    }
-
-    public String getPhoneNumberVerified() {
-        return phoneNumberVerified;
-    }
-
-    public void setPhoneNumberVerified(String phoneNumberVerified) {
-        this.phoneNumberVerified = phoneNumberVerified;
-    }
-
-    @Override
-    public String toString() {
-        return OpenIdClaims.class.getSimpleName()
-                + "{"
-                + "name=" + name
-                + ", familyName=" + familyName
-                + ", givenName=" + givenName
-                + ", middleName=" + middleName
-                + ", nickname=" + nickname
-                + ", preferredUsername=" + preferredUsername
-                + ", profile=" + profile
-                + ", picture=" + picture
-                + ", website=" + website
-                + ", gender=" + gender
-                + ", birthdate=" + birthdate
-                + ", zoneinfo=" + zoneinfo
-                + ", locale=" + locale
-                + ", updatedAt=" + updatedAt
-                + ", email=" + email
-                + ", emailVerified=" + emailVerified
-                + ", address=" + address
-                + ", phoneNumber=" + phoneNumber
-                + ", phoneNumberVerified=" + phoneNumberVerified
-                + '}';
-    }
 
 }

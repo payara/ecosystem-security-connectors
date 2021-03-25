@@ -39,8 +39,11 @@ package fish.payara.security.openid.domain;
 
 import com.nimbusds.jwt.EncryptedJWT;
 import com.nimbusds.jwt.JWT;
+import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.JWTParser;
 import fish.payara.security.openid.api.IdentityToken;
+import fish.payara.security.openid.api.JwtClaims;
+
 import static fish.payara.security.openid.api.OpenIdConstant.EXPIRATION_IDENTIFIER;
 import java.text.ParseException;
 import static java.util.Collections.emptyMap;
@@ -58,7 +61,7 @@ public class IdentityTokenImpl implements IdentityToken {
 
     private final JWT tokenJWT;
 
-    private Map<String, Object> claims;
+    private JWTClaimsSet claims;
 
     private OpenIdConfiguration configuration;
 
@@ -67,10 +70,17 @@ public class IdentityTokenImpl implements IdentityToken {
         this.token = token;
         try {
             this.tokenJWT = JWTParser.parse(token);
-            this.claims = tokenJWT.getJWTClaimsSet().getClaims();
+            this.claims = tokenJWT.getJWTClaimsSet();
         } catch (ParseException ex) {
             throw new IllegalStateException("Error in parsing the Token", ex);
         }
+    }
+
+    private IdentityTokenImpl(OpenIdConfiguration configuration, JWT token, JWTClaimsSet verifiedClaims) {
+        this.token = token.getParsedString();
+        this.tokenJWT = token;
+        this.claims = verifiedClaims;
+        this.configuration = configuration;
     }
 
     public JWT getTokenJWT() {
@@ -87,11 +97,12 @@ public class IdentityTokenImpl implements IdentityToken {
         if (claims == null) {
             return emptyMap();
         }
-        return claims;
+        return claims.getClaims();
     }
 
-    public void setClaims(Map<String, Object> claims) {
-        this.claims = claims;
+    @Override
+    public JwtClaims getJwtClaims() {
+        return NimbusJwtClaims.ifPresent(this.claims);
     }
 
     @Override
@@ -122,5 +133,9 @@ public class IdentityTokenImpl implements IdentityToken {
     @Override
     public String toString() {
         return token;
+    }
+
+    public IdentityToken withClaims(JWTClaimsSet verifiedClaims) {
+        return new IdentityTokenImpl(configuration, tokenJWT, verifiedClaims);
     }
 }

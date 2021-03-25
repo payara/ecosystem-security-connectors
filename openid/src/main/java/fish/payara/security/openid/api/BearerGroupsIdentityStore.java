@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Payara Foundation and/or its affiliates. All rights reserved.
+ * Copyright (c) 2021 Payara Foundation and/or its affiliates. All rights reserved.
  *
  *  The contents of this file are subject to the terms of either the GNU
  *  General Public License Version 2 only ("GPL") or the Common Development
@@ -35,50 +35,29 @@
  *  only if the new code is made subject to such option by the copyright
  *  holder.
  */
+
 package fish.payara.security.openid.api;
 
-import java.util.Map;
+import java.util.Collections;
+import java.util.Set;
 
-/**
- * Identity tokens is a security token that issued in authentication flow
- * process.
- *
- * @author jGauravGupta
- */
-public interface IdentityToken {
+import javax.security.enterprise.identitystore.CredentialValidationResult;
+import javax.security.enterprise.identitystore.IdentityStore;
 
-    /**
-     * @return the identity token
-     */
-    String getToken();
+public abstract class BearerGroupsIdentityStore implements IdentityStore {
+    @Override
+    public Set<String> getCallerGroups(CredentialValidationResult validationResult) {
+        if (validationResult.getCallerPrincipal() instanceof AccessTokenCallerPrincipal) {
+            return getCallerGroups((AccessTokenCallerPrincipal)validationResult.getCallerPrincipal());
+        } else {
+            return Collections.emptySet();
+        }
+    }
 
-    /**
-     * @return the identity token's claims that was received from the OpenId
-     * Connect provider
-     * @deprecated use {@link #getJwtClaims()}
-     */
-    @Deprecated
-    Map<String, Object> getClaims();
+    protected abstract Set<String> getCallerGroups(AccessTokenCallerPrincipal callerPrincipal);
 
-    /**
-     * @param key the claim key
-     * @return the identity token's claim based on requested key type.
-     * @deprecated use {@link #getJwtClaims()}
-     */
-    @Deprecated
-    Object getClaim(String key);
-
-    /**
-     * Claims of this token
-     * @return claims of this token
-     */
-    JwtClaims getJwtClaims();
-
-    /**
-     * Checks if the Identity Token is expired.
-     *
-     * @return {@code true}, if identity token is expired or it will be expired in
-     * the next X milliseconds configured by user.
-     */
-    boolean isExpired();
+    @Override
+    public Set<ValidationType> validationTypes() {
+        return Collections.singleton(ValidationType.PROVIDE_GROUPS);
+    }
 }
