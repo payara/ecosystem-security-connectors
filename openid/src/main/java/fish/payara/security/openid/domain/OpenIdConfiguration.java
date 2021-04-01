@@ -254,6 +254,7 @@ public class OpenIdConfiguration {
         return this;
     }
 
+
     public ClientAuthentication getClientAuthentication() {
         return clientAuthentication;
     }
