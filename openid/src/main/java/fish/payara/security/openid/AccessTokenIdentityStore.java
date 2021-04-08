@@ -53,7 +53,7 @@ import com.nimbusds.jose.proc.SecurityContext;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.proc.BadJWTException;
 import fish.payara.security.openid.api.AccessTokenCallerPrincipal;
-import fish.payara.security.openid.api.OpenIdConstant;
+import fish.payara.security.openid.api.AccessTokenCredential;
 import fish.payara.security.openid.controller.TokenClaimsSetVerifier;
 import fish.payara.security.openid.domain.AccessTokenImpl;
 import fish.payara.security.openid.domain.OpenIdConfiguration;
@@ -91,7 +91,7 @@ public class AccessTokenIdentityStore implements IdentityStore {
                                     .orElse(null)));
 
             return new CredentialValidationResult(new AccessTokenCallerPrincipal(accessToken, context::getClaims));
-        } catch (ParseException e) {
+        } catch (ParseException | RuntimeException e) {
             LOGGER.log(Level.WARNING, "Cannot parse access token", e);
         }
         return CredentialValidationResult.INVALID_RESULT;
