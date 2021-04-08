@@ -215,7 +215,7 @@ public class OpenIdContextImpl implements OpenIdContext {
             redirect(response, logout.buildRedirectURI(request));
         } else {
             // Redirect user to OpenID connect provider for re-authentication
-            authenticationController.authenticateUser(configuration, request, response);
+            authenticationController.authenticateUser(request, response);
         }
     }
 

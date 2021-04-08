@@ -44,6 +44,8 @@ import fish.payara.security.openid.http.HttpStorageController;
 
 import javax.enterprise.context.ApplicationScoped;
 import java.util.Optional;
+
+import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -57,6 +59,9 @@ public class StateController {
 
     private static final String STATE_KEY = "oidc.state";
 
+    @Inject
+    OpenIdConfiguration configuration;
+
     public void store(
             OpenIdState state,
             OpenIdConfiguration configuration,
@@ -68,7 +73,6 @@ public class StateController {
     }
 
     public Optional<OpenIdState> get(
-            OpenIdConfiguration configuration,
             HttpServletRequest request,
             HttpServletResponse response) {
 
@@ -79,7 +83,6 @@ public class StateController {
     }
 
     public void remove(
-            OpenIdConfiguration configuration,
             HttpServletRequest request,
             HttpServletResponse response) {
 

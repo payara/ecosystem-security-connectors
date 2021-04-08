@@ -64,6 +64,7 @@ import static java.util.Objects.nonNull;
 public class AccessTokenImpl implements AccessToken {
 
     private final String token;
+    private final long tokenMinValidity;
 
     private final AccessToken.Type type;
 
@@ -79,11 +80,9 @@ public class AccessTokenImpl implements AccessToken {
 
     private final long createdAt;
 
-    private OpenIdConfiguration configuration;
-
-    public AccessTokenImpl(OpenIdConfiguration configuration, String tokenType, String token, Long expiresIn, String scopeValue) {
-        this.configuration = configuration;
+    public AccessTokenImpl(String tokenType, String token, Long expiresIn, String scopeValue, long tokenMinValidity) {
         this.token = token;
+        this.tokenMinValidity = tokenMinValidity;
         JWTClaimsSet jwtClaimsSet = null;
         try {
             this.tokenJWT = JWTParser.parse(token);
@@ -100,8 +99,7 @@ public class AccessTokenImpl implements AccessToken {
         this.scope = Scope.parse(scopeValue);
     }
 
-    private AccessTokenImpl(OpenIdConfiguration configuration, JWT token, JWTClaimsSet claims) {
-        this.configuration = configuration;
+    private AccessTokenImpl(JWT token, JWTClaimsSet claims, long tokenMinValidity) {
         this.token = token.getParsedString();
         this.tokenJWT = token;
         this.claims = claims.getClaims();
@@ -110,12 +108,13 @@ public class AccessTokenImpl implements AccessToken {
         this.expiresIn = null;
         this.createdAt = System.currentTimeMillis();
         this.scope = jwtClaims.getStringClaim(OpenIdConstant.SCOPE).map(Scope::parse).orElse(null);
+        this.tokenMinValidity = tokenMinValidity;
     }
 
     public static AccessTokenImpl forBearerToken(OpenIdConfiguration configuration, String rawToken, JWTClaimsSetVerifier validator) throws ParseException {
         JWT token = JWTParser.parse(rawToken);
         JWTClaimsSet claims = configuration.getJWTValidator().validateBearerToken(token, validator);
-        return new AccessTokenImpl(configuration, token, claims);
+        return new AccessTokenImpl(token, claims, configuration.getTokenMinValidity());
     }
 
     public JWT getTokenJWT() {
@@ -127,9 +126,9 @@ public class AccessTokenImpl implements AccessToken {
         boolean expired = true;
         Date exp;
          if (nonNull(expiresIn)) {
-            expired = System.currentTimeMillis() + configuration.getTokenMinValidity() > createdAt + (expiresIn * 1000);
+            expired = System.currentTimeMillis() + tokenMinValidity > createdAt + (expiresIn * 1000);
         } else if(nonNull(exp = (Date) this.getClaim(OpenIdConstant.EXPIRATION_IDENTIFIER))) {
-            expired = System.currentTimeMillis() + configuration.getTokenMinValidity() > exp.getTime();
+            expired = System.currentTimeMillis() + tokenMinValidity > exp.getTime();
         } else {
             throw new IllegalStateException("Missing expiration time (exp) claim in access token");
         }

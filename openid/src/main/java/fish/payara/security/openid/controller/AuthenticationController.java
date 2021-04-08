@@ -68,6 +68,9 @@ public class AuthenticationController {
     @Inject
     private NonceController nonceController;
 
+    @Inject
+    private OpenIdConfiguration configuration;
+
     private static final Logger LOGGER = Logger.getLogger(AuthenticationController.class.getName());
 
     /**
@@ -80,13 +83,11 @@ public class AuthenticationController {
      * Authorization Code.
      *
      *
-     * @param configuration the OpenId Connect client configuration configuration
      * @param request
      * @param response
      * @return
      */
     public AuthenticationStatus authenticateUser(
-            OpenIdConfiguration configuration,
             HttpServletRequest request,
             HttpServletResponse response) {
 
