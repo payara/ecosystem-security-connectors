@@ -41,7 +41,6 @@ import com.nimbusds.jose.Algorithm;
 import com.nimbusds.jwt.JWTClaimsSet;
 import fish.payara.security.openid.api.OpenIdConstant;
 import fish.payara.security.openid.controller.TokenController;
-import fish.payara.security.openid.controller.UserInfoController;
 import fish.payara.security.openid.domain.AccessTokenImpl;
 import fish.payara.security.openid.domain.IdentityTokenImpl;
 import fish.payara.security.openid.domain.OpenIdConfiguration;
@@ -93,7 +92,7 @@ public class OpenIdIdentityStore implements IdentityStore {
             idTokenClaims = tokenController.validateIdToken(idToken, httpContext);
         } else {
             // If an ID Token is returned as a result of a token refresh request
-            idTokenClaims = tokenController.validateRefreshedIdToken(context.getIdentityToken(), idToken, httpContext);
+            idTokenClaims = tokenController.validateRefreshedIdToken(context.getIdentityToken(), idToken);
         }
         context.setIdentityToken(idToken.withClaims(idTokenClaims));
 

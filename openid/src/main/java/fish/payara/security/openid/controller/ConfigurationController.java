@@ -362,83 +362,56 @@ public class ConfigurationController {
      * This can serve as a key to a cache of OpenIdConfiguration objects if configuration varies among requests, which
      * is a feature coming soon.
      */
-    static class DefinitionKey {
-        private final String[] attributes;
-        private int hashCode;
+    static CacheKey keyFromDefinition(OpenIdAuthenticationDefinition definition) {
+        String[][] values = {
+                {
+                        definition.providerURI(),
+                        definition.clientId(),
+                        definition.clientSecret(),
+                        definition.redirectURI(),
+                        definition.responseType(),
+                        definition.responseMode(),
+                        Arrays.toString(definition.prompt()),
+                        String.valueOf(definition.useNonce()),
+                        String.valueOf(definition.useSession()),
+                        String.valueOf(definition.tokenAutoRefresh()),
+                        String.valueOf(definition.tokenMinValidity())
+                },
+                definition.scope(),
+                definition.extraParameters(),
+                providerMetadataAttrs(definition.providerMetadata()),
+                claimsAttrs(definition.claimsDefinition()),
+                logoutAttrs(definition.logout())
+        };
 
-        DefinitionKey(String... attributes) {
-            this.attributes = attributes;
-            this.hashCode = Objects.hash(attributes);
-        }
+        // and now concatentate all of these together to form a key
+        return new CacheKey(Stream.of(values).flatMap(Stream::of).toArray(String[]::new));
+    }
 
-        @Override
-        public int hashCode() {
-            return hashCode;
-        }
+    private static String[] logoutAttrs(LogoutDefinition logout) {
+        return logout != null ? new String[] {
+                String.valueOf(logout.notifyProvider()),
+                logout.redirectURI(),
+                String.valueOf(logout.accessTokenExpiry()),
+                String.valueOf(logout.identityTokenExpiry())
+        } : new String[4];
+    }
 
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) {
-                return true;
-            }
-            if (o == null || getClass() != o.getClass()) {
-                return false;
-            }
-            DefinitionKey that = (DefinitionKey) o;
-            return hashCode == that.hashCode && Arrays.equals(attributes, that.attributes);
-        }
+    private static String[] claimsAttrs(ClaimsDefinition claimsDefinition) {
+        return claimsDefinition != null ? new String[] {
+                claimsDefinition.callerGroupsClaim(),
+                claimsDefinition.callerNameClaim()
+        } : new String[2];
+    }
 
-        static DefinitionKey fromDefinition(OpenIdAuthenticationDefinition definition) {
-            String[][] values = {
-                    {
-                            definition.providerURI(),
-                            definition.clientId(),
-                            definition.clientSecret(),
-                            definition.redirectURI(),
-                            definition.responseType(),
-                            definition.responseMode(),
-                            Arrays.toString(definition.prompt()),
-                            String.valueOf(definition.useNonce()),
-                            String.valueOf(definition.useSession()),
-                            String.valueOf(definition.tokenAutoRefresh()),
-                            String.valueOf(definition.tokenMinValidity())
-                    },
-                    definition.scope(),
-                    definition.extraParameters(),
-                    providerMetadataAttrs(definition.providerMetadata()),
-                    claimsAttrs(definition.claimsDefinition()),
-                    logoutAttrs(definition.logout())
-            };
-
-            // and now concatentate all of these together to form a key
-            return new DefinitionKey(Stream.of(values).flatMap(Stream::of).toArray(String[]::new));
-        }
-
-        private static String[] logoutAttrs(LogoutDefinition logout) {
-            return logout != null ? new String[] {
-                    String.valueOf(logout.notifyProvider()),
-                    logout.redirectURI(),
-                    String.valueOf(logout.accessTokenExpiry()),
-                    String.valueOf(logout.identityTokenExpiry())
-            } : new String[4];
-        }
-
-        private static String[] claimsAttrs(ClaimsDefinition claimsDefinition) {
-            return claimsDefinition != null ? new String[] {
-                    claimsDefinition.callerGroupsClaim(),
-                    claimsDefinition.callerNameClaim()
-            } : new String[2];
-        }
-
-        private static String[] providerMetadataAttrs(OpenIdProviderMetadata providerMetadata) {
-            return providerMetadata != null ? new String[]{
-                    providerMetadata.authorizationEndpoint(),
-                    providerMetadata.tokenEndpoint(),
-                    providerMetadata.userinfoEndpoint(),
-                    providerMetadata.endSessionEndpoint(),
-                    providerMetadata.jwksURI(),
-            } : new String[5];
-        }
+    private static String[] providerMetadataAttrs(OpenIdProviderMetadata providerMetadata) {
+        return providerMetadata != null ? new String[]{
+                providerMetadata.authorizationEndpoint(),
+                providerMetadata.tokenEndpoint(),
+                providerMetadata.userinfoEndpoint(),
+                providerMetadata.endSessionEndpoint(),
+                providerMetadata.jwksURI(),
+        } : new String[5];
     }
 
 }

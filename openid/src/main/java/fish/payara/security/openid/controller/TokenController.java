@@ -78,6 +78,9 @@ public class TokenController {
     @Inject
     OpenIdConfiguration configuration;
 
+    @Inject
+    JWTValidator validator;
+
     /**
      * (4) A Client makes a token request to the token endpoint and the OpenId
      * Provider responds with an ID Token and an Access Token.
@@ -140,7 +143,7 @@ public class TokenController {
 
         try {
             JWTClaimsSetVerifier jwtVerifier = new IdTokenClaimsSetVerifier(expectedNonceHash, configuration);
-            claimsSet = configuration.getJWTValidator().validateBearerToken(idToken.getTokenJWT(), jwtVerifier);
+            claimsSet = validator.validateBearerToken(idToken.getTokenJWT(), jwtVerifier);
         } finally {
             nonceController.remove(configuration, request, response);
         }
@@ -153,12 +156,11 @@ public class TokenController {
      *
      * @param previousIdToken
      * @param newIdToken
-     * @param httpContext
      * @return JWT Claims
      */
-    public JWTClaimsSet validateRefreshedIdToken(IdentityToken previousIdToken, IdentityTokenImpl newIdToken, HttpMessageContext httpContext) {
+    public JWTClaimsSet validateRefreshedIdToken(IdentityToken previousIdToken, IdentityTokenImpl newIdToken) {
         JWTClaimsSetVerifier jwtVerifier = new RefreshedIdTokenClaimsSetVerifier(previousIdToken, configuration);
-        JWTClaimsSet claimsSet = configuration.getJWTValidator().validateBearerToken(newIdToken.getTokenJWT(), jwtVerifier);
+        JWTClaimsSet claimsSet = validator.validateBearerToken(newIdToken.getTokenJWT(), jwtVerifier);
         return claimsSet;
     }
 

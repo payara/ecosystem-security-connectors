@@ -51,6 +51,7 @@ import java.util.Map;
 import fish.payara.security.openid.api.JwtClaims;
 import fish.payara.security.openid.api.Scope;
 import fish.payara.security.openid.api.OpenIdConstant;
+import fish.payara.security.openid.controller.JWTValidator;
 
 import java.util.Date;
 import java.util.Optional;
@@ -111,9 +112,9 @@ public class AccessTokenImpl implements AccessToken {
         this.tokenMinValidity = tokenMinValidity;
     }
 
-    public static AccessTokenImpl forBearerToken(OpenIdConfiguration configuration, String rawToken, JWTClaimsSetVerifier validator) throws ParseException {
+    public static AccessTokenImpl forBearerToken(OpenIdConfiguration configuration, String rawToken, JWTClaimsSetVerifier verifier, JWTValidator validator) throws ParseException {
         JWT token = JWTParser.parse(rawToken);
-        JWTClaimsSet claims = configuration.getJWTValidator().validateBearerToken(token, validator);
+        JWTClaimsSet claims = validator.validateBearerToken(token, verifier);
         return new AccessTokenImpl(token, claims, configuration.getTokenMinValidity());
     }
 
