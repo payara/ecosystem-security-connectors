@@ -36,10 +36,13 @@
  *  holder.
  */
 
-package fish.payara.security.openid.domain;
+package fish.payara.security.openid.controller;
 
 import java.text.ParseException;
 import java.util.concurrent.ConcurrentHashMap;
+
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 
 import com.nimbusds.jose.Algorithm;
 import com.nimbusds.jose.EncryptionMethod;
@@ -67,19 +70,20 @@ import com.nimbusds.jwt.proc.ConfigurableJWTProcessor;
 import com.nimbusds.jwt.proc.DefaultJWTProcessor;
 import com.nimbusds.jwt.proc.JWTClaimsSetVerifier;
 import fish.payara.security.openid.api.OpenIdConstant;
+import fish.payara.security.openid.domain.OpenIdConfiguration;
 
 import static com.nimbusds.jose.jwk.source.RemoteJWKSet.DEFAULT_HTTP_SIZE_LIMIT;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Objects.isNull;
 
+@ApplicationScoped
 public class JWTValidator {
-    private final OpenIdConfiguration configuration;
-    private ConcurrentHashMap<String, JWSKeySelector> jwsCache = new ConcurrentHashMap<>();
-    private JWEKeySelector jweKeySelector;
+    @Inject
+    OpenIdConfiguration configuration;
 
-    JWTValidator(OpenIdConfiguration openIdConfiguration) {
-        this.configuration = openIdConfiguration;
-    }
+    private ConcurrentHashMap<CacheKey, JWSKeySelector> jwsCache = new ConcurrentHashMap<>();
+    private ConcurrentHashMap<CacheKey, JWEKeySelector> jweCache = new ConcurrentHashMap<>();
+
 
     public JWTClaimsSet validateBearerToken(JWT token, JWTClaimsSetVerifier jwtVerifier) {
         JWTClaimsSet claimsSet;
@@ -132,9 +136,21 @@ public class JWTValidator {
      * @param alg the algorithm for the key
      * @return the JSON Web Signing (JWS) key selector
      */
-    private JWSKeySelector getJWSKeySelector(String alg) {
-        return jwsCache.computeIfAbsent(alg, this::createJWSKeySelector);
+    private JWSKeySelector<?> getJWSKeySelector(String alg) {
+        return jwsCache.computeIfAbsent(createCacheKey(alg), k -> createJWSKeySelector(alg));
     }
+
+    private CacheKey createCacheKey(String alg) {
+        return new CacheKey(alg,
+                configuration.getEncryptionMetadata().getEncryptionAlgorithm(),
+                configuration.getEncryptionMetadata().getEncryptionMethod(),
+                configuration.getEncryptionMetadata().getPrivateKeySource(),
+                configuration.getJwksConnectTimeout(),
+                configuration.getJwksReadTimeout(),
+                configuration.getProviderMetadata().getJwksURL(),
+                configuration.getClientSecret());
+    }
+
 
     /**
      * JWEKeySelector selects the key to decrypt JSON Web Encryption (JWE) and
@@ -142,14 +158,14 @@ public class JWTValidator {
      *
      * @return the JSON Web Encryption (JWE) key selector
      */
-    private JWEKeySelector getJWEKeySelector() {
-        if (jweKeySelector != null) {
-            return jweKeySelector;
-        }
+    private JWEKeySelector<?> getJWEKeySelector() {
+        return jweCache.computeIfAbsent(createCacheKey(null), k -> createJweKeySelector());
+    }
 
+    private JWEKeySelector<?> createJweKeySelector() {
         JWEAlgorithm jwsAlg = configuration.getEncryptionMetadata().getEncryptionAlgorithm();
         EncryptionMethod jweEnc = configuration.getEncryptionMetadata().getEncryptionMethod();
-        JWKSource jwkSource = configuration.getEncryptionMetadata().getPrivateKeySource();
+        JWKSource<?> jwkSource = configuration.getEncryptionMetadata().getPrivateKeySource();
 
         if (isNull(jwsAlg)) {
             throw new IllegalStateException("Missing JWE encryption algorithm ");
@@ -164,12 +180,11 @@ public class JWTValidator {
             throw new IllegalStateException("Unsupported ID tokens encryption method :" + jweEnc.getName());
         }
 
-        jweKeySelector = new JWEDecryptionKeySelector(jwsAlg, jweEnc, jwkSource);
-        return jweKeySelector;
+        return new JWEDecryptionKeySelector<>(jwsAlg, jweEnc, jwkSource);
     }
 
-    private JWSKeySelector createJWSKeySelector(String alg) {
-        JWKSource jwkSource;
+    private JWSKeySelector<?> createJWSKeySelector(String alg) {
+        JWKSource<?> jwkSource;
         JWSAlgorithm jWSAlgorithm = new JWSAlgorithm(alg);
         if (Algorithm.NONE.equals(jWSAlgorithm)) {
             throw new IllegalStateException("Unsupported JWS algorithm : " + jWSAlgorithm);
@@ -180,17 +195,17 @@ public class JWTValidator {
                     configuration.getJwksReadTimeout(),
                     DEFAULT_HTTP_SIZE_LIMIT
             );
-            jwkSource = new RemoteJWKSet(configuration.getProviderMetadata().getJwksURL(), jwkSetRetriever);
+            jwkSource = new RemoteJWKSet<>(configuration.getProviderMetadata().getJwksURL(), jwkSetRetriever);
         } else if (JWSAlgorithm.Family.HMAC_SHA.contains(jWSAlgorithm)) {
             byte[] clientSecret = new String(configuration.getClientSecret()).getBytes(UTF_8);
             if (isNull(clientSecret)) {
                 throw new IllegalStateException("Missing client secret");
             }
-            jwkSource = new ImmutableSecret(clientSecret);
+            jwkSource = new ImmutableSecret<>(clientSecret);
         } else {
             throw new IllegalStateException("Unsupported JWS algorithm : " + jWSAlgorithm);
         }
-        return new JWSVerificationKeySelector(jWSAlgorithm, jwkSource);
+        return new JWSVerificationKeySelector<>(jWSAlgorithm, jwkSource);
     }
 
 }

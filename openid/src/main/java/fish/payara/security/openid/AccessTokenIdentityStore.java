@@ -54,6 +54,7 @@ import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.proc.BadJWTException;
 import fish.payara.security.openid.api.AccessTokenCallerPrincipal;
 import fish.payara.security.openid.api.AccessTokenCredential;
+import fish.payara.security.openid.controller.JWTValidator;
 import fish.payara.security.openid.controller.TokenClaimsSetVerifier;
 import fish.payara.security.openid.domain.AccessTokenImpl;
 import fish.payara.security.openid.domain.OpenIdConfiguration;
@@ -74,12 +75,15 @@ public class AccessTokenIdentityStore implements IdentityStore {
     @Inject
     OpenIdConfiguration configuration;
 
+    @Inject
+    JWTValidator validator;
+
     @SuppressWarnings("unused")
     public CredentialValidationResult validate(AccessTokenCredential credential) {
         try {
             AccessTokenImpl accessToken = AccessTokenImpl.forBearerToken(configuration,
                     credential.getAccessToken(),
-                    new BearerVerifier(configuration));
+                    new BearerVerifier(configuration), validator);
             context.setAccessToken(accessToken);
             // for setClaims we'd need to invoke userinfo. That should be lazy unless required
             context.setCallerName(
