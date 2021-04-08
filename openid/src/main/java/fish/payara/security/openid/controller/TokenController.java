@@ -75,16 +75,18 @@ public class TokenController {
     @Inject
     private NonceController nonceController;
 
+    @Inject
+    OpenIdConfiguration configuration;
+
     /**
      * (4) A Client makes a token request to the token endpoint and the OpenId
      * Provider responds with an ID Token and an Access Token.
      *
-     * @param configuration the OpenId Connect client configuration configuration
      * @param request
      * @return a JSON object representation of OpenID Connect token response
      * from the Token endpoint.
      */
-    public Response getTokens(OpenIdConfiguration configuration, HttpServletRequest request) {
+    public Response getTokens(HttpServletRequest request) {
         /**
          * one-time authorization code that RP exchange for an Access / Id token
          */
@@ -119,10 +121,9 @@ public class TokenController {
      *
      * @param idToken
      * @param httpContext
-     * @param configuration the OpenId Connect client configuration configuration
      * @return JWT Claims
      */
-    public JWTClaimsSet validateIdToken(IdentityTokenImpl idToken, HttpMessageContext httpContext, OpenIdConfiguration configuration) {
+    public JWTClaimsSet validateIdToken(IdentityTokenImpl idToken, HttpMessageContext httpContext) {
         JWTClaimsSet claimsSet;
         HttpServletRequest request = httpContext.getRequest();
         HttpServletResponse response = httpContext.getResponse();
@@ -153,10 +154,9 @@ public class TokenController {
      * @param previousIdToken
      * @param newIdToken
      * @param httpContext
-     * @param configuration the OpenId Connect client configuration configuration
      * @return JWT Claims
      */
-    public JWTClaimsSet validateRefreshedIdToken(IdentityToken previousIdToken, IdentityTokenImpl newIdToken, HttpMessageContext httpContext, OpenIdConfiguration configuration) {
+    public JWTClaimsSet validateRefreshedIdToken(IdentityToken previousIdToken, IdentityTokenImpl newIdToken, HttpMessageContext httpContext) {
         JWTClaimsSetVerifier jwtVerifier = new RefreshedIdTokenClaimsSetVerifier(previousIdToken, configuration);
         JWTClaimsSet claimsSet = configuration.getJWTValidator().validateBearerToken(newIdToken.getTokenJWT(), jwtVerifier);
         return claimsSet;
@@ -168,10 +168,9 @@ public class TokenController {
      * @param accessToken
      * @param idTokenAlgorithm
      * @param idTokenClaims
-     * @param configuration the OpenId Connect client configuration configuration
      * @return JWT Claims
      */
-    public Map<String, Object> validateAccessToken(AccessTokenImpl accessToken, Algorithm idTokenAlgorithm, Map<String, Object> idTokenClaims, OpenIdConfiguration configuration) {
+    public Map<String, Object> validateAccessToken(AccessTokenImpl accessToken, Algorithm idTokenAlgorithm, Map<String, Object> idTokenClaims) {
         Map<String, Object> claims = emptyMap();
 
         AccessTokenClaimsSetVerifier jwtVerifier = new AccessTokenClaimsSetVerifier(
@@ -196,12 +195,11 @@ public class TokenController {
      * Makes a refresh request to the token endpoint and the OpenId Provider
      * responds with a new (updated) Access Token and Refreshs Token.
      *
-     * @param configuration the OpenId Connect client configuration configuration
      * @param refreshToken Refresh Token received from previous token request.
      * @return a JSON object representation of OpenID Connect token response
      * from the Token endpoint.
      */
-    public Response refreshTokens(OpenIdConfiguration configuration, RefreshToken refreshToken) {
+    public Response refreshTokens(RefreshToken refreshToken) {
 
         Form form = new Form()
                 .param(OpenIdConstant.CLIENT_ID, configuration.getClientId())

@@ -48,7 +48,6 @@ import static fish.payara.security.openid.api.OpenIdConstant.TOKEN_TYPE;
 import fish.payara.security.openid.api.OpenIdState;
 import fish.payara.security.openid.api.RefreshToken;
 import fish.payara.security.openid.controller.AuthenticationController;
-import fish.payara.security.openid.controller.ConfigurationController;
 import fish.payara.security.openid.controller.StateController;
 import fish.payara.security.openid.controller.TokenController;
 import fish.payara.security.openid.domain.LogoutConfiguration;
@@ -67,8 +66,6 @@ import static java.util.logging.Level.INFO;
 import static java.util.logging.Level.WARNING;
 import java.util.logging.Logger;
 import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.context.Initialized;
-import javax.enterprise.event.Observes;
 import javax.enterprise.inject.Alternative;
 import javax.inject.Inject;
 import javax.json.Json;
@@ -133,6 +130,8 @@ import javax.ws.rs.core.Response.Status;
 public class OpenIdAuthenticationMechanism implements HttpAuthenticationMechanism {
 
     public static final String BEARER_PREFIX = "Bearer ";
+
+    @Inject
     private OpenIdConfiguration configuration;
 
     @Inject
@@ -140,9 +139,6 @@ public class OpenIdAuthenticationMechanism implements HttpAuthenticationMechanis
 
     @Inject
     private IdentityStoreHandler identityStoreHandler;
-
-    @Inject
-    private ConfigurationController configurationController;
 
     @Inject
     private AuthenticationController authenticationController;
@@ -159,34 +155,6 @@ public class OpenIdAuthenticationMechanism implements HttpAuthenticationMechanis
     }
 
     private static final String SESSION_LOCK_NAME = OpenIdAuthenticationMechanism.class.getName();
-
-    /**
-     * Creates an {@link OpenIdAuthenticationMechanism}.
-     * <p>
-     * If this constructor is used then {@link #setConfiguration(OpenIdAuthenticationDefinition) must be
-     * called before any requests are validated.
-     */
-    public OpenIdAuthenticationMechanism() {
-    }
-
-
-    /**
-     * Sets the properties of the {@link OpenIdAuthenticationMechanism} as
-     * defined in an {@link OpenIdAuthenticationDefinition} annotation or using
-     * MP Config source. MP Config take precedence over
-     * {@link OpenIdAuthenticationDefinition} annotation value
-     *
-     * @param definition
-     * @return
-     */
-    OpenIdAuthenticationMechanism setConfiguration(OpenIdAuthenticationDefinition definition) {
-        this.configuration = configurationController.buildConfig(definition);
-        return this;
-    }
-
-    void init(@Observes @Initialized(ApplicationScoped.class) Object context, OpenIdAuthenticationDefinition definition) {
-        setConfiguration(definition);
-    }
 
     @Override
     public AuthenticationStatus validateRequest(
@@ -248,7 +216,7 @@ public class OpenIdAuthenticationMechanism implements HttpAuthenticationMechanis
 
     private AuthenticationStatus authenticateBearer(HttpServletRequest request, HttpServletResponse response, HttpMessageContext httpContext) {
             // Validate bearer access token
-            CredentialValidationResult validationResult = identityStoreHandler.validate(new AccessTokenCredential(configuration, readBearerAuthorization(request)));
+            CredentialValidationResult validationResult = identityStoreHandler.validate(new AccessTokenCredential(readBearerAuthorization(request)));
             // Register session manually (if @AutoApplySession used, this would be done by its interceptor)
             httpContext.setRegisterSession(validationResult.getCallerPrincipal().getName(), validationResult.getCallerGroups());
             return httpContext.notifyContainerAboutLogin(validationResult);
@@ -272,7 +240,7 @@ public class OpenIdAuthenticationMechanism implements HttpAuthenticationMechanis
 
         if (httpContext.isProtected() && isNull(request.getUserPrincipal())) {
             // (1) The End-User is not already authenticated
-            return authenticationController.authenticateUser(configuration, request, response);
+            return authenticationController.authenticateUser(request, response);
         }
 
         Optional<OpenIdState> receivedState = OpenIdState.from(request.getParameter(STATE));
@@ -282,7 +250,7 @@ public class OpenIdAuthenticationMechanism implements HttpAuthenticationMechanis
                 LOGGER.log(INFO, "OpenID Redirect URL {0} not matched with request URL {1}", new Object[]{redirectURI, request.getRequestURL().toString()});
                 return httpContext.notifyContainerAboutLogin(NOT_VALIDATED_RESULT);
             }
-            Optional<OpenIdState> expectedState = stateController.get(configuration, request, response);
+            Optional<OpenIdState> expectedState = stateController.get(request, response);
             if (!expectedState.isPresent()) {
                 LOGGER.fine("Expected state not found");
                 return httpContext.notifyContainerAboutLogin(NOT_VALIDATED_RESULT);
@@ -316,16 +284,16 @@ public class OpenIdAuthenticationMechanism implements HttpAuthenticationMechanis
             LOGGER.log(WARNING, "Error occurred in receiving Authorization Code : {0} caused by {1}", new Object[]{error, errorDescription});
             return httpContext.notifyContainerAboutLogin(INVALID_RESULT);
         }
-        stateController.remove(configuration, request, response);
+        stateController.remove(request, response);
 
         LOGGER.finer("Authorization Code received, now fetching Access token & Id token");
 
-        Response tokenResponse = tokenController.getTokens(configuration, request);
+        Response tokenResponse = tokenController.getTokens(request);
         JsonObject tokensObject = readJsonObject(tokenResponse.readEntity(String.class));
         if (tokenResponse.getStatus() == Status.OK.getStatusCode()) {
             // Successful Token Response
             updateContext(tokensObject);
-            OpenIdCredential credential = new OpenIdCredential(tokensObject, httpContext, configuration);
+            OpenIdCredential credential = new OpenIdCredential(tokensObject, httpContext, configuration.getTokenMinValidity());
             CredentialValidationResult validationResult = identityStoreHandler.validate(credential);
 
             // Register session manually (if @AutoApplySession used, this would be done by its interceptor)
@@ -371,13 +339,13 @@ public class OpenIdAuthenticationMechanism implements HttpAuthenticationMechanis
     }
 
     private AuthenticationStatus refreshTokens(HttpMessageContext httpContext, RefreshToken refreshToken) {
-        Response response = tokenController.refreshTokens(configuration, refreshToken);
+        Response response = tokenController.refreshTokens(refreshToken);
         JsonObject tokensObject = readJsonObject(response.readEntity(String.class));
 
         if (response.getStatus() == Response.Status.OK.getStatusCode()) {
             // Successful Token Response
             updateContext(tokensObject);
-            OpenIdCredential credential = new OpenIdCredential(tokensObject, httpContext, configuration);
+            OpenIdCredential credential = new OpenIdCredential(tokensObject, httpContext, configuration.getTokenMinValidity());
             CredentialValidationResult validationResult = identityStoreHandler.validate(credential);
 
             // Do not register session, as this will invalidate the currently active session (destroys session beans and removes attributes set in session)!

@@ -58,16 +58,16 @@ import static java.util.Objects.nonNull;
 public class IdentityTokenImpl implements IdentityToken {
 
     private final String token;
+    private final long tokenMinValidity;
 
     private final JWT tokenJWT;
 
     private JWTClaimsSet claims;
 
-    private OpenIdConfiguration configuration;
 
-    public IdentityTokenImpl(OpenIdConfiguration configuration, String token) {
-        this.configuration = configuration;
+    public IdentityTokenImpl(String token, long tokenMinValidity) {
         this.token = token;
+        this.tokenMinValidity = tokenMinValidity;
         try {
             this.tokenJWT = JWTParser.parse(token);
             this.claims = tokenJWT.getJWTClaimsSet();
@@ -76,11 +76,11 @@ public class IdentityTokenImpl implements IdentityToken {
         }
     }
 
-    private IdentityTokenImpl(OpenIdConfiguration configuration, JWT token, JWTClaimsSet verifiedClaims) {
+    private IdentityTokenImpl(JWT token, JWTClaimsSet verifiedClaims, long tokenMinValidity) {
         this.token = token.getParsedString();
         this.tokenJWT = token;
         this.claims = verifiedClaims;
-        this.configuration = configuration;
+        this.tokenMinValidity = tokenMinValidity;
     }
 
     public JWT getTokenJWT() {
@@ -123,7 +123,7 @@ public class IdentityTokenImpl implements IdentityToken {
         boolean expired = true;
         Date exp;
         if (nonNull(exp = (Date) this.getClaim(EXPIRATION_IDENTIFIER))) {
-            expired = System.currentTimeMillis() + configuration.getTokenMinValidity() > exp.getTime();
+            expired = System.currentTimeMillis() + tokenMinValidity > exp.getTime();
         } else {
             throw new IllegalStateException("Missing expiration time (exp) claim in identity token");
         }
@@ -136,6 +136,6 @@ public class IdentityTokenImpl implements IdentityToken {
     }
 
     public IdentityToken withClaims(JWTClaimsSet verifiedClaims) {
-        return new IdentityTokenImpl(configuration, tokenJWT, verifiedClaims);
+        return new IdentityTokenImpl(tokenJWT, verifiedClaims, tokenMinValidity);
     }
 }

@@ -71,18 +71,21 @@ public class AccessTokenIdentityStore implements IdentityStore {
     @Inject
     OpenIdContextImpl context;
 
+    @Inject
+    OpenIdConfiguration configuration;
+
     @SuppressWarnings("unused")
     public CredentialValidationResult validate(AccessTokenCredential credential) {
         try {
-            AccessTokenImpl accessToken = AccessTokenImpl.forBearerToken(credential.getConfiguration(),
+            AccessTokenImpl accessToken = AccessTokenImpl.forBearerToken(configuration,
                     credential.getAccessToken(),
-                    new BearerVerifier(credential.getConfiguration()));
+                    new BearerVerifier(configuration));
             context.setAccessToken(accessToken);
             // for setClaims we'd need to invoke userinfo. That should be lazy unless required
             context.setCallerName(
                     // use configured caller name claim if present in access token
                     accessToken.getJwtClaims().getStringClaim(
-                            credential.getConfiguration().getClaimsConfiguration().getCallerNameClaim())
+                            configuration.getClaimsConfiguration().getCallerNameClaim())
                             // or subject, which is more likely present, but is still optional per JWT spec
                             .orElse(accessToken.getJwtClaims().getSubject()
                                     .orElse(null)));

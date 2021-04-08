@@ -50,18 +50,14 @@ import fish.payara.security.openid.domain.OpenIdContextImpl;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
+
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 import java.util.Set;
-import static java.util.stream.Collectors.toSet;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.inject.Alternative;
 import javax.inject.Inject;
-import javax.json.JsonArray;
-import javax.json.JsonObject;
-import javax.json.JsonValue;
 import javax.security.enterprise.authentication.mechanism.http.HttpMessageContext;
 import javax.security.enterprise.identitystore.CredentialValidationResult;
 import javax.security.enterprise.identitystore.IdentityStore;
@@ -83,35 +79,34 @@ public class OpenIdIdentityStore implements IdentityStore {
     private TokenController tokenController;
 
     @Inject
-    private UserInfoController userInfoController;
+    private OpenIdConfiguration configuration;
 
     @SuppressWarnings("unused") // IdentityStore calls overloads
     public CredentialValidationResult validate(OpenIdCredential credential) {
         HttpMessageContext httpContext = credential.getHttpContext();
-        OpenIdConfiguration configuration = credential.getConfiguration();
         IdentityTokenImpl idToken = credential.getIdentityTokenImpl();
         
         Algorithm idTokenAlgorithm = idToken.getTokenJWT().getHeader().getAlgorithm();
         
         JWTClaimsSet idTokenClaims;
         if (isNull(context.getIdentityToken())) {
-            idTokenClaims = tokenController.validateIdToken(idToken, httpContext, configuration);
+            idTokenClaims = tokenController.validateIdToken(idToken, httpContext);
         } else {
             // If an ID Token is returned as a result of a token refresh request
-            idTokenClaims = tokenController.validateRefreshedIdToken(context.getIdentityToken(), idToken, httpContext, configuration);
+            idTokenClaims = tokenController.validateRefreshedIdToken(context.getIdentityToken(), idToken, httpContext);
         }
         context.setIdentityToken(idToken.withClaims(idTokenClaims));
 
         AccessTokenImpl accessToken = (AccessTokenImpl) credential.getAccessToken();
         if (nonNull(accessToken)) {
             tokenController.validateAccessToken(
-                    accessToken, idTokenAlgorithm, context.getIdentityToken().getClaims(), configuration
+                    accessToken, idTokenAlgorithm, context.getIdentityToken().getClaims()
             );
             context.setAccessToken(accessToken);
         }
 
-        context.setCallerName(getCallerName(configuration));
-        context.setCallerGroups(getCallerGroups(configuration));
+        context.setCallerName(getCallerName());
+        context.setCallerGroups(getCallerGroups());
 
         return new CredentialValidationResult(
                 context.getCallerName(),
@@ -119,7 +114,7 @@ public class OpenIdIdentityStore implements IdentityStore {
         );
     }
 
-    private String getCallerName(OpenIdConfiguration configuration) {
+    private String getCallerName() {
         String callerNameClaim = configuration.getClaimsConfiguration().getCallerNameClaim();
         if (OpenIdConstant.SUBJECT_IDENTIFIER.equals(callerNameClaim)) {
             return context.getSubject();
@@ -137,7 +132,7 @@ public class OpenIdIdentityStore implements IdentityStore {
         return callerName;
     }
 
-    private Set<String> getCallerGroups(OpenIdConfiguration configuration) {
+    private Set<String> getCallerGroups() {
         String callerGroupsClaim = configuration.getClaimsConfiguration().getCallerGroupsClaim();
         List<String> groupsAccessClaim
                 = context.getAccessToken().getJwtClaims().getArrayStringClaim(callerGroupsClaim);
