@@ -37,7 +37,6 @@
  */
 package fish.payara.security.openid;
 
-import fish.payara.security.annotations.OpenIdAuthenticationDefinition;
 import static fish.payara.security.openid.OpenIdUtil.isEmpty;
 import static fish.payara.security.openid.api.OpenIdConstant.ERROR_DESCRIPTION_PARAM;
 import static fish.payara.security.openid.api.OpenIdConstant.ERROR_PARAM;
@@ -45,6 +44,8 @@ import static fish.payara.security.openid.api.OpenIdConstant.EXPIRES_IN;
 import static fish.payara.security.openid.api.OpenIdConstant.REFRESH_TOKEN;
 import static fish.payara.security.openid.api.OpenIdConstant.STATE;
 import static fish.payara.security.openid.api.OpenIdConstant.TOKEN_TYPE;
+
+import fish.payara.security.openid.api.AccessTokenCredential;
 import fish.payara.security.openid.api.OpenIdState;
 import fish.payara.security.openid.api.RefreshToken;
 import fish.payara.security.openid.controller.AuthenticationController;
