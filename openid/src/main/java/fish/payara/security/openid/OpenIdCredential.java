@@ -61,17 +61,15 @@ public class OpenIdCredential implements Credential {
 
     private final HttpMessageContext httpContext;
 
-    private final OpenIdConfiguration configuration;
 
     private final IdentityTokenImpl identityToken;
 
     private AccessToken accessToken;
 
-    public OpenIdCredential(JsonObject tokensObject, HttpMessageContext httpContext, OpenIdConfiguration configuration) {
+    public OpenIdCredential(JsonObject tokensObject, HttpMessageContext httpContext, long tokenMinValidity) {
         this.httpContext = httpContext;
-        this.configuration = configuration;
 
-        this.identityToken = new IdentityTokenImpl(configuration, tokensObject.getString(IDENTITY_TOKEN));
+        this.identityToken = new IdentityTokenImpl(tokensObject.getString(IDENTITY_TOKEN), tokenMinValidity);
         String accessTokenString = tokensObject.getString(ACCESS_TOKEN, null);
         Long expiresIn = null;
         if(nonNull(tokensObject.getJsonNumber(EXPIRES_IN))){
@@ -80,7 +78,7 @@ public class OpenIdCredential implements Credential {
         String tokenType = tokensObject.getString(TOKEN_TYPE, null);
         String scopeString = tokensObject.getString(SCOPE, null);
         if (nonNull(accessTokenString)) {
-            accessToken = new AccessTokenImpl(configuration, tokenType, accessTokenString, expiresIn, scopeString);
+            accessToken = new AccessTokenImpl(tokenType, accessTokenString, expiresIn, scopeString, tokenMinValidity);
         }
     }
 
@@ -98,10 +96,6 @@ public class OpenIdCredential implements Credential {
 
     public HttpMessageContext getHttpContext() {
         return httpContext;
-    }
-
-    public OpenIdConfiguration getConfiguration() {
-        return configuration;
     }
 
 }

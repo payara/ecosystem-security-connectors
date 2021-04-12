@@ -41,6 +41,8 @@ import java.util.Arrays;
 import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 
+import fish.payara.security.openid.controller.JWTValidator;
+
 /**
  * OpenId Connect client configuration
  *
@@ -274,10 +276,4 @@ public class OpenIdConfiguration {
                 + '}';
     }
 
-    public JWTValidator getJWTValidator() {
-        if (this.validator == null) {
-            this.validator = new JWTValidator(this);
-        }
-        return this.validator;
-    }
 }

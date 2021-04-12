@@ -53,7 +53,8 @@ import com.nimbusds.jose.proc.SecurityContext;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.proc.BadJWTException;
 import fish.payara.security.openid.api.AccessTokenCallerPrincipal;
-import fish.payara.security.openid.api.OpenIdConstant;
+import fish.payara.security.openid.api.AccessTokenCredential;
+import fish.payara.security.openid.controller.JWTValidator;
 import fish.payara.security.openid.controller.TokenClaimsSetVerifier;
 import fish.payara.security.openid.domain.AccessTokenImpl;
 import fish.payara.security.openid.domain.OpenIdConfiguration;
@@ -71,24 +72,30 @@ public class AccessTokenIdentityStore implements IdentityStore {
     @Inject
     OpenIdContextImpl context;
 
+    @Inject
+    OpenIdConfiguration configuration;
+
+    @Inject
+    JWTValidator validator;
+
     @SuppressWarnings("unused")
     public CredentialValidationResult validate(AccessTokenCredential credential) {
         try {
-            AccessTokenImpl accessToken = AccessTokenImpl.forBearerToken(credential.getConfiguration(),
+            AccessTokenImpl accessToken = AccessTokenImpl.forBearerToken(configuration,
                     credential.getAccessToken(),
-                    new BearerVerifier(credential.getConfiguration()));
+                    new BearerVerifier(configuration), validator);
             context.setAccessToken(accessToken);
             // for setClaims we'd need to invoke userinfo. That should be lazy unless required
             context.setCallerName(
                     // use configured caller name claim if present in access token
                     accessToken.getJwtClaims().getStringClaim(
-                            credential.getConfiguration().getClaimsConfiguration().getCallerNameClaim())
+                            configuration.getClaimsConfiguration().getCallerNameClaim())
                             // or subject, which is more likely present, but is still optional per JWT spec
                             .orElse(accessToken.getJwtClaims().getSubject()
                                     .orElse(null)));
 
             return new CredentialValidationResult(new AccessTokenCallerPrincipal(accessToken, context::getClaims));
-        } catch (ParseException e) {
+        } catch (ParseException | RuntimeException e) {
             LOGGER.log(Level.WARNING, "Cannot parse access token", e);
         }
         return CredentialValidationResult.INVALID_RESULT;

@@ -36,18 +36,16 @@
  *  holder.
  */
 
-package fish.payara.security.openid;
+package fish.payara.security.openid.api;
 
 import javax.security.enterprise.credential.Credential;
 
 import fish.payara.security.openid.domain.OpenIdConfiguration;
 
 public class AccessTokenCredential implements Credential {
-    private final OpenIdConfiguration configuration;
     private final String accessToken;
 
-    AccessTokenCredential(OpenIdConfiguration configuration, String accessToken) {
-        this.configuration = configuration;
+    public AccessTokenCredential(String accessToken) {
         this.accessToken = accessToken;
     }
 
@@ -55,7 +53,4 @@ public class AccessTokenCredential implements Credential {
         return accessToken;
     }
 
-    OpenIdConfiguration getConfiguration() {
-        return configuration;
-    }
 }
