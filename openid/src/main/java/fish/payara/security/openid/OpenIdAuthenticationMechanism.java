@@ -37,13 +37,34 @@
  */
 package fish.payara.security.openid;
 
-import static fish.payara.security.openid.OpenIdUtil.isEmpty;
-import static fish.payara.security.openid.api.OpenIdConstant.ERROR_DESCRIPTION_PARAM;
-import static fish.payara.security.openid.api.OpenIdConstant.ERROR_PARAM;
-import static fish.payara.security.openid.api.OpenIdConstant.EXPIRES_IN;
-import static fish.payara.security.openid.api.OpenIdConstant.REFRESH_TOKEN;
-import static fish.payara.security.openid.api.OpenIdConstant.STATE;
-import static fish.payara.security.openid.api.OpenIdConstant.TOKEN_TYPE;
+import java.io.IOException;
+import java.io.Serializable;
+import java.io.StringReader;
+import java.util.Optional;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.inject.Typed;
+import javax.inject.Inject;
+import javax.json.Json;
+import javax.json.JsonNumber;
+import javax.json.JsonObject;
+import javax.json.JsonReader;
+import javax.security.auth.callback.Callback;
+import javax.security.auth.callback.UnsupportedCallbackException;
+import javax.security.auth.message.callback.CallerPrincipalCallback;
+import javax.security.enterprise.AuthenticationException;
+import javax.security.enterprise.AuthenticationStatus;
+import javax.security.enterprise.authentication.mechanism.http.HttpAuthenticationMechanism;
+import javax.security.enterprise.authentication.mechanism.http.HttpMessageContext;
+import javax.security.enterprise.identitystore.CredentialValidationResult;
+import javax.security.enterprise.identitystore.IdentityStoreHandler;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
 
 import fish.payara.security.openid.api.AccessTokenCredential;
 import fish.payara.security.openid.api.OpenIdState;
@@ -56,41 +77,21 @@ import fish.payara.security.openid.domain.OpenIdConfiguration;
 import fish.payara.security.openid.domain.OpenIdContextImpl;
 import fish.payara.security.openid.domain.RefreshTokenImpl;
 
-import java.io.IOException;
-import java.io.Serializable;
-import java.io.StringReader;
+import static fish.payara.security.openid.OpenIdUtil.isEmpty;
+import static fish.payara.security.openid.api.OpenIdConstant.ERROR_DESCRIPTION_PARAM;
+import static fish.payara.security.openid.api.OpenIdConstant.ERROR_PARAM;
+import static fish.payara.security.openid.api.OpenIdConstant.EXPIRES_IN;
+import static fish.payara.security.openid.api.OpenIdConstant.REFRESH_TOKEN;
+import static fish.payara.security.openid.api.OpenIdConstant.STATE;
+import static fish.payara.security.openid.api.OpenIdConstant.TOKEN_TYPE;
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
-import java.util.Optional;
-import java.util.logging.Level;
 import static java.util.logging.Level.INFO;
 import static java.util.logging.Level.WARNING;
-import java.util.logging.Logger;
-import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.inject.Alternative;
-import javax.inject.Inject;
-import javax.json.Json;
-import javax.json.JsonNumber;
-import javax.json.JsonObject;
-import javax.json.JsonReader;
-import javax.security.auth.callback.Callback;
-import javax.security.auth.callback.UnsupportedCallbackException;
-import javax.security.auth.message.callback.CallerPrincipalCallback;
-import javax.security.enterprise.AuthenticationException;
-import javax.security.enterprise.AuthenticationStatus;
 import static javax.security.enterprise.AuthenticationStatus.SEND_FAILURE;
 import static javax.security.enterprise.AuthenticationStatus.SUCCESS;
-import javax.security.enterprise.authentication.mechanism.http.HttpAuthenticationMechanism;
-import javax.security.enterprise.authentication.mechanism.http.HttpMessageContext;
-import javax.security.enterprise.identitystore.CredentialValidationResult;
 import static javax.security.enterprise.identitystore.CredentialValidationResult.INVALID_RESULT;
 import static javax.security.enterprise.identitystore.CredentialValidationResult.NOT_VALIDATED_RESULT;
-import javax.security.enterprise.identitystore.IdentityStoreHandler;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.Status;
 
 /**
  * The AuthenticationMechanism used to authenticate users using the OpenId
@@ -126,8 +127,8 @@ import javax.ws.rs.core.Response.Status;
 //  |        |<------------------------------------------------------|        |
 //  |        |                                                       |        |
 //  +--------+                                                       +--------+
-@Alternative
 @ApplicationScoped
+@Typed(OpenIdAuthenticationMechanism.class)
 public class OpenIdAuthenticationMechanism implements HttpAuthenticationMechanism {
 
     public static final String BEARER_PREFIX = "Bearer ";
