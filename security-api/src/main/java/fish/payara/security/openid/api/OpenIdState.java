@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Payara Foundation and/or its affiliates. All rights reserved.
+ * Copyright (c) 2020-2021 Payara Foundation and/or its affiliates. All rights reserved.
  *
  *  The contents of this file are subject to the terms of either the GNU
  *  General Public License Version 2 only ("GPL") or the Common Development
@@ -35,54 +35,87 @@
  *  only if the new code is made subject to such option by the copyright
  *  holder.
  */
-package fish.payara.security.oauth2.api;
-
-import fish.payara.security.oauth2.OAuth2AuthenticationMechanism;
+package fish.payara.security.openid.api;
 
 import java.io.Serializable;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
-import javax.enterprise.context.SessionScoped;
 
 /**
- * Class to hold state of OAuth2
+ * Class to hold state of OpenId
  * <p>
- * This is used in the authentication mechanism to both help prevent CSRF and to 
+ * This is used in the authentication mechanism to both help prevent CSRF and to
  * pass data to the callback page.
+ *
+ * @author Gaurav Gupta
  * @author jonathan
- * @since 4.1.2.182
  */
-@SessionScoped
-public class OAuth2State implements Serializable {
+public class OpenIdState implements Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     private final String state;
-    
 
     /**
-     * Creates a new instance with a random UUID as the state. 
+     * Creates a new instance with a random UUID as the state.
      */
-    public OAuth2State(){
+    public OpenIdState() {
         state = UUID.randomUUID().toString();
     }
-    
+
     /**
      * Creates a new instance set the state to what is in the constructor.
      * <p>
      * This can be used so that the callback page knows the originating page,
-     * but is not used by the {@link OAuth2AuthenticationMechanism} by default
-     * @param state 
+     * but is not used by the
+     * {@link fish.payara.security.openid.OpenIdAuthenticationMechanism} by
+     * default
+     *
+     * @param state the state to encapsulate
      */
-    public OAuth2State(String state){
+    public OpenIdState(String state) {
         this.state = state;
     }
-    
+
+    /**
+     * Factory method which creates an {@link OpenIdState} if the
+     * state provided is not NULL or empty.
+     * @param state the state to create an {@link OpenIdState} from
+     * @return an {@link OpenIdState} if the state provided is not NULL or empty
+     */
+    public static Optional<OpenIdState> from(String state) {
+        if (state == null || "".equals(state.trim())) {
+            return Optional.empty();
+        }
+        return Optional.of(new OpenIdState(state.trim()));
+    }
+
     /**
      * Gets the state
      *
-     * @return
+     * @return the state
      */
-    public String getState(){
+    public String getValue() {
         return state;
     }
 
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof OpenIdState) {
+            return Objects.equals(this.state, ((OpenIdState)obj).state);
+        }
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(this.state);
+    }
+
+    @Override
+    public String toString() {
+        return state;
+    }
 
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Payara Foundation and/or its affiliates. All rights reserved.
+ * Copyright (c) 2020-2021 Payara Foundation and/or its affiliates. All rights reserved.
  *
  *  The contents of this file are subject to the terms of either the GNU
  *  General Public License Version 2 only ("GPL") or the Common Development
@@ -37,8 +37,6 @@
  */
 package fish.payara.security.oauth2.api;
 
-import fish.payara.security.annotations.OAuth2AuthenticationDefinition;
-
 import java.util.EnumSet;
 import java.util.Set;
 import javax.security.enterprise.credential.RememberMeCredential;
@@ -54,7 +52,7 @@ import static javax.security.enterprise.identitystore.IdentityStore.ValidationTy
  * credential upon creation is a valid one and does no further validation. If further validation is required
  * then it may be useful to send a JAX-RS request to the OAuth provider.
  * <p>
- * If an {@link OAuth2AuthenticationDefinition} is declared and their are
+ * If an {@link fish.payara.security.annotations.OAuth2AuthenticationDefinition} is declared and their are
  * no other {@link IdentityStore} definitions implemented then this will be used as a fall-back.
  * If other {@link IdentityStore} definitions are available but none validate {@link RememberMeCredential} then 
  * {@link CredentialValidationResult#NOT_VALIDATED_RESULT} will be returned to the authentication mechanism.
