@@ -42,6 +42,7 @@ import fish.payara.security.annotations.GoogleAuthenticationDefinition;
 import fish.payara.security.annotations.OpenIdAuthenticationDefinition;
 import fish.payara.security.openid.controller.AuthenticationController;
 import fish.payara.security.openid.controller.ConfigurationController;
+import fish.payara.security.openid.controller.JWTValidator;
 import fish.payara.security.openid.controller.NonceController;
 import fish.payara.security.openid.controller.ProviderMetadataContoller;
 import fish.payara.security.openid.controller.StateController;
@@ -50,15 +51,15 @@ import fish.payara.security.openid.controller.UserInfoController;
 import fish.payara.security.openid.domain.OpenIdContextImpl;
 
 import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.context.Dependent;
 import javax.enterprise.event.Observes;
-import javax.enterprise.inject.spi.AfterBeanDiscovery;
-import javax.enterprise.inject.spi.AfterTypeDiscovery;
-import javax.enterprise.inject.spi.BeanManager;
-import javax.enterprise.inject.spi.DefinitionException;
-import javax.enterprise.inject.spi.Extension;
-import javax.enterprise.inject.spi.ProcessAnnotatedType;
-import javax.enterprise.inject.spi.ProcessBean;
-import javax.enterprise.inject.spi.WithAnnotations;
+import javax.enterprise.inject.Any;
+import javax.enterprise.inject.spi.*;
+import javax.security.enterprise.authentication.mechanism.http.HttpAuthenticationMechanism;
+import javax.security.enterprise.identitystore.IdentityStore;
+import javax.security.enterprise.identitystore.IdentityStoreHandler;
+
+import java.util.Set;
 import java.util.logging.Logger;
 
 import static java.util.logging.Level.INFO;
@@ -75,10 +76,30 @@ public class OpenIdExtension implements Extension {
     private static final Logger LOGGER = Logger.getLogger(OpenIdExtension.class.getName());
 
     private OpenIdAuthenticationDefinition definition;
-    private boolean deployedAsAppLibrary;
+    private Class<?> definitionSource;
+    private boolean definitionActive;
+    private Producer<IdentityStoreHandler> storeHandlerWorkaroundProducer;
 
-    protected void foundMyClasses(@Observes ProcessAnnotatedType<OpenIdContextImpl> myType) {
-        this.deployedAsAppLibrary = true;
+    protected void registerTypes(@Observes BeforeBeanDiscovery before) {
+        registerTypes(before,
+                AuthenticationController.class,
+                ConfigurationController.class,
+                NonceController.class,
+                ProviderMetadataContoller.class,
+                StateController.class,
+                TokenController.class,
+                UserInfoController.class,
+                OpenIdContextImpl.class,
+                OpenIdIdentityStore.class,
+                OpenIdAuthenticationMechanism.class,
+                JWTValidator.class
+        );
+    }
+
+    private void registerTypes(BeforeBeanDiscovery event, Class<?>... classes) {
+        for (Class<?> aClass : classes) {
+            event.addAnnotatedType(aClass, aClass.getName());
+        }
     }
 
     /**
@@ -95,7 +116,8 @@ public class OpenIdExtension implements Extension {
             LOGGER.warning("Multiple authentication definition found. Will ignore the definition in " + sourceClass);
             return;
         }
-
+        validateExtraParametersFormat(definition);
+        this.definitionSource = sourceClass;
         this.definition = definition;
         LOGGER.log(INFO, "Activating {0} OpenID Connect authentication definition from class {1}",
                 new Object[]{definitionKind, sourceClass.getName()});
@@ -138,44 +160,70 @@ public class OpenIdExtension implements Extension {
         }
     }
 
-    protected void afterTypeDiscovery(@Observes AfterTypeDiscovery afterTypeDiscovery) {
-        if (!deployedAsAppLibrary) {
-            registerTypes(afterTypeDiscovery);
-        }
-        if (this.definition != null) {
-            // if there is a definition, enable mechanism and identity store
-            afterTypeDiscovery.getAlternatives().add(OpenIdAuthenticationMechanism.class);
-            afterTypeDiscovery.getAlternatives().add(OpenIdIdentityStore.class);
+    protected void watchActiveBeans(@Observes ProcessBean<?> processBean) {
+        if (definitionSource != null && definitionSource.equals(processBean.getAnnotated().getBaseType())) {
+            definitionActive = true;
         }
     }
 
-    protected void registerTypes(AfterTypeDiscovery event) {
-        // in case this is bundled in server and not a library, the types needs explicit registration
-        // in such case they need explicit type id, otherwise this type conflicts with type discovered within
-        // extension bean manager.
-        registerType(event, OpenIdContextImpl.class);
-        registerType(event, NonceController.class);
-        registerType(event, StateController.class);
-        registerType(event, ConfigurationController.class);
-        registerType(event, ProviderMetadataContoller.class);
-        registerType(event, AuthenticationController.class);
-        registerType(event, TokenController.class);
-        registerType(event, UserInfoController.class);
-        registerType(event, OpenIdAuthenticationMechanism.class);
+    protected void watchForInjectionWorkaround(@Observes @Any ProcessProducer<?,IdentityStoreHandler> workedAroundBean) {
+        if (!workedAroundBean.getAnnotatedMember().isAnnotationPresent(InjectionWorkaround.class)) {
+            return;
+        }
+        this.storeHandlerWorkaroundProducer = workedAroundBean.getProducer();
     }
 
-    private void registerType(AfterTypeDiscovery event, Class<?> type) {
-        event.addAnnotatedType(type, "OIDCExtension/" + type.getName());
-    }
+
 
     protected void registerDefinition(@Observes AfterBeanDiscovery afterBeanDiscovery, BeanManager beanManager) {
-        if (definition != null) {
+
+        if (definitionActive) {
+            // if definition is active we broaden the type of OpenIdAuthenticationMechanism back to
+            // HttpAuthenticationMechanism, so it would be picked up by Jakarta Security.
+            afterBeanDiscovery.addBean()
+                    .beanClass(HttpAuthenticationMechanism.class)
+                    .addType(HttpAuthenticationMechanism.class)
+                    .scope(ApplicationScoped.class)
+                    .produceWith(in -> in.select(OpenIdAuthenticationMechanism.class).get())
+                    .disposeWith((inst,callback) -> callback.destroy(inst));
+
+            afterBeanDiscovery.addBean()
+                    .beanClass(IdentityStore.class)
+                    .addType(IdentityStore.class)
+                    .scope(ApplicationScoped.class)
+                    .produceWith(in -> in.select(OpenIdIdentityStore.class).get())
+                    .disposeWith((inst,callback) -> callback.destroy(inst));
+
             afterBeanDiscovery.addBean()
                     .beanClass(OpenIdAuthenticationDefinition.class)
                     .types(OpenIdAuthenticationDefinition.class)
                     .scope(ApplicationScoped.class)
                     .id("OpenId Definition")
                     .createWith(cc -> this.definition);
+
+            if (storeHandlerWorkaroundProducer != null) {
+                // the fact that it is here means that we are likely to have an injection problem and need to add the
+                // bean into our bean manager
+                Set<Bean<?>> workaroundBeans = beanManager.getBeans(IdentityStoreHandler.class, InjectionWorkaround.LITERAL);
+                if (workaroundBeans.isEmpty()) {
+                    afterBeanDiscovery.addBean()
+                            .beanClass(IdentityStoreHandler.class)
+                            .types(IdentityStoreHandler.class)
+                            .addQualifier(InjectionWorkaround.LITERAL)
+                            .createWith(storeHandlerWorkaroundProducer::produce)
+                            .destroyWith((inst, cc) -> storeHandlerWorkaroundProducer.dispose(inst));
+                }
+            }
+        } else {
+            // Publish empty definition to prevent injection errors. The helper components will not work, but
+            // will not cause definition error. This is quite unlucky situation, but when definition is on an
+            // alternative bean we don't know before this moment whether the bean is enabled or not.
+            afterBeanDiscovery.addBean()
+                    .beanClass(OpenIdAuthenticationDefinition.class)
+                    .types(OpenIdAuthenticationDefinition.class)
+                    .scope(Dependent.class)
+                    .id("Null OpenId Definition")
+                    .createWith(cc -> null);
         }
     }
 

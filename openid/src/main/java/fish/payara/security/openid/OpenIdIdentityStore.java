@@ -37,6 +37,17 @@
  */
 package fish.payara.security.openid;
 
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
+import javax.security.enterprise.authentication.mechanism.http.HttpMessageContext;
+import javax.security.enterprise.identitystore.CredentialValidationResult;
+import javax.security.enterprise.identitystore.IdentityStore;
+
 import com.nimbusds.jose.Algorithm;
 import com.nimbusds.jwt.JWTClaimsSet;
 import fish.payara.security.openid.api.OpenIdConstant;
@@ -46,20 +57,8 @@ import fish.payara.security.openid.domain.IdentityTokenImpl;
 import fish.payara.security.openid.domain.OpenIdConfiguration;
 import fish.payara.security.openid.domain.OpenIdContextImpl;
 
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
-import java.util.Set;
-
-import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.inject.Alternative;
-import javax.inject.Inject;
-import javax.security.enterprise.authentication.mechanism.http.HttpMessageContext;
-import javax.security.enterprise.identitystore.CredentialValidationResult;
-import javax.security.enterprise.identitystore.IdentityStore;
 
 /**
  * Identity store validates the identity token & access toekn and returns the
@@ -67,7 +66,6 @@ import javax.security.enterprise.identitystore.IdentityStore;
  *
  * @author Gaurav Gupta
  */
-@Alternative
 @ApplicationScoped
 public class OpenIdIdentityStore implements IdentityStore {
 
