@@ -44,7 +44,9 @@ import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.inject.Instance;
 import javax.enterprise.inject.Typed;
 import javax.inject.Inject;
 import javax.json.Json;
@@ -139,7 +141,6 @@ public class OpenIdAuthenticationMechanism implements HttpAuthenticationMechanis
     @Inject
     private OpenIdContextImpl context;
 
-    @Inject
     private IdentityStoreHandler identityStoreHandler;
 
     @Inject
@@ -151,12 +152,41 @@ public class OpenIdAuthenticationMechanism implements HttpAuthenticationMechanis
     @Inject
     private StateController stateController;
 
+    @Inject
+    Instance<IdentityStoreHandler> storeHandlerInstance;
+
+    @Inject
+    @InjectionWorkaround
+    Instance<IdentityStoreHandler> storeHandlerWorkaround;
+
     private static final Logger LOGGER = Logger.getLogger(OpenIdAuthenticationMechanism.class.getName());
 
     private static class Lock implements Serializable {
     }
 
     private static final String SESSION_LOCK_NAME = OpenIdAuthenticationMechanism.class.getName();
+
+    @PostConstruct
+    void init() {
+        if (storeHandlerInstance.isResolvable()) {
+            identityStoreHandler = storeHandlerInstance.get();
+            return;
+        }
+        if (storeHandlerWorkaround.isResolvable()) {
+            identityStoreHandler = storeHandlerWorkaround.get();
+            return;
+        }
+        if (storeHandlerInstance.isAmbiguous()) {
+            throw new IllegalStateException("Multiple @Default IdentityStoreHandle available for injection");
+        }
+        if (storeHandlerWorkaround.isUnsatisfied()) {
+            throw new IllegalStateException("Cannot get instance of IdentityStoreHandler. " +
+                    "Try producing one with in your app qualified with @" + InjectionWorkaround.class.getName());
+        }
+        throw new IllegalStateException(String.format("Cannot get instance of IdentityStoreHandler\n" +
+                "@Inject IdentityStoreHandler is unsatisfied.\n" +
+                "@Inject @%s is ambiguous", InjectionWorkaround.class));
+    }
 
     @Override
     public AuthenticationStatus validateRequest(

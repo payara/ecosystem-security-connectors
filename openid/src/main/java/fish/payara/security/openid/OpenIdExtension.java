@@ -48,18 +48,18 @@ import fish.payara.security.openid.controller.ProviderMetadataContoller;
 import fish.payara.security.openid.controller.StateController;
 import fish.payara.security.openid.controller.TokenController;
 import fish.payara.security.openid.controller.UserInfoController;
-import fish.payara.security.openid.domain.OpenIdConfiguration;
 import fish.payara.security.openid.domain.OpenIdContextImpl;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.context.Dependent;
 import javax.enterprise.event.Observes;
+import javax.enterprise.inject.Any;
 import javax.enterprise.inject.spi.*;
 import javax.security.enterprise.authentication.mechanism.http.HttpAuthenticationMechanism;
 import javax.security.enterprise.identitystore.IdentityStore;
+import javax.security.enterprise.identitystore.IdentityStoreHandler;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Set;
 import java.util.logging.Logger;
 
 import static java.util.logging.Level.INFO;
@@ -78,6 +78,7 @@ public class OpenIdExtension implements Extension {
     private OpenIdAuthenticationDefinition definition;
     private Class<?> definitionSource;
     private boolean definitionActive;
+    private Producer<IdentityStoreHandler> storeHandlerWorkaroundProducer;
 
     protected void registerTypes(@Observes BeforeBeanDiscovery before) {
         registerTypes(before,
@@ -165,6 +166,15 @@ public class OpenIdExtension implements Extension {
         }
     }
 
+    protected void watchForInjectionWorkaround(@Observes @Any ProcessProducer<?,IdentityStoreHandler> workedAroundBean) {
+        if (!workedAroundBean.getAnnotatedMember().isAnnotationPresent(InjectionWorkaround.class)) {
+            return;
+        }
+        this.storeHandlerWorkaroundProducer = workedAroundBean.getProducer();
+    }
+
+
+
     protected void registerDefinition(@Observes AfterBeanDiscovery afterBeanDiscovery, BeanManager beanManager) {
 
         if (definitionActive) {
@@ -174,13 +184,15 @@ public class OpenIdExtension implements Extension {
                     .beanClass(HttpAuthenticationMechanism.class)
                     .addType(HttpAuthenticationMechanism.class)
                     .scope(ApplicationScoped.class)
-                    .produceWith(in -> in.select(OpenIdAuthenticationMechanism.class).get());
+                    .produceWith(in -> in.select(OpenIdAuthenticationMechanism.class).get())
+                    .disposeWith((inst,callback) -> callback.destroy(inst));
 
             afterBeanDiscovery.addBean()
                     .beanClass(IdentityStore.class)
                     .addType(IdentityStore.class)
                     .scope(ApplicationScoped.class)
-                    .produceWith(in -> in.select(OpenIdIdentityStore.class));
+                    .produceWith(in -> in.select(OpenIdIdentityStore.class).get())
+                    .disposeWith((inst,callback) -> callback.destroy(inst));
 
             afterBeanDiscovery.addBean()
                     .beanClass(OpenIdAuthenticationDefinition.class)
@@ -188,6 +200,20 @@ public class OpenIdExtension implements Extension {
                     .scope(ApplicationScoped.class)
                     .id("OpenId Definition")
                     .createWith(cc -> this.definition);
+
+            if (storeHandlerWorkaroundProducer != null) {
+                // the fact that it is here means that we are likely to have an injection problem and need to add the
+                // bean into our bean manager
+                Set<Bean<?>> workaroundBeans = beanManager.getBeans(IdentityStoreHandler.class, InjectionWorkaround.LITERAL);
+                if (workaroundBeans.isEmpty()) {
+                    afterBeanDiscovery.addBean()
+                            .beanClass(IdentityStoreHandler.class)
+                            .types(IdentityStoreHandler.class)
+                            .addQualifier(InjectionWorkaround.LITERAL)
+                            .createWith(storeHandlerWorkaroundProducer::produce)
+                            .destroyWith((inst, cc) -> storeHandlerWorkaroundProducer.dispose(inst));
+                }
+            }
         } else {
             // Publish empty definition to prevent injection errors. The helper components will not work, but
             // will not cause definition error. This is quite unlucky situation, but when definition is on an
