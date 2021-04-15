@@ -85,6 +85,7 @@
     </developers>
 
     <modules>
+        <module>security-connectors-api</module>
         <module>openid</module>
         <module>oauth2</module>
         <module>openid-standalone</module>
