@@ -74,6 +74,7 @@ import fish.payara.security.openid.api.RefreshToken;
 import fish.payara.security.openid.controller.AuthenticationController;
 import fish.payara.security.openid.controller.StateController;
 import fish.payara.security.openid.controller.TokenController;
+import fish.payara.security.openid.domain.AccessTokenImpl;
 import fish.payara.security.openid.domain.LogoutConfiguration;
 import fish.payara.security.openid.domain.OpenIdConfiguration;
 import fish.payara.security.openid.domain.OpenIdContextImpl;
@@ -90,6 +91,7 @@ import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 import static java.util.logging.Level.INFO;
 import static java.util.logging.Level.WARNING;
+import static javax.security.enterprise.AuthenticationStatus.NOT_DONE;
 import static javax.security.enterprise.AuthenticationStatus.SEND_FAILURE;
 import static javax.security.enterprise.AuthenticationStatus.SUCCESS;
 import static javax.security.enterprise.identitystore.CredentialValidationResult.INVALID_RESULT;
@@ -248,10 +250,20 @@ public class OpenIdAuthenticationMechanism implements HttpAuthenticationMechanis
 
     private AuthenticationStatus authenticateBearer(HttpServletRequest request, HttpServletResponse response, HttpMessageContext httpContext) {
             // Validate bearer access token
-            CredentialValidationResult validationResult = identityStoreHandler.validate(new AccessTokenCredential(readBearerAuthorization(request)));
-            // Register session manually (if @AutoApplySession used, this would be done by its interceptor)
-            httpContext.setRegisterSession(validationResult.getCallerPrincipal().getName(), validationResult.getCallerGroups());
-            return httpContext.notifyContainerAboutLogin(validationResult);
+        CredentialValidationResult validationResult = identityStoreHandler.validate(new AccessTokenCredential(readBearerAuthorization(request)));
+
+        switch (validationResult.getStatus()) {
+            case INVALID:
+                return SEND_FAILURE;
+            case NOT_VALIDATED:
+                return NOT_DONE;
+            case VALID:
+                // Register session manually (if @AutoApplySession used, this would be done by its interceptor)
+                httpContext.setRegisterSession(validationResult.getCallerPrincipal().getName(), validationResult.getCallerGroups());
+                return httpContext.notifyContainerAboutLogin(validationResult);
+        }
+        LOGGER.warning("Unexpected validation result status "+validationResult.getStatus());
+        return NOT_DONE;
     }
 
     private boolean hasBearerAuthorization(HttpServletRequest request) {
@@ -399,7 +411,6 @@ public class OpenIdAuthenticationMechanism implements HttpAuthenticationMechanis
     }
 
     private void updateContext(JsonObject tokensObject) {
-        context.setOpenIdConfiguration(configuration);
         context.setTokenType(tokensObject.getString(TOKEN_TYPE, null));
 
         String refreshToken = tokensObject.getString(REFRESH_TOKEN, null);

@@ -81,6 +81,8 @@ public class OpenIdContextImpl implements OpenIdContext {
     private RefreshToken refreshToken;
     private Long expiresIn;
     private JsonObject claims;
+
+    @Inject
     private OpenIdConfiguration configuration;
 
     @Inject
@@ -176,10 +178,6 @@ public class OpenIdContextImpl implements OpenIdContext {
     @Override
     public JsonObject getProviderMetadata() {
         return configuration.getProviderMetadata().getDocument();
-    }
-
-    public void setOpenIdConfiguration(OpenIdConfiguration configuration) {
-        this.configuration = configuration;
     }
 
     public void logout(HttpServletRequest request, HttpServletResponse response) {

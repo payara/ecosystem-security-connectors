@@ -45,6 +45,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.inject.Typed;
 import javax.inject.Inject;
 import javax.security.enterprise.identitystore.CredentialValidationResult;
 import javax.security.enterprise.identitystore.IdentityStore;
@@ -61,6 +62,7 @@ import fish.payara.security.openid.domain.OpenIdConfiguration;
 import fish.payara.security.openid.domain.OpenIdContextImpl;
 
 @ApplicationScoped
+@Typed(AccessTokenIdentityStore.class)
 public class AccessTokenIdentityStore implements IdentityStore {
     private static final Logger LOGGER = Logger.getLogger(AccessTokenIdentityStore.class.getName());
 
