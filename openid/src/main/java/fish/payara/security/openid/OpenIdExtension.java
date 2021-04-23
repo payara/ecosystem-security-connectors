@@ -49,9 +49,12 @@ import fish.payara.security.openid.controller.StateController;
 import fish.payara.security.openid.controller.TokenController;
 import fish.payara.security.openid.controller.UserInfoController;
 import fish.payara.security.openid.domain.OpenIdContextImpl;
+import org.eclipse.microprofile.config.Config;
+import org.eclipse.microprofile.config.ConfigProvider;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.context.Dependent;
+import javax.enterprise.context.SessionScoped;
 import javax.enterprise.event.Observes;
 import javax.enterprise.inject.Any;
 import javax.enterprise.inject.spi.*;
@@ -174,7 +177,20 @@ public class OpenIdExtension implements Extension {
         this.storeHandlerWorkaroundProducer = workedAroundBean.getProducer();
     }
 
-
+    protected void redefineConfigControllerScope(@Observes ProcessBeanAttributes<ConfigurationController> controller) {
+        Config mpConfig = ConfigProvider.getConfig();
+        boolean sessionScopedConfig = false;
+        try {
+            sessionScopedConfig = mpConfig.getOptionalValue(OpenIdAuthenticationDefinition.OPENID_MP_SESSION_SCOPED_CONFIGURATION, boolean.class)
+                    .orElse(true);
+        } catch (IllegalArgumentException e) {
+            LOGGER.warning("The value of " + OpenIdAuthenticationDefinition.OPENID_MP_SESSION_SCOPED_CONFIGURATION + "is not a boolean value. The OpenID connector will be configured only once for all requests.");
+        }
+        if (sessionScopedConfig) {
+            LOGGER.info("Using per-session OpenIdConfiguration");
+            controller.configureBeanAttributes().scope(SessionScoped.class);
+        }
+    }
 
     protected void registerDefinition(@Observes AfterBeanDiscovery afterBeanDiscovery, BeanManager beanManager) {
 
