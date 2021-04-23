@@ -355,4 +355,8 @@ public @interface OpenIdAuthenticationDefinition {
      */
     String OPENID_MP_TOKEN_MIN_VALIDITY = "payara.security.openid.token.minValidity";
 
+    /**
+     * The Microprofile Config key for evaluating EL expressions for every HTTP session is <code>{@value}</code>
+     */
+    String OPENID_MP_SESSION_SCOPED_CONFIGURATION = "payara.security.openid.sessionScopedConfiguration";
 }
