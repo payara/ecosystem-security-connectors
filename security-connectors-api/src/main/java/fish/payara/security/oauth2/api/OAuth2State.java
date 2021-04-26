@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Payara Foundation and/or its affiliates. All rights reserved.
+ * Copyright (c) 2020-2021 Payara Foundation and/or its affiliates. All rights reserved.
  *
  *  The contents of this file are subject to the terms of either the GNU
  *  General Public License Version 2 only ("GPL") or the Common Development
@@ -35,27 +35,52 @@
  *  only if the new code is made subject to such option by the copyright
  *  holder.
  */
+package fish.payara.security.oauth2.api;
 
-package fish.payara.security.openid;
+import java.io.Serializable;
+import java.util.UUID;
+import javax.enterprise.context.SessionScoped;
 
-import javax.security.enterprise.credential.Credential;
+/**
+ * Class to hold state of OAuth2
+ * <p>
+ * This is used in the authentication mechanism to both help prevent CSRF and to 
+ * pass data to the callback page.
+ * @author jonathan
+ * @since 4.1.2.182
+ */
+@SessionScoped
+public class OAuth2State implements Serializable {
 
-import fish.payara.security.openid.domain.OpenIdConfiguration;
+    private final String state;
+    
 
-public class AccessTokenCredential implements Credential {
-    private final OpenIdConfiguration configuration;
-    private final String accessToken;
-
-    AccessTokenCredential(OpenIdConfiguration configuration, String accessToken) {
-        this.configuration = configuration;
-        this.accessToken = accessToken;
+    /**
+     * Creates a new instance with a random UUID as the state. 
+     */
+    public OAuth2State(){
+        state = UUID.randomUUID().toString();
+    }
+    
+    /**
+     * Creates a new instance set the state to what is in the constructor.
+     * <p>
+     * This can be used so that the callback page knows the originating page,
+     * but is not used by the {@link fish.payara.security.oauth2.OAuth2AuthenticationMechanism} by default
+     * @param state 
+     */
+    public OAuth2State(String state){
+        this.state = state;
+    }
+    
+    /**
+     * Gets the state
+     *
+     * @return
+     */
+    public String getState(){
+        return state;
     }
 
-    public String getAccessToken() {
-        return accessToken;
-    }
 
-    OpenIdConfiguration getConfiguration() {
-        return configuration;
-    }
 }

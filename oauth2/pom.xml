@@ -83,6 +83,11 @@
             <groupId>net.minidev</groupId>
             <artifactId>accessors-smart</artifactId>
         </dependency>
+        <dependency>
+            <groupId>fish.payara.security.connectors</groupId>
+            <artifactId>security-connectors-api</artifactId>
+            <version>${project.version}</version>
+        </dependency>
     </dependencies>
 
     <build>

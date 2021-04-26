@@ -81,6 +81,8 @@ public class OpenIdContextImpl implements OpenIdContext {
     private RefreshToken refreshToken;
     private Long expiresIn;
     private JsonObject claims;
+
+    @Inject
     private OpenIdConfiguration configuration;
 
     @Inject
@@ -178,10 +180,6 @@ public class OpenIdContextImpl implements OpenIdContext {
         return configuration.getProviderMetadata().getDocument();
     }
 
-    public void setOpenIdConfiguration(OpenIdConfiguration configuration) {
-        this.configuration = configuration;
-    }
-
     public void logout(HttpServletRequest request, HttpServletResponse response) {
         LogoutConfiguration logout = configuration.getLogoutConfiguration();
         try {
@@ -215,7 +213,7 @@ public class OpenIdContextImpl implements OpenIdContext {
             redirect(response, logout.buildRedirectURI(request));
         } else {
             // Redirect user to OpenID connect provider for re-authentication
-            authenticationController.authenticateUser(configuration, request, response);
+            authenticationController.authenticateUser(request, response);
         }
     }
 

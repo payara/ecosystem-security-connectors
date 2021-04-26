@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Payara Foundation and/or its affiliates. All rights reserved.
+ * Copyright (c) 2021 Payara Foundation and/or its affiliates. All rights reserved.
  *
  *  The contents of this file are subject to the terms of either the GNU
  *  General Public License Version 2 only ("GPL") or the Common Development
@@ -35,58 +35,20 @@
  *  only if the new code is made subject to such option by the copyright
  *  holder.
  */
-package fish.payara.security.openid.controller;
 
-import fish.payara.security.openid.OpenIdUtil;
-import fish.payara.security.openid.api.OpenIdState;
-import fish.payara.security.openid.domain.OpenIdConfiguration;
-import fish.payara.security.openid.http.HttpStorageController;
+package fish.payara.security.openid.api;
 
-import javax.enterprise.context.ApplicationScoped;
-import java.util.Optional;
+import javax.security.enterprise.credential.Credential;
 
-import javax.inject.Inject;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+public class AccessTokenCredential implements Credential {
+    private final String accessToken;
 
-/**
- * Controller to manage OpenId state parameter value
- *
- * @author Gaurav Gupta
- */
-@ApplicationScoped
-public class StateController {
-
-    private static final String STATE_KEY = "oidc.state";
-
-    @Inject
-    OpenIdConfiguration configuration;
-
-    public void store(
-            OpenIdState state,
-            OpenIdConfiguration configuration,
-            HttpServletRequest request,
-            HttpServletResponse response) {
-
-        HttpStorageController.getInstance(configuration, request, response)
-                .store(STATE_KEY, state.getValue(), null);
+    public AccessTokenCredential(String accessToken) {
+        this.accessToken = accessToken;
     }
 
-    public Optional<OpenIdState> get(
-            HttpServletRequest request,
-            HttpServletResponse response) {
-
-        return HttpStorageController.getInstance(configuration, request, response)
-                .getAsString(STATE_KEY)
-                .filter(OpenIdUtil.not(OpenIdUtil::isEmpty))
-                .map(OpenIdState::new);
+    public String getAccessToken() {
+        return accessToken;
     }
 
-    public void remove(
-            HttpServletRequest request,
-            HttpServletResponse response) {
-
-        HttpStorageController.getInstance(configuration, request, response)
-                .remove(STATE_KEY);
-    }
 }

@@ -69,7 +69,7 @@ public final class OpenIdUtil {
     }
 
     public static boolean isELExpression(String expression) {
-        return !expression.isEmpty() && isDeferredExpression(expression);
+        return expression != null && !expression.isEmpty() && isDeferredExpression(expression);
     }
 
     public static boolean isDeferredExpression(String expression) {

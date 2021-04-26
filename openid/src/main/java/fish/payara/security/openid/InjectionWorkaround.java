@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Payara Foundation and/or its affiliates. All rights reserved.
+ * Copyright (c) 2021 Payara Foundation and/or its affiliates. All rights reserved.
  *
  *  The contents of this file are subject to the terms of either the GNU
  *  General Public License Version 2 only ("GPL") or the Common Development
@@ -35,58 +35,30 @@
  *  only if the new code is made subject to such option by the copyright
  *  holder.
  */
-package fish.payara.security.openid.controller;
 
-import fish.payara.security.openid.OpenIdUtil;
-import fish.payara.security.openid.api.OpenIdState;
-import fish.payara.security.openid.domain.OpenIdConfiguration;
-import fish.payara.security.openid.http.HttpStorageController;
+package fish.payara.security.openid;
 
-import javax.enterprise.context.ApplicationScoped;
-import java.util.Optional;
+import java.lang.annotation.Annotation;
+import java.lang.annotation.Documented;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-import javax.inject.Inject;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import javax.inject.Qualifier;
 
 /**
- * Controller to manage OpenId state parameter value
- *
- * @author Gaurav Gupta
+ * Workaround for IdentityStoreHandler not being injectable in an extension due to a bug.
  */
-@ApplicationScoped
-public class StateController {
-
-    private static final String STATE_KEY = "oidc.state";
-
-    @Inject
-    OpenIdConfiguration configuration;
-
-    public void store(
-            OpenIdState state,
-            OpenIdConfiguration configuration,
-            HttpServletRequest request,
-            HttpServletResponse response) {
-
-        HttpStorageController.getInstance(configuration, request, response)
-                .store(STATE_KEY, state.getValue(), null);
-    }
-
-    public Optional<OpenIdState> get(
-            HttpServletRequest request,
-            HttpServletResponse response) {
-
-        return HttpStorageController.getInstance(configuration, request, response)
-                .getAsString(STATE_KEY)
-                .filter(OpenIdUtil.not(OpenIdUtil::isEmpty))
-                .map(OpenIdState::new);
-    }
-
-    public void remove(
-            HttpServletRequest request,
-            HttpServletResponse response) {
-
-        HttpStorageController.getInstance(configuration, request, response)
-                .remove(STATE_KEY);
-    }
+@Qualifier
+@Documented
+@Retention(RetentionPolicy.RUNTIME)
+@Target({ElementType.FIELD, ElementType.METHOD, ElementType.TYPE, ElementType.PARAMETER})
+public @interface InjectionWorkaround {
+    static InjectionWorkaround LITERAL = new InjectionWorkaround() {
+        @Override
+        public Class<? extends Annotation> annotationType() {
+            return InjectionWorkaround.class;
+        }
+    };
 }
