@@ -91,6 +91,7 @@ public class OpenIdExtension implements Extension {
                 UserInfoController.class,
                 OpenIdContextImpl.class,
                 OpenIdIdentityStore.class,
+                AccessTokenIdentityStore.class,
                 OpenIdAuthenticationMechanism.class,
                 JWTValidator.class
         );
@@ -183,6 +184,7 @@ public class OpenIdExtension implements Extension {
             afterBeanDiscovery.addBean()
                     .beanClass(HttpAuthenticationMechanism.class)
                     .addType(HttpAuthenticationMechanism.class)
+                    .id(OpenIdExtension.class.getName()+"/OpenIdAuthenticationMechanism")
                     .scope(ApplicationScoped.class)
                     .produceWith(in -> in.select(OpenIdAuthenticationMechanism.class).get())
                     .disposeWith((inst,callback) -> callback.destroy(inst));
@@ -190,8 +192,17 @@ public class OpenIdExtension implements Extension {
             afterBeanDiscovery.addBean()
                     .beanClass(IdentityStore.class)
                     .addType(IdentityStore.class)
+                    .id(OpenIdExtension.class.getName()+"/OpenIdIdentityStore")
                     .scope(ApplicationScoped.class)
                     .produceWith(in -> in.select(OpenIdIdentityStore.class).get())
+                    .disposeWith((inst,callback) -> callback.destroy(inst));
+
+            afterBeanDiscovery.addBean()
+                    .beanClass(IdentityStore.class)
+                    .addType(IdentityStore.class)
+                    .id(OpenIdExtension.class.getName()+"/AccessTokenIdentityStore")
+                    .scope(ApplicationScoped.class)
+                    .produceWith(in -> in.select(AccessTokenIdentityStore.class).get())
                     .disposeWith((inst,callback) -> callback.destroy(inst));
 
             afterBeanDiscovery.addBean()

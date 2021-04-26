@@ -45,6 +45,10 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.context.ContextNotActiveException;
+import javax.enterprise.context.SessionScoped;
+import javax.enterprise.inject.Typed;
+import javax.enterprise.inject.spi.BeanManager;
 import javax.inject.Inject;
 import javax.security.enterprise.identitystore.CredentialValidationResult;
 import javax.security.enterprise.identitystore.IdentityStore;
@@ -61,22 +65,22 @@ import fish.payara.security.openid.domain.OpenIdConfiguration;
 import fish.payara.security.openid.domain.OpenIdContextImpl;
 
 @ApplicationScoped
+@Typed(AccessTokenIdentityStore.class)
 public class AccessTokenIdentityStore implements IdentityStore {
     private static final Logger LOGGER = Logger.getLogger(AccessTokenIdentityStore.class.getName());
+    @Inject
+    OpenIdContextImpl context;
+    @Inject
+    OpenIdConfiguration configuration;
+    @Inject
+    JWTValidator validator;
+    @Inject
+    BeanManager beanManager;
 
     @Override
     public Set<ValidationType> validationTypes() {
         return Collections.singleton(ValidationType.VALIDATE);
     }
-
-    @Inject
-    OpenIdContextImpl context;
-
-    @Inject
-    OpenIdConfiguration configuration;
-
-    @Inject
-    JWTValidator validator;
 
     @SuppressWarnings("unused")
     public CredentialValidationResult validate(AccessTokenCredential credential) {
@@ -84,21 +88,33 @@ public class AccessTokenIdentityStore implements IdentityStore {
             AccessTokenImpl accessToken = AccessTokenImpl.forBearerToken(configuration,
                     credential.getAccessToken(),
                     new BearerVerifier(configuration), validator);
-            context.setAccessToken(accessToken);
-            // for setClaims we'd need to invoke userinfo. That should be lazy unless required
-            context.setCallerName(
-                    // use configured caller name claim if present in access token
-                    accessToken.getJwtClaims().getStringClaim(
-                            configuration.getClaimsConfiguration().getCallerNameClaim())
-                            // or subject, which is more likely present, but is still optional per JWT spec
-                            .orElse(accessToken.getJwtClaims().getSubject()
-                                    .orElse(null)));
+
+            // OpenIdContext is session scoped, but access tokens might be validated outside of HTTP session
+            if (isSessionActive()) {
+                context.setAccessToken(accessToken);
+                // for setClaims we'd need to invoke userinfo. That should be lazy unless required
+                context.setCallerName(
+                        // use configured caller name claim if present in access token
+                        accessToken.getJwtClaims().getStringClaim(
+                                configuration.getClaimsConfiguration().getCallerNameClaim())
+                                // or subject, which is more likely present, but is still optional per JWT spec
+                                .orElse(accessToken.getJwtClaims().getSubject()
+                                        .orElse(null)));
+            }
 
             return new CredentialValidationResult(new AccessTokenCallerPrincipal(accessToken, context::getClaims));
         } catch (ParseException | RuntimeException e) {
-            LOGGER.log(Level.WARNING, "Cannot parse access token", e);
+            LOGGER.log(Level.WARNING, "Cannot parse access token " + credential.getAccessToken(), e);
         }
         return CredentialValidationResult.INVALID_RESULT;
+    }
+
+    private boolean isSessionActive() {
+        try {
+            return beanManager.getContext(SessionScoped.class).isActive();
+        } catch (ContextNotActiveException notActive) {
+            return false;
+        }
     }
 
     static class BearerVerifier extends TokenClaimsSetVerifier {
