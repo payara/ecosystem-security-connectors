@@ -182,7 +182,7 @@ public class OpenIdExtension implements Extension {
         boolean sessionScopedConfig = false;
         try {
             sessionScopedConfig = mpConfig.getOptionalValue(OpenIdAuthenticationDefinition.OPENID_MP_SESSION_SCOPED_CONFIGURATION, boolean.class)
-                    .orElse(true);
+                    .orElse(false);
         } catch (IllegalArgumentException e) {
             LOGGER.warning("The value of " + OpenIdAuthenticationDefinition.OPENID_MP_SESSION_SCOPED_CONFIGURATION + "is not a boolean value. The OpenID connector will be configured only once for all requests.");
         }
