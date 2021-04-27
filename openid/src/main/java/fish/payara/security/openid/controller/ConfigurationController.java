@@ -44,6 +44,8 @@ import fish.payara.security.openid.domain.ClaimsConfiguration;
 import fish.payara.security.openid.domain.LogoutConfiguration;
 import fish.payara.security.openid.domain.OpenIdConfiguration;
 import fish.payara.security.openid.domain.OpenIdTokenEncryptionMetadata;
+
+import java.io.Serializable;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -76,18 +78,21 @@ import org.eclipse.microprofile.config.ConfigProvider;
  * @author Gaurav Gupta
  */
 @ApplicationScoped
-public class ConfigurationController {
+public class ConfigurationController implements Serializable {
 
     @Inject
     private ProviderMetadataContoller providerMetadataContoller;
 
     private static final String SPACE_SEPARATOR = " ";
 
-    private volatile LastBuiltConfig lastBuiltConfig = new LastBuiltConfig(null, null);
+    private volatile transient LastBuiltConfig lastBuiltConfig;
 
     @Produces
     @RequestScoped
     public OpenIdConfiguration produceConfiguration(OpenIdAuthenticationDefinition definition) {
+        if (lastBuiltConfig == null) {
+            lastBuiltConfig = new LastBuiltConfig(null, null);
+        }
         OpenIdConfiguration cached = lastBuiltConfig.cachedConfiguration(definition);
         if (cached != null) {
             return cached;
