@@ -1,0 +1,23 @@
+version: 2
+updates:
+- package-ecosystem: maven
+  directory: "/"
+  schedule:
+    interval: daily
+    time: "03:00"
+  open-pull-requests-limit: 10
+  ignore:
+  - dependency-name: net.minidev:accessors-smart
+    versions:
+    - 2.4.2
+    - 2.4.6
+  - dependency-name: com.nimbusds:nimbus-jose-jwt
+    versions:
+    - 9.4.2
+    - "9.5"
+    - "9.6"
+    - "9.7"
+    - "9.8"
+  - dependency-name: org.apache.felix:maven-bundle-plugin
+    versions:
+    - 5.1.2
