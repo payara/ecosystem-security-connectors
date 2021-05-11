@@ -323,6 +323,29 @@
                 </plugins>
             </build>
         </profile>
+        <profile>
+            <id>payara-artifacts</id>
+            <distributionManagement>
+                <repository>
+                    <id>payara-artifacts</id>
+                    <name>Payara Artifacts</name>
+                    <url>https://nexus.payara.fish/content/repositories/payara-artifacts</url>
+                </repository>
+            </distributionManagement>
+            <repositories>
+                <repository>
+                    <id>payara-artifacts</id>
+                    <name>Payara Artifacts</name>
+                    <url>https://nexus.payara.fish/content/repositories/payara-artifacts</url>
+                    <releases>
+                        <enabled>true</enabled>
+                    </releases>
+                    <snapshots>
+                        <enabled>false</enabled>
+                    </snapshots>
+                </repository>
+            </repositories>
+        </profile>
     </profiles>
 
     <repositories>
