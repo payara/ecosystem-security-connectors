@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Payara Foundation and/or its affiliates. All rights reserved.
+ * Copyright (c) 2020-2021 Payara Foundation and/or its affiliates. All rights reserved.
  *
  *  The contents of this file are subject to the terms of either the GNU
  *  General Public License Version 2 only ("GPL") or the Common Development
@@ -59,6 +59,7 @@ import fish.payara.security.openid.domain.OpenIdContextImpl;
 
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
+import javax.security.enterprise.credential.Credential;
 
 /**
  * Identity store validates the identity token & access toekn and returns the
@@ -109,6 +110,15 @@ public class OpenIdIdentityStore implements IdentityStore {
                 context.getCallerName(),
                 context.getCallerGroups()
         );
+    }
+    
+    @Override
+    public CredentialValidationResult validate(Credential credential) {
+        if (credential instanceof OpenIdCredential) {
+            return validate((OpenIdCredential) credential);
+        } else {
+            return CredentialValidationResult.NOT_VALIDATED_RESULT;
+        }
     }
 
     private String getCallerName() {
