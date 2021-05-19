@@ -40,8 +40,6 @@ You can also add the Payara Artifacts repository into your pom.xml and define th
 
 ## Features in the upcoming 2.0.0 version
 
-The version 2.0.0 is currently in beta stage and will be released as a final version soon. 
-
 ### Support for multitenancy
 
 By default, the same configuration of the OpenID connector is applied for the whole application, for all authentication attempts. In a multitenant scenario, each tenant should be able to supply a different configuration. This is implemented by an optional session scope for the configuration, which means that the configuration is evaluated for each user session. Therefore it's possible to dynamically adjust the configuration before each authantication attempt, e.g. based on the URL, domain in the URL or any other information in the incoming HTTP request. 
