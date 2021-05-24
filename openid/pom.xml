@@ -124,9 +124,8 @@
                     <instructions>
                         <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
                         <Bundle-Version>${project.version}</Bundle-Version>
-                        <!-- Only export root package, subpackages have nimbusds references -->
                         <Export-Package>
-                            fish.payara.security.openid
+                            fish.payara.security.openid.*
                         </Export-Package>
                         <!-- Import API classes, other are NimbusDS optional dependencies -->
                         <Import-Package>
