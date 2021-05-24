@@ -76,12 +76,8 @@
             <artifactId>javax.security.enterprise</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.nimbusds</groupId>
-            <artifactId>nimbus-jose-jwt</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>net.minidev</groupId>
-            <artifactId>accessors-smart</artifactId>
+            <groupId>fish.payara.security.connectors</groupId>
+            <artifactId>security-connectors-api</artifactId>
         </dependency>
         <dependency>
             <groupId>fish.payara.security.connectors</groupId>
@@ -99,10 +95,6 @@
                     <instructions>
                         <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
                         <Bundle-Version>${project.version}</Bundle-Version>
-                        <Export-Package>
-                            fish.payara.security.annotations,
-                            fish.payara.security.oauth2.api
-                        </Export-Package>
                     </instructions>
                 </configuration>
             </plugin>
