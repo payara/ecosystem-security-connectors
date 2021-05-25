@@ -48,6 +48,8 @@ However, it's not possible to use a different configuration for different secure
 
 Multitenancy is disabled by default for performance reasons. To enable it, set the MicroProfile Configuration property `payara.security.openid.sessionScopedConfiguration` to `true`. To specify it directly in the application, you can place it in the [microprofile-config.properties](https://download.eclipse.org/microprofile/microprofile-config-1.4/microprofile-config-spec.html#default_configsources) file.
 
+NOTE: If you use the security connector in EAR and you want to specify configuration properties in `microprofile-config.properties`, note that you need to place the `microprofile-config.properties` file in a JAR file in the `lib` directory in the `EAR`. This will make the properties visible for all modules in the EAR. If you place the `microprofile-config.properties` file only in the WAR inside the EAR, it will be ignored even if you use the connector only in the WAR application.
+
 Dynamic configuration is possible using Expression Language to specify the properties in the configuration annotations as described in [Payara Community](https://docs.payara.fish/community/docs/documentation/payara-server/public-api/openid-connect-support.html#el-support) and [Payara Enterprise](https://docs.payara.fish/enterprise/docs/documentation/payara-server/public-api/openid-connect-support.html#el-support) documentation.
 
 #### Example for multitenancy
