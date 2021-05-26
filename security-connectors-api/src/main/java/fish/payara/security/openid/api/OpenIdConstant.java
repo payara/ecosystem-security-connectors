@@ -164,4 +164,7 @@ public interface OpenIdConstant {
     String DEFAULT_JWT_SIGNED_ALGORITHM = "RS256";
     String DEFAULT_HASH_ALGORITHM = "SHA-256";
 
+    // Original user Request
+    String ORIGINAL_REQUEST = "oidc.original.request";
+
 }
