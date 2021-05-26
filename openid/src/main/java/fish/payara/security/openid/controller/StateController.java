@@ -38,6 +38,7 @@
 package fish.payara.security.openid.controller;
 
 import fish.payara.security.openid.OpenIdUtil;
+import fish.payara.security.openid.api.OpenIdConstant;
 import fish.payara.security.openid.api.OpenIdState;
 import fish.payara.security.openid.domain.OpenIdConfiguration;
 import fish.payara.security.openid.http.HttpStorageController;
@@ -50,7 +51,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 /**
- * Controller to manage OpenId state parameter value
+ * Controller to manage OpenId state parameter value and request being validated
  *
  * @author Gaurav Gupta
  */
@@ -68,8 +69,21 @@ public class StateController {
             HttpServletRequest request,
             HttpServletResponse response) {
 
-        HttpStorageController.getInstance(configuration, request, response)
-                .store(STATE_KEY, state.getValue(), null);
+        HttpStorageController storage = HttpStorageController.getInstance(configuration, request, response);
+
+        storage.store(STATE_KEY, state.getValue(), null);
+        storage.store(OpenIdConstant.ORIGINAL_REQUEST, getFullURL(request), null);
+    }
+
+    private static String getFullURL(HttpServletRequest request) {
+        StringBuilder requestURL = new StringBuilder(request.getRequestURL().toString());
+        String queryString = request.getQueryString();
+
+        if (queryString == null) {
+            return requestURL.toString();
+        } else {
+            return requestURL.append('?').append(queryString).toString();
+        }
     }
 
     public Optional<OpenIdState> get(
