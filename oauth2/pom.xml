@@ -91,6 +91,13 @@
                     <instructions>
                         <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
                         <Bundle-Version>${project.version}</Bundle-Version>
+                        <Import-Package>
+                            org.eclipse.microprofile.config;version="[1.0,3)",
+                            *
+                        </Import-Package>
+                        <Export-Package>
+                            fish.payara.security.oauth2.*
+                        </Export-Package>
                     </instructions>
                 </configuration>
             </plugin>
