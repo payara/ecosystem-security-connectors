@@ -59,6 +59,8 @@ import fish.payara.security.openid.domain.OpenIdContextImpl;
 
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.security.enterprise.credential.Credential;
 
 /**
@@ -69,6 +71,8 @@ import javax.security.enterprise.credential.Credential;
  */
 @ApplicationScoped
 public class OpenIdIdentityStore implements IdentityStore {
+
+    private static final Logger LOGGER = Logger.getLogger(OpenIdIdentityStore.class.getName());
 
     @Inject
     private OpenIdContextImpl context;
@@ -103,8 +107,17 @@ public class OpenIdIdentityStore implements IdentityStore {
             context.setAccessToken(accessToken);
         }
 
-        context.setCallerName(getCallerName());
-        context.setCallerGroups(getCallerGroups());
+        String callerName = getCallerName();
+        context.setCallerName(callerName);
+        Set<String> callerGroups = getCallerGroups();
+        context.setCallerGroups(callerGroups);
+        
+        if (LOGGER.isLoggable(Level.FINE)) {
+            LOGGER.log(Level.FINE, "Setting caller groups into the OpenID context: " + callerGroups);
+            if (LOGGER.isLoggable(Level.FINER)) {
+                LOGGER.log(Level.FINER, "Setting caller name into the OpenID context: " + callerName);
+            }
+        }
 
         return new CredentialValidationResult(
                 context.getCallerName(),
