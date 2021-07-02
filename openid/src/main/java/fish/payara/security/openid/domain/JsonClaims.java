@@ -79,18 +79,25 @@ class JsonClaims implements OpenIdClaims {
         if (value == null) {
             return Collections.emptyList();
         }
-        if (value.getValueType() == JsonValue.ValueType.STRING) {
-            return Collections.singletonList(getStringValue(value));
-        }
         if (value.getValueType() == JsonValue.ValueType.ARRAY) {
             return value.asJsonArray().stream().map(this::getStringValue).collect(Collectors.toList());
         }
-        throw new IllegalArgumentException("Cannot interpret "+name+" as string array");
+        return Collections.singletonList(getStringValue(value));
     }
 
     private String getStringValue(JsonValue value) {
-            JsonString stringValue = (JsonString)value;
-            return stringValue.getString();
+        switch (value.getValueType()) {
+            case STRING:
+                return ((JsonString)value).getString();
+            case TRUE:
+                return "true";
+            case FALSE:
+                return "false";
+            case NUMBER:
+                return ((JsonNumber)value).numberValue().toString();
+            default:
+                throw new IllegalArgumentException("Cannot handle nested JSON value in a claim:" + value);
+        }
     }
     
     private JsonNumber getNumber(String name) {
