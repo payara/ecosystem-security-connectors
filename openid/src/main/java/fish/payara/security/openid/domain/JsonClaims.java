@@ -53,6 +53,7 @@ import javax.json.JsonValue;
 
 import fish.payara.security.openid.api.Claims;
 import fish.payara.security.openid.api.OpenIdClaims;
+import javax.json.JsonString;
 
 class JsonClaims implements OpenIdClaims {
     private final JsonObject claims;
@@ -78,15 +79,27 @@ class JsonClaims implements OpenIdClaims {
         if (value == null) {
             return Collections.emptyList();
         }
-        if (value.getValueType() == JsonValue.ValueType.STRING) {
-            return Collections.singletonList(value.toString());
-        }
         if (value.getValueType() == JsonValue.ValueType.ARRAY) {
-            return value.asJsonArray().stream().map(JsonValue::toString).collect(Collectors.toList());
+            return value.asJsonArray().stream().map(this::getStringValue).collect(Collectors.toList());
         }
-        throw new IllegalArgumentException("Cannot interpret "+name+" as string array");
+        return Collections.singletonList(getStringValue(value));
     }
 
+    private String getStringValue(JsonValue value) {
+        switch (value.getValueType()) {
+            case STRING:
+                return ((JsonString)value).getString();
+            case TRUE:
+                return "true";
+            case FALSE:
+                return "false";
+            case NUMBER:
+                return ((JsonNumber)value).numberValue().toString();
+            default:
+                throw new IllegalArgumentException("Cannot handle nested JSON value in a claim:" + value);
+        }
+    }
+    
     private JsonNumber getNumber(String name) {
         try {
             return claims.getJsonNumber(name);
