@@ -47,13 +47,13 @@ import java.util.OptionalInt;
 import java.util.OptionalLong;
 import java.util.stream.Collectors;
 
-import javax.json.JsonNumber;
-import javax.json.JsonObject;
-import javax.json.JsonValue;
+import jakarta.json.JsonNumber;
+import jakarta.json.JsonObject;
+import jakarta.json.JsonValue;
 
 import fish.payara.security.openid.api.Claims;
 import fish.payara.security.openid.api.OpenIdClaims;
-import javax.json.JsonString;
+import jakarta.json.JsonString;
 
 class JsonClaims implements OpenIdClaims {
     private final JsonObject claims;

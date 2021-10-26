@@ -35,30 +35,55 @@
  *  only if the new code is made subject to such option by the copyright
  *  holder.
  */
+package fish.payara.security.oauth2;
 
-package fish.payara.security.openid;
+import jakarta.enterprise.context.spi.CreationalContext;
+import org.glassfish.soteria.cdi.CdiProducer;
 
 import java.lang.annotation.Annotation;
-import java.lang.annotation.Documented;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
-
-import jakarta.inject.Qualifier;
+import java.lang.reflect.Type;
+import java.util.function.Function;
 
 /**
- * Workaround for IdentityStoreHandler not being injectable in an extension due to a bug.
+ *
+ * @author Gaurav Gupta
  */
-@Qualifier
-@Documented
-@Retention(RetentionPolicy.RUNTIME)
-@Target({ElementType.FIELD, ElementType.METHOD, ElementType.TYPE, ElementType.PARAMETER})
-public @interface InjectionWorkaround {
-    static InjectionWorkaround LITERAL = new InjectionWorkaround() {
-        @Override
-        public Class<? extends Annotation> annotationType() {
-            return InjectionWorkaround.class;
-        }
-    };
+public class PayaraCdiProducer<T> extends CdiProducer<T> {
+
+    public PayaraCdiProducer active(boolean active) {
+        return (PayaraCdiProducer) super.active(active);
+    }
+
+    public PayaraCdiProducer name(String name) {
+        return (PayaraCdiProducer) super.name(name);
+    }
+
+    public PayaraCdiProducer create(Function<CreationalContext<T>, T> create) {
+        return (PayaraCdiProducer) super.create(create);
+    }
+
+    public PayaraCdiProducer beanClass(Class<?> beanClass) {
+        return (PayaraCdiProducer) super.beanClass(beanClass);
+    }
+
+    public PayaraCdiProducer types(Type... types) {
+        return (PayaraCdiProducer) super.types(types);
+    }
+
+    public PayaraCdiProducer beanClassAndType(Class<?> beanClass) {
+        return (PayaraCdiProducer) super.beanClassAndType(beanClass);
+    }
+
+    public PayaraCdiProducer qualifiers(Annotation... qualifiers) {
+        return (PayaraCdiProducer) super.qualifiers(qualifiers);
+    }
+
+    public PayaraCdiProducer scope(Class<? extends Annotation> scope) {
+        return (PayaraCdiProducer) super.scope(scope);
+    }
+
+    public PayaraCdiProducer addToId(Object object) {
+        return (PayaraCdiProducer) super.addToId(object);
+    }
+
 }

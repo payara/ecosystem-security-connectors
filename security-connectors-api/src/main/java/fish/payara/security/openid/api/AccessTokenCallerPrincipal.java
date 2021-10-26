@@ -40,7 +40,7 @@ package fish.payara.security.openid.api;
 
 import java.util.function.Supplier;
 
-import javax.security.enterprise.CallerPrincipal;
+import jakarta.security.enterprise.CallerPrincipal;
 
 import fish.payara.security.openid.api.AccessToken;
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Payara Foundation and/or its affiliates. All rights reserved.
+ * Copyright (c) 2020-2021 Payara Foundation and/or its affiliates. All rights reserved.
  *
  *  The contents of this file are subject to the terms of either the GNU
  *  General Public License Version 2 only ("GPL") or the Common Development
@@ -39,8 +39,8 @@ package fish.payara.security.openid;
 
 import java.util.Optional;
 import java.util.function.Predicate;
-import javax.el.ELProcessor;
-import javax.enterprise.inject.spi.BeanManager;
+import jakarta.el.ELProcessor;
+import jakarta.enterprise.inject.spi.BeanManager;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 import org.eclipse.microprofile.config.Config;

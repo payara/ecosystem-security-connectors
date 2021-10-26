@@ -41,8 +41,8 @@ package fish.payara.security.openid.api;
 import java.util.Collections;
 import java.util.Set;
 
-import javax.security.enterprise.identitystore.CredentialValidationResult;
-import javax.security.enterprise.identitystore.IdentityStore;
+import jakarta.security.enterprise.identitystore.CredentialValidationResult;
+import jakarta.security.enterprise.identitystore.IdentityStore;
 
 public abstract class BearerGroupsIdentityStore implements IdentityStore {
     @Override

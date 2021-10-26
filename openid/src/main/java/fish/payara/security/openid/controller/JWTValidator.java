@@ -41,8 +41,8 @@ package fish.payara.security.openid.controller;
 import java.text.ParseException;
 import java.util.concurrent.ConcurrentHashMap;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 
 import com.nimbusds.jose.Algorithm;
 import com.nimbusds.jose.EncryptionMethod;

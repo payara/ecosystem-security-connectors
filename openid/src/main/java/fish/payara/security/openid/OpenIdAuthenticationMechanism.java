@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Payara Foundation and/or its affiliates. All rights reserved.
+ * Copyright (c) 2020-2021 Payara Foundation and/or its affiliates. All rights reserved.
  *
  *  The contents of this file are subject to the terms of either the GNU
  *  General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,40 @@
  */
 package fish.payara.security.openid;
 
+import fish.payara.security.openid.api.AccessTokenCredential;
+import fish.payara.security.openid.api.OpenIdState;
+import fish.payara.security.openid.api.RefreshToken;
+import fish.payara.security.openid.controller.AuthenticationController;
+import fish.payara.security.openid.controller.StateController;
+import fish.payara.security.openid.controller.TokenController;
+import fish.payara.security.openid.domain.LogoutConfiguration;
+import fish.payara.security.openid.domain.OpenIdConfiguration;
+import fish.payara.security.openid.domain.OpenIdContextImpl;
+import fish.payara.security.openid.domain.RefreshTokenImpl;
+import jakarta.annotation.PostConstruct;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Instance;
+import jakarta.enterprise.inject.Typed;
+import jakarta.inject.Inject;
+import jakarta.json.Json;
+import jakarta.json.JsonNumber;
+import jakarta.json.JsonObject;
+import jakarta.json.JsonReader;
+import jakarta.security.auth.message.callback.CallerPrincipalCallback;
+import jakarta.security.enterprise.AuthenticationException;
+import jakarta.security.enterprise.AuthenticationStatus;
+import jakarta.security.enterprise.authentication.mechanism.http.HttpAuthenticationMechanism;
+import jakarta.security.enterprise.authentication.mechanism.http.HttpMessageContext;
+import jakarta.security.enterprise.identitystore.CredentialValidationResult;
+import jakarta.security.enterprise.identitystore.IdentityStoreHandler;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.Response.Status;
+
+import javax.security.auth.callback.Callback;
+import javax.security.auth.callback.UnsupportedCallbackException;
 import java.io.IOException;
 import java.io.Serializable;
 import java.io.StringReader;
@@ -44,58 +78,15 @@ import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.annotation.PostConstruct;
-import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.inject.Instance;
-import javax.enterprise.inject.Typed;
-import javax.inject.Inject;
-import javax.json.Json;
-import javax.json.JsonNumber;
-import javax.json.JsonObject;
-import javax.json.JsonReader;
-import javax.security.auth.callback.Callback;
-import javax.security.auth.callback.UnsupportedCallbackException;
-import javax.security.auth.message.callback.CallerPrincipalCallback;
-import javax.security.enterprise.AuthenticationException;
-import javax.security.enterprise.AuthenticationStatus;
-import javax.security.enterprise.authentication.mechanism.http.HttpAuthenticationMechanism;
-import javax.security.enterprise.authentication.mechanism.http.HttpMessageContext;
-import javax.security.enterprise.identitystore.CredentialValidationResult;
-import javax.security.enterprise.identitystore.IdentityStoreHandler;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.Status;
-
-import fish.payara.security.openid.api.AccessTokenCredential;
-import fish.payara.security.openid.api.OpenIdState;
-import fish.payara.security.openid.api.RefreshToken;
-import fish.payara.security.openid.controller.AuthenticationController;
-import fish.payara.security.openid.controller.StateController;
-import fish.payara.security.openid.controller.TokenController;
-import fish.payara.security.openid.domain.AccessTokenImpl;
-import fish.payara.security.openid.domain.LogoutConfiguration;
-import fish.payara.security.openid.domain.OpenIdConfiguration;
-import fish.payara.security.openid.domain.OpenIdContextImpl;
-import fish.payara.security.openid.domain.RefreshTokenImpl;
-
 import static fish.payara.security.openid.OpenIdUtil.isEmpty;
-import static fish.payara.security.openid.api.OpenIdConstant.ERROR_DESCRIPTION_PARAM;
-import static fish.payara.security.openid.api.OpenIdConstant.ERROR_PARAM;
-import static fish.payara.security.openid.api.OpenIdConstant.EXPIRES_IN;
-import static fish.payara.security.openid.api.OpenIdConstant.REFRESH_TOKEN;
-import static fish.payara.security.openid.api.OpenIdConstant.STATE;
-import static fish.payara.security.openid.api.OpenIdConstant.TOKEN_TYPE;
+import static fish.payara.security.openid.api.OpenIdConstant.*;
+import static jakarta.security.enterprise.AuthenticationStatus.*;
+import static jakarta.security.enterprise.identitystore.CredentialValidationResult.INVALID_RESULT;
+import static jakarta.security.enterprise.identitystore.CredentialValidationResult.NOT_VALIDATED_RESULT;
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 import static java.util.logging.Level.INFO;
 import static java.util.logging.Level.WARNING;
-import static javax.security.enterprise.AuthenticationStatus.NOT_DONE;
-import static javax.security.enterprise.AuthenticationStatus.SEND_FAILURE;
-import static javax.security.enterprise.AuthenticationStatus.SUCCESS;
-import static javax.security.enterprise.identitystore.CredentialValidationResult.INVALID_RESULT;
-import static javax.security.enterprise.identitystore.CredentialValidationResult.NOT_VALIDATED_RESULT;
 
 /**
  * The AuthenticationMechanism used to authenticate users using the OpenId

@@ -38,7 +38,7 @@
 
 package fish.payara.security.openid.api;
 
-import javax.security.enterprise.credential.Credential;
+import jakarta.security.enterprise.credential.Credential;
 
 public class AccessTokenCredential implements Credential {
     private final String accessToken;
