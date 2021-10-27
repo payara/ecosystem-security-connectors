@@ -54,7 +54,6 @@ import fish.payara.security.openid.api.OpenIdConstant;
 import fish.payara.security.openid.controller.JWTValidator;
 
 import java.util.Date;
-import java.util.Optional;
 
 import static java.util.Objects.nonNull;
 
@@ -88,7 +87,7 @@ public class AccessTokenImpl implements AccessToken {
         try {
             this.tokenJWT = JWTParser.parse(token);
             jwtClaimsSet = tokenJWT.getJWTClaimsSet();
-            this.claims = jwtClaimsSet.getClaims();
+            this.claims = jwtClaimsSet == null ? null : jwtClaimsSet.getClaims();
         } catch (ParseException ex) {
             // Access token doesn't need to be JWT at all
         }
