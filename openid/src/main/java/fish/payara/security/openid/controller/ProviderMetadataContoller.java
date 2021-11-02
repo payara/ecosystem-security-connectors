@@ -40,7 +40,6 @@ package fish.payara.security.openid.controller;
 import java.io.StringReader;
 import java.util.HashMap;
 import java.util.Map;
-import static java.util.Objects.isNull;
 import javax.enterprise.context.ApplicationScoped;
 import javax.json.Json;
 import javax.json.JsonObject;
@@ -77,37 +76,47 @@ public class ProviderMetadataContoller {
      *
      */
     public JsonObject getDocument(String providerURI) {
-        if (isNull(providerDocuments.get(providerURI))) {
-            if (providerURI.endsWith("/")) {
-                providerURI = providerURI.substring(0, providerURI.length() - 1);
-            }
-
-            if (!providerURI.endsWith(WELL_KNOWN_PREFIX)) {
-                providerURI = providerURI + WELL_KNOWN_PREFIX;
-            }
-
-            Client client = ClientBuilder.newClient();
-            WebTarget target = client.target(providerURI);
-            Response response = target.request()
-                    .accept(APPLICATION_JSON)
-                    .get();
-
-            if (response.getStatus() == Status.OK.getStatusCode()) {
-                // Get back the result of the REST request
-                String responseBody = response.readEntity(String.class);
-                try (JsonReader reader = Json.createReader(new StringReader(responseBody))) {
-                    JsonObject responseObject = reader.readObject();
-                    providerDocuments.put(providerURI, responseObject);
-                }
+        if (!providerDocuments.containsKey(providerURI)) {
+            JsonObject responseObject;
+            if ("".equals(providerURI)) {
+                // no providerURI provided, data must be load from @OpenIdProviderMetadata
+                responseObject = JsonObject.EMPTY_JSON_OBJECT;
             } else {
-                throw new IllegalStateException(String.format(
-                        "Unable to retrieve OpenID Provider's [%s] configuration document, HTTP respons code : [%s] ",
-                        providerURI,
-                        response.getStatus()
-                ));
+                responseObject = downloadWellKnownUris(providerURI);
             }
+            providerDocuments.put(providerURI, responseObject);
         }
         return providerDocuments.get(providerURI);
     }
 
+    private JsonObject downloadWellKnownUris(String providerURI) {
+        if (providerURI.endsWith("/")) {
+            providerURI = providerURI.substring(0, providerURI.length() - 1);
+        }
+
+        if (!providerURI.endsWith(WELL_KNOWN_PREFIX)) {
+            providerURI = providerURI + WELL_KNOWN_PREFIX;
+        }
+
+        Client client = ClientBuilder.newClient();
+        WebTarget target = client.target(providerURI);
+        Response response = target.request()
+                .accept(APPLICATION_JSON)
+                .get();
+
+        if (response.getStatus() == Status.OK.getStatusCode()) {
+            // Get back the result of the REST request
+            String responseBody = response.readEntity(String.class);
+            try (JsonReader reader = Json.createReader(new StringReader(responseBody))) {
+                JsonObject responseObject = reader.readObject();
+                return responseObject;
+            }
+        } else {
+            throw new IllegalStateException(String.format(
+                    "Unable to retrieve OpenID Provider's [%s] configuration document, HTTP respons code : [%s] ",
+                    providerURI,
+                    response.getStatus()
+            ));
+        }
+    }
 }

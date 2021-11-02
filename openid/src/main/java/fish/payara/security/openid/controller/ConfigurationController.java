@@ -53,9 +53,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.joining;
@@ -69,6 +67,7 @@ import fish.payara.security.annotations.ClaimsDefinition;
 import fish.payara.security.annotations.LogoutDefinition;
 import fish.payara.security.openid.OpenIdUtil;
 import fish.payara.security.openid.api.OpenIdConstant;
+import java.util.Collections;
 import org.eclipse.microprofile.config.Config;
 import org.eclipse.microprofile.config.ConfigProvider;
 
@@ -217,9 +216,25 @@ public class ConfigurationController implements Serializable {
         int tokenMinValidity = OpenIdUtil.getConfiguredValue(Integer.class, definition.tokenMinValidity(), provider, OpenIdAuthenticationDefinition.OPENID_MP_TOKEN_MIN_VALIDITY);
         boolean userClaimsFromIDToken = OpenIdUtil.getConfiguredValue(Boolean.class, definition.userClaimsFromIDToken(), provider, OpenIdAuthenticationDefinition.OPENID_MP_USER_CLAIMS_FROM_ID_TOKEN);
 
+        fish.payara.security.openid.domain.OpenIdProviderMetadata openIdProviderMetadata;
+        if (providerDocument != null) {
+            openIdProviderMetadata = new fish.payara.security.openid.domain.OpenIdProviderMetadata(providerDocument);
+        } else {
+            // FIXME: necessary to provide meaningful default data
+            openIdProviderMetadata = new fish.payara.security.openid.domain.OpenIdProviderMetadata(
+                    null,
+                    Collections.emptySet(),
+                    Collections.emptySet(),
+                    Collections.emptySet(),
+                    Collections.emptySet(),
+                    Collections.emptySet(),
+                    Collections.emptySet(),
+                    Collections.emptySet());
+        }
+
         OpenIdConfiguration configuration = new OpenIdConfiguration()
                 .setProviderMetadata(
-                        new fish.payara.security.openid.domain.OpenIdProviderMetadata(providerDocument)
+                        openIdProviderMetadata
                                 .setAuthorizationEndpoint(authorizationEndpoint)
                                 .setTokenEndpoint(tokenEndpoint)
                                 .setUserinfoEndpoint(userinfoEndpoint)
