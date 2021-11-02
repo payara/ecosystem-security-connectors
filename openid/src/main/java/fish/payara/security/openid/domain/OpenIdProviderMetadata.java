@@ -77,6 +77,17 @@ public class OpenIdProviderMetadata {
     private final Set<String> idTokenEncryptionMethodsSupported;
     private final Set<String> subjectTypesSupported;
 
+    public OpenIdProviderMetadata(String issuerURI, Set<String> scopesSupported, Set<String> claimsSupported, Set<String> responseTypeSupported, Set<String> idTokenSigningAlgorithmsSupported, Set<String> idTokenEncryptionAlgorithmsSupported, Set<String> idTokenEncryptionMethodsSupported, Set<String> subjectTypesSupported) {
+        this.issuerURI = issuerURI;
+        this.scopesSupported = scopesSupported;
+        this.claimsSupported = claimsSupported;
+        this.responseTypeSupported = responseTypeSupported;
+        this.idTokenSigningAlgorithmsSupported = idTokenSigningAlgorithmsSupported;
+        this.idTokenEncryptionAlgorithmsSupported = idTokenEncryptionAlgorithmsSupported;
+        this.idTokenEncryptionMethodsSupported = idTokenEncryptionMethodsSupported;
+        this.subjectTypesSupported = subjectTypesSupported;
+    }
+
     public OpenIdProviderMetadata(JsonObject document) {
         this.document = document;
         this.issuerURI = document.getString(ISSUER);
