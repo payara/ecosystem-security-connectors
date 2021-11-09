@@ -53,7 +53,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 public @interface OpenIdProviderMetadata {
 
     /**
-     * Required, FIXME: keep optional for backward compatibility. The base address of OpenId Connect Provider.
+     * Required: The base address of OpenId Connect Provider.
      * <p>
      * URL using the https scheme with no query or fragment component that the OP asserts as its Issuer Identifier.
      * </p>
@@ -64,7 +64,7 @@ public @interface OpenIdProviderMetadata {
     String issuer() default "";
 
     /**
-     * Required. The URL for the OAuth2 provider to provide authentication
+     * Required: The URL for the OAuth2 provider to provide authentication.
      * <p>
      * This must be a https endpoint.
      * </p>
@@ -76,7 +76,7 @@ public @interface OpenIdProviderMetadata {
     String authorizationEndpoint() default "";
 
     /**
-     * Required. The URL for the OAuth2 provider to give the authorization token
+     * Required: The URL for the OAuth2 provider to give the authorization token.
      * <p>
      * To set this using Microprofile Config use
      * {@code payara.security.openid.provider.tokenEndpoint}
@@ -87,8 +87,7 @@ public @interface OpenIdProviderMetadata {
     String tokenEndpoint() default "";
 
     /**
-     * Required. An OAuth 2.0 Protected Resource that returns Claims about the
-     * authenticated End-User.
+     * Required: An OAuth 2.0 Protected Resource that returns Claims about the     * authenticated End-User.
      * <p>
      * To set this using Microprofile Config use
      * {@code payara.security.openid.provider.userinfoEndpoint}
@@ -99,8 +98,7 @@ public @interface OpenIdProviderMetadata {
     String userinfoEndpoint() default "";
 
     /**
-     * Optional. OP endpoint to notify that the End-User has logged out of the
-     * site and might want to log out of the OP as well.
+     * Optional: OP endpoint to notify that the End-User has logged out of the     * site and might want to log out of the OP as well.
      * <p>
      * To set this using Microprofile Config use
      * {@code payara.security.openid.provider.endSessionEndpoint}
@@ -111,7 +109,7 @@ public @interface OpenIdProviderMetadata {
     String endSessionEndpoint() default "";
 
     /**
-     * Required. An OpenId Connect Provider's JSON Web Key Set document
+     * Required: An OpenId Connect Provider's JSON Web Key Set document.
      * <p>
      * This contains the signing key(s) the RP uses to validate signatures from
      * the OP. The JWK Set may also contain the Server's encryption key(s),
@@ -128,7 +126,7 @@ public @interface OpenIdProviderMetadata {
     //RECOMMENDED. URL of the OP's Dynamic Client Registration Endpoint.
     //
     /**
-     * Recommended. JSON array containing a list of the OAuth 2.0 [RFC6749] scope values that this server supports.
+     * Recommended: List of the OAuth 2.0 scope values that this server supports.
      *
      * To set this using Microprofile Config use {@code payara.security.openid.provider.scopesSupported}
      *
@@ -137,7 +135,7 @@ public @interface OpenIdProviderMetadata {
     String[] scopesSupported() default {};//{"openid"};
 
     /**
-     * Required. JSON array containing a list of the OAuth 2.0 response_type values that this OP supports.
+     * Required: List of the OAuth 2.0 response_type values that this OP supports.
      *
      * To set this using Microprofile Config use {@code payara.security.openid.provider.responseTypeSupported}
      *
@@ -147,15 +145,18 @@ public @interface OpenIdProviderMetadata {
 
     // NOT USED
     // response_modes_supported
-    //    OPTIONAL. JSON array containing a list of the OAuth 2.0 response_mode values that this OP supports, as specified in OAuth 2.0 Multiple Response Type Encoding Practices [OAuth.Responses]. If omitted, the default for Dynamic OpenID Providers is ["query", "fragment"].
+    //    OPTIONAL. List of the OAuth 2.0 response_mode values that this OP supports, as
+    // specified in OAuth 2.0 Multiple Response Type Encoding Practices [OAuth.Responses]. If omitted, the default for
+    // Dynamic OpenID Providers is ["query", "fragment"].
     // grant_types_supported
-    //    OPTIONAL. JSON array containing a list of the OAuth 2.0 Grant Type values that this OP supports. Dynamic OpenID Providers MUST support the authorization_code and implicit Grant Type values and MAY support other Grant Types. If omitted, the default value is ["authorization_code", "implicit"].
+    //    OPTIONAL. List of the OAuth 2.0 Grant Type values that this OP supports. Dynamic
+    // OpenID Providers MUST support the authorization_code and implicit Grant Type values and MAY support other Grant
+    // Types. If omitted, the default value is ["authorization_code", "implicit"].
     // acr_values_supported
-    //    OPTIONAL. JSON array containing a list of the Authentication Context Class References that this OP supports.
+    //    OPTIONAL. List of the Authentication Context Class References that this OP supports.
     //
     /**
-     * Required. JSON array containing a list of the Subject Identifier types that this OP supports. Valid types include
-     * pairwise and public.
+     * Required: List of the Subject Identifier types that this OP supports. Valid types include pairwise and public.
      *
      * To set this using Microprofile Config use {@code payara.security.openid.provider.subjectTypesSupported}
      *
@@ -164,8 +165,8 @@ public @interface OpenIdProviderMetadata {
     String[] subjectTypesSupported() default {};//{"public"};
 
     /**
-     * Required. REQUIRED. JSON array containing a list of the JWS signing algorithms (alg values) supported by the OP
-     * for the ID Token to encode the Claims in a JWT.
+     * Required: List of the JWS signing algorithms (alg values) supported by the OP for the ID Token to encode the
+     * Claims in a JWT.
      *
      * To set this using Microprofile Config use
      * {@code payara.security.openid.provider.idTokenSigningAlgorithmsSupported}
@@ -175,8 +176,8 @@ public @interface OpenIdProviderMetadata {
     String[] idTokenSigningAlgValuesSupported() default {};//{"RS256"};
 
     /**
-     * Optional. JSON array containing a list of the JWE encryption algorithms (alg values) supported by the OP for the
-     * ID Token to encode the Claims in a JWT.
+     * Optional: List of the JWE encryption algorithms (alg values) supported by the OP for the ID Token to encode the
+     * Claims in a JWT.
      *
      * To set this using Microprofile Config use
      * {@code payara.security.openid.provider.idTokenEncryptionAlgValuesSupported}
@@ -186,8 +187,8 @@ public @interface OpenIdProviderMetadata {
     String[] idTokenEncryptionAlgValuesSupported() default {};
 
     /**
-     * Optional. JSON array containing a list of the JWE encryption algorithms (enc values) supported by the OP for the
-     * ID Token to encode the Claims in a JWT.
+     * Optional: List of the JWE encryption algorithms (enc values) supported by the OP for the ID Token to encode the
+     * Claims in a JWT.
      *
      * To set this using Microprofile Config use
      * {@code payara.security.openid.provider.idTokenEncryptionEncValuesSupported}
@@ -197,8 +198,8 @@ public @interface OpenIdProviderMetadata {
     String[] idTokenEncryptionEncValuesSupported() default {};
 
     /**
-     * Recommended. JSON array containing a list of the Claim Names of the Claims that the OpenID Provider MAY be able
-     * to supply values for. Note that for privacy or other reasons, this might not be an exhaustive list.
+     * Recommended: List of the Claim Names of the Claims that the OpenID Provider MAY be able to supply values for.
+     * Note that for privacy or other reasons, this might not be an exhaustive list.
      *
      * To set this using Microprofile Config use
      * {@code payara.security.openid.provider.claimsSupported}
