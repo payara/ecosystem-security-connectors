@@ -65,6 +65,7 @@ import javax.json.JsonObject;
 
 import fish.payara.security.annotations.ClaimsDefinition;
 import fish.payara.security.annotations.LogoutDefinition;
+import fish.payara.security.openid.OpenIdAuthenticationException;
 import fish.payara.security.openid.OpenIdUtil;
 import fish.payara.security.openid.api.OpenIdConstant;
 import org.eclipse.microprofile.config.Config;
@@ -137,7 +138,7 @@ public class ConfigurationController implements Serializable {
         issuerURI = OpenIdUtil.readConfiguredValueFromMetadataOrProvider(providerMetadata.issuer(), providerDocument, OpenIdConstant.ISSUER, provider, OpenIdProviderMetadata.OPENID_MP_ISSUER);
 
         if (issuerURI == null || "".equals(issuerURI)) {
-            throw new IllegalStateException("issuer URL is not available, specify it either in @OpenIdProviderMetadata or by providerURI and autoconfiguration");
+            throw new OpenIdAuthenticationException("issuer URL is not available, specify it either in @OpenIdProviderMetadata or by providerURI and autoconfiguration");
         }
 
         authorizationEndpoint = OpenIdUtil.readConfiguredValueFromMetadataOrProvider(providerMetadata.authorizationEndpoint(), providerDocument, OpenIdConstant.AUTHORIZATION_ENDPOINT, provider, OpenIdProviderMetadata.OPENID_MP_AUTHORIZATION_ENDPOINT);
@@ -148,7 +149,7 @@ public class ConfigurationController implements Serializable {
         try {
             jwksURL = new URL(jwksURI);
         } catch (MalformedURLException ex) {
-            throw new IllegalStateException("jwksURI is not a valid URL: " + jwksURI, ex);
+            throw new OpenIdAuthenticationException("jwksURI is not a valid URL: " + jwksURI, ex);
         }
         scopesSupported = OpenIdUtil.readConfiguredValueFromMetadataOrProvider(providerMetadata.scopesSupported(), providerDocument, OpenIdConstant.SCOPES_SUPPORTED, provider, OpenIdProviderMetadata.OPENID_MP_SCOPES_SUPPORTED);
         responseTypesSupported = OpenIdUtil.readConfiguredValueFromMetadataOrProvider(providerMetadata.responseTypesSupported(), providerDocument, OpenIdConstant.RESPONSE_TYPES_SUPPORTED, provider, OpenIdProviderMetadata.OPENID_MP_RESPONSE_TYPES_SUPPORTED);
@@ -287,7 +288,7 @@ public class ConfigurationController implements Serializable {
         errorMessages.addAll(validateClientConfiguration(configuration));
 
         if (!errorMessages.isEmpty()) {
-            throw new IllegalStateException(errorMessages.toString());
+            throw new OpenIdAuthenticationException(errorMessages.toString());
         }
     }
 
