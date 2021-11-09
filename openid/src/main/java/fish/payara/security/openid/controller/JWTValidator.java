@@ -170,13 +170,13 @@ public class JWTValidator {
         if (isNull(jwsAlg)) {
             throw new IllegalStateException("Missing JWE encryption algorithm ");
         }
-        if (!configuration.getProviderMetadata().getIdTokenEncryptionAlgorithmsSupported().contains(jwsAlg.getName())) {
+        if (!configuration.getProviderMetadata().getIdTokenEncryptionAlgValuesSupported().contains(jwsAlg.getName())) {
             throw new IllegalStateException("Unsupported ID tokens algorithm :" + jwsAlg.getName());
         }
         if (isNull(jweEnc)) {
             throw new IllegalStateException("Missing JWE encryption method");
         }
-        if (!configuration.getProviderMetadata().getIdTokenEncryptionMethodsSupported().contains(jweEnc.getName())) {
+        if (!configuration.getProviderMetadata().getIdTokenEncryptionEncValuesSupported().contains(jweEnc.getName())) {
             throw new IllegalStateException("Unsupported ID tokens encryption method :" + jweEnc.getName());
         }
 

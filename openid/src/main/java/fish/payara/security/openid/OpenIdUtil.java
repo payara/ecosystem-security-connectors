@@ -37,21 +37,89 @@
  */
 package fish.payara.security.openid;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import static java.util.Objects.isNull;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import javax.el.ELProcessor;
 import javax.enterprise.inject.spi.BeanManager;
+import javax.json.JsonArray;
+import javax.json.JsonObject;
+import javax.json.JsonString;
+import static javax.json.JsonValue.ValueType.STRING;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 import org.eclipse.microprofile.config.Config;
 
 /**
+ * Utility class for evaluation of OpenId values.
  *
  * @author Gaurav Gupta
+ * @author Petr Aubrecht
  */
 public final class OpenIdUtil {
 
+    private static final String SET_DELIMITER = "|";
+    private static final String SET_DELIMITER_REGEX = "[|]";
+
     private OpenIdUtil() {
+    }
+
+    public static String readConfiguredValueFromMetadataOrProvider(String metadataValue, JsonObject providerDocument, String openIdConstant, Config provider, String openIdProviderMetadataName) {
+        String value;
+        if (isEmpty(metadataValue) && providerDocument.containsKey(openIdConstant)) {
+            value = getConfiguredValue(String.class, providerDocument.getString(openIdConstant), provider, openIdProviderMetadataName);
+        } else {
+            value = getConfiguredValue(String.class, metadataValue, provider, openIdProviderMetadataName);
+        }
+        return value;
+    }
+
+    public static Set<String> readConfiguredValueFromMetadataOrProvider(String[] metadataValue, JsonObject providerDocument, String openIdConstant, Config provider, String openIdProviderMetadataName) {
+        Set<String> value;
+        // PayaraConfig can contain strings from microprofile config, e.g. parse set with '|' as separator.
+        if (metadataValue.length == 0 && providerDocument.containsKey(openIdConstant)) {
+            value = parseSet(getConfiguredValue(String.class, null, provider, openIdProviderMetadataName));
+            if (value == null) {
+                value = getValues(providerDocument, openIdConstant);
+            }
+        } else {
+            Set<String> metadataValueSet = Stream.of(metadataValue).collect(Collectors.toSet());
+            value = parseSet(getConfiguredValue(String.class, null, provider, openIdProviderMetadataName));
+            if (value == null) {
+                value = metadataValueSet;
+            }
+        }
+        return value;
+    }
+
+    private static Set<String> parseSet(String val) {
+        if (val == null) {
+            return null;
+        } else {
+            Set<String> set = new HashSet<>();
+            set.addAll(Arrays.asList(val.split(SET_DELIMITER_REGEX)));
+            return set;
+        }
+    }
+
+    private static Set<String> getValues(JsonObject document, String key) {
+        JsonArray jsonArray = document.getJsonArray(key);
+        if (isNull(jsonArray)) {
+            return Collections.emptySet();
+        } else {
+            return jsonArray
+                    .stream()
+                    .filter(element -> element.getValueType() == STRING)
+                    .map(element -> (JsonString) element)
+                    .map(JsonString::getString)
+                    .collect(Collectors.toSet());
+        }
     }
 
     public static <T> T getConfiguredValue(Class<T> type, T value, Config provider, String mpConfigKey) {
