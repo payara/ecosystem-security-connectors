@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Payara Foundation and/or its affiliates. All rights reserved.
+ * Copyright (c) 2021 Payara Foundation and/or its affiliates. All rights reserved.
  *
  *  The contents of this file are subject to the terms of either the GNU
  *  General Public License Version 2 only ("GPL") or the Common Development
@@ -233,6 +233,13 @@ public @interface OpenIdAuthenticationDefinition {
     int tokenMinValidity() default 10 * 1000;
 
     /**
+     * Optional. Indicates to skip the /userinfo endpoint call and get the user information from ID Token.
+     *
+     * @return
+     */
+    boolean userClaimsFromIDToken() default false;
+
+    /**
      * The Microprofile Config key for the provider uri is <code>{@value}</code>
      */
     String OPENID_MP_PROVIDER_URI = "payara.security.openid.providerURI";
@@ -359,4 +366,10 @@ public @interface OpenIdAuthenticationDefinition {
      * The Microprofile Config key for evaluating EL expressions for every HTTP session is <code>{@value}</code>
      */
     String OPENID_MP_SESSION_SCOPED_CONFIGURATION = "payara.security.openid.sessionScopedConfiguration";
+
+    /**
+     * The Microprofile Config key to skip the /userinfo endpoint call
+     * and get the user information from ID Token is <code>{@value}</code>
+     */
+    String OPENID_MP_CLAIMS_FROM_ID_TOKEN = "payara.security.openid.claimsFromIDToken";
 }
