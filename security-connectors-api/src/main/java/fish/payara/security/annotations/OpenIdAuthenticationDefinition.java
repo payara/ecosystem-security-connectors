@@ -371,5 +371,5 @@ public @interface OpenIdAuthenticationDefinition {
      * The Microprofile Config key to skip the /userinfo endpoint call
      * and get the user information from ID Token is <code>{@value}</code>
      */
-    String OPENID_MP_CLAIMS_FROM_ID_TOKEN = "payara.security.openid.claimsFromIDToken";
+    String OPENID_MP_USER_CLAIMS_FROM_ID_TOKEN = "payara.security.openid.userClaimsFromIDToken";
 }

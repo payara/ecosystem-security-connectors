@@ -70,7 +70,7 @@ public class OpenIdConfiguration {
     private boolean tokenAutoRefresh;
     private int tokenMinValidity;
     private JWTValidator validator;
-    private boolean claimsFromIDToken;
+    private boolean userClaimsFromIDToken;
 
     static final String BASE_URL_EXPRESSION = "${baseURL}";
 
@@ -254,12 +254,12 @@ public class OpenIdConfiguration {
         return this;
     }
 
-    public boolean isClaimsFromIDToken() {
-        return claimsFromIDToken;
+    public boolean isUserClaimsFromIDToken() {
+        return userClaimsFromIDToken;
     }
 
-    public OpenIdConfiguration setClaimsFromIDToken(boolean claimsFromIDToken) {
-        this.claimsFromIDToken = claimsFromIDToken;
+    public OpenIdConfiguration setUserClaimsFromIDToken(boolean userClaimsFromIDToken) {
+        this.userClaimsFromIDToken = userClaimsFromIDToken;
         return this;
     }
 
@@ -283,7 +283,7 @@ public class OpenIdConfiguration {
                 + ", encryptionMetadata=" + encryptionMetadata
                 + ", tokenAutoRefresh=" + tokenAutoRefresh
                 + ", tokenMinValidity=" + tokenMinValidity
-                + ", claimsFromIDToken=" + claimsFromIDToken
+                + ", userClaimsFromIDToken=" + userClaimsFromIDToken
                 + '}';
     }
 
