@@ -224,14 +224,18 @@ public class OpenIdContextImpl implements OpenIdContext {
         if (logout == null) {
             LOGGER.log(WARNING, "Logout invoked on session without OpenID session");
             redirect(response, request.getContextPath());
+            return;
         }
-        /**
+        /*
          * See section 5. RP-Initiated Logout
          * https://openid.net/specs/openid-connect-session-1_0.html#RPLogout
          */
+
+        String endSessionEndpoint = configuration.getProviderMetadata().getEndSessionEndpoint();
         if (logout.isNotifyProvider()
-                && !OpenIdUtil.isEmpty(configuration.getProviderMetadata().getEndSessionEndpoint())) {
-            UriBuilder logoutURI = UriBuilder.fromUri(configuration.getProviderMetadata().getEndSessionEndpoint())
+                && !OpenIdUtil.isEmpty(endSessionEndpoint)
+                && getIdentityToken() != null) {
+            UriBuilder logoutURI = UriBuilder.fromUri(endSessionEndpoint)
                     .queryParam(OpenIdConstant.ID_TOKEN_HINT, getIdentityToken().getToken());
             if (!OpenIdUtil.isEmpty(logout.getRedirectURI())) {
                 // User Agent redirected to POST_LOGOUT_REDIRECT_URI after a logout operation performed in OP.
