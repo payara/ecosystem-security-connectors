@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Payara Foundation and/or its affiliates. All rights reserved.
+ * Copyright (c) 2021 Payara Foundation and/or its affiliates. All rights reserved.
  *
  *  The contents of this file are subject to the terms of either the GNU
  *  General Public License Version 2 only ("GPL") or the Common Development
@@ -42,13 +42,15 @@ import fish.payara.security.openid.api.IdentityToken;
 import fish.payara.security.openid.api.OpenIdClaims;
 import fish.payara.security.openid.api.OpenIdContext;
 import fish.payara.security.openid.api.RefreshToken;
+import fish.payara.security.openid.api.JwtClaims;
+import fish.payara.security.openid.api.OpenIdConstant;
 import fish.payara.security.openid.controller.AuthenticationController;
 import fish.payara.security.openid.OpenIdUtil;
-import fish.payara.security.openid.api.OpenIdConstant;
 import fish.payara.security.openid.controller.UserInfoController;
 
 import java.io.IOException;
 import java.util.Optional;
+import static java.util.logging.Level.FINEST;
 import static java.util.logging.Level.WARNING;
 import java.util.logging.Logger;
 import java.util.Set;
@@ -162,12 +164,39 @@ public class OpenIdContextImpl implements OpenIdContext {
     public JsonObject getClaimsJson() {
         if (claims == null) {
             if (configuration != null && accessToken != null) {
-                claims = userInfoController.getUserInfo(configuration, accessToken);
+                if(!configuration.isUserClaimsFromIDToken()) {
+                    claims = userInfoController.getUserInfo(configuration, accessToken);
+                } else {
+                    LOGGER.log(FINEST, "Processing user info from ID Token");
+                    claims = processUserClaimsFromIDToken();
+                }
             } else {
                 claims = Json.createObjectBuilder().build();
             }
         }
         return claims;
+    }
+
+    /**
+     * Method to get user information from Id Token
+     * @return JsonObject with user information
+     */
+    private JsonObject processUserClaimsFromIDToken() {
+        JwtClaims identityTokenJWTClaims = identityToken.getJwtClaims();
+        JwtClaims accessTokenJWTClaims = accessToken.getJwtClaims();
+        //setting profile claims from id token
+        JsonObject userInfo = Json.createObjectBuilder()
+                .add(OpenIdConstant.SUBJECT_IDENTIFIER, identityTokenJWTClaims.getStringClaim(OpenIdConstant.SUBJECT_IDENTIFIER).orElse(""))
+                .add(OpenIdConstant.NAME, identityTokenJWTClaims.getStringClaim(OpenIdConstant.NAME).orElse(""))
+                .add(OpenIdConstant.FAMILY_NAME, accessTokenJWTClaims.getStringClaim(OpenIdConstant.FAMILY_NAME).orElse(""))
+                .add(OpenIdConstant.GIVEN_NAME, accessTokenJWTClaims.getStringClaim(OpenIdConstant.GIVEN_NAME).orElse(""))
+                .add(OpenIdConstant.EMAIL, identityTokenJWTClaims.getStringClaim(OpenIdConstant.EMAIL).orElse("")).build();
+
+        if(!this.getSubject().equals(userInfo.getString(OpenIdConstant.SUBJECT_IDENTIFIER))) {
+            throw new IllegalStateException("UserInfo Response is invalid as sub claim must match with the sub Claim in the ID Token");
+        }
+
+        return userInfo;
     }
 
     @Override

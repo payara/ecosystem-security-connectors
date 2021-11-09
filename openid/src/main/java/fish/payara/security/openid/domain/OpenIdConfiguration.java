@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Payara Foundation and/or its affiliates. All rights reserved.
+ * Copyright (c) 2021 Payara Foundation and/or its affiliates. All rights reserved.
  *
  *  The contents of this file are subject to the terms of either the GNU
  *  General Public License Version 2 only ("GPL") or the Common Development
@@ -70,6 +70,7 @@ public class OpenIdConfiguration {
     private boolean tokenAutoRefresh;
     private int tokenMinValidity;
     private JWTValidator validator;
+    private boolean userClaimsFromIDToken;
 
     static final String BASE_URL_EXPRESSION = "${baseURL}";
 
@@ -253,6 +254,15 @@ public class OpenIdConfiguration {
         return this;
     }
 
+    public boolean isUserClaimsFromIDToken() {
+        return userClaimsFromIDToken;
+    }
+
+    public OpenIdConfiguration setUserClaimsFromIDToken(boolean userClaimsFromIDToken) {
+        this.userClaimsFromIDToken = userClaimsFromIDToken;
+        return this;
+    }
+
     @Override
     public String toString() {
         return OpenIdConfiguration.class.getSimpleName()
@@ -273,6 +283,7 @@ public class OpenIdConfiguration {
                 + ", encryptionMetadata=" + encryptionMetadata
                 + ", tokenAutoRefresh=" + tokenAutoRefresh
                 + ", tokenMinValidity=" + tokenMinValidity
+                + ", userClaimsFromIDToken=" + userClaimsFromIDToken
                 + '}';
     }
 

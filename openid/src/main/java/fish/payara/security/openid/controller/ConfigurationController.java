@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Payara Foundation and/or its affiliates. All rights reserved.
+ * Copyright (c) 2021 Payara Foundation and/or its affiliates. All rights reserved.
  *
  *  The contents of this file are subject to the terms of either the GNU
  *  General Public License Version 2 only ("GPL") or the Common Development
@@ -215,6 +215,7 @@ public class ConfigurationController implements Serializable {
 
         boolean tokenAutoRefresh = OpenIdUtil.getConfiguredValue(Boolean.class, definition.tokenAutoRefresh(), provider, OpenIdAuthenticationDefinition.OPENID_MP_TOKEN_AUTO_REFRESH);
         int tokenMinValidity = OpenIdUtil.getConfiguredValue(Integer.class, definition.tokenMinValidity(), provider, OpenIdAuthenticationDefinition.OPENID_MP_TOKEN_MIN_VALIDITY);
+        boolean userClaimsFromIDToken = OpenIdUtil.getConfiguredValue(Boolean.class, definition.userClaimsFromIDToken(), provider, OpenIdAuthenticationDefinition.OPENID_MP_USER_CLAIMS_FROM_ID_TOKEN);
 
         OpenIdConfiguration configuration = new OpenIdConfiguration()
                 .setProviderMetadata(
@@ -256,7 +257,8 @@ public class ConfigurationController implements Serializable {
                 .setJwksConnectTimeout(jwksConnectTimeout)
                 .setJwksReadTimeout(jwksReadTimeout)
                 .setTokenAutoRefresh(tokenAutoRefresh)
-                .setTokenMinValidity(tokenMinValidity);
+                .setTokenMinValidity(tokenMinValidity)
+                .setUserClaimsFromIDToken(userClaimsFromIDToken);
 
         validateConfiguration(configuration);
 
