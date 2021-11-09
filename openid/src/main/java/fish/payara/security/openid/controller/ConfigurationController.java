@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Payara Foundation and/or its affiliates. All rights reserved.
+ * Copyright (c) 2021 Payara Foundation and/or its affiliates. All rights reserved.
  *
  *  The contents of this file are subject to the terms of either the GNU
  *  General Public License Version 2 only ("GPL") or the Common Development
@@ -37,24 +37,15 @@
  */
 package fish.payara.security.openid.controller;
 
-import fish.payara.security.annotations.ClaimsDefinition;
-import fish.payara.security.annotations.LogoutDefinition;
 import fish.payara.security.annotations.OpenIdAuthenticationDefinition;
 import fish.payara.security.annotations.OpenIdProviderMetadata;
-import fish.payara.security.openid.OpenIdUtil;
-import fish.payara.security.openid.api.ClientAuthenticationMethod;
-import fish.payara.security.openid.api.OpenIdConstant;
 import fish.payara.security.openid.api.PromptType;
 import fish.payara.security.openid.domain.ClaimsConfiguration;
 import fish.payara.security.openid.domain.LogoutConfiguration;
 import fish.payara.security.openid.domain.OpenIdConfiguration;
 import fish.payara.security.openid.domain.OpenIdTokenEncryptionMetadata;
-import org.eclipse.microprofile.config.Config;
-import org.eclipse.microprofile.config.ConfigProvider;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
-import javax.json.JsonObject;
+import java.io.Serializable;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -62,9 +53,24 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.joining;
+import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.context.RequestScoped;
+import javax.enterprise.inject.Produces;
+import javax.inject.Inject;
+import javax.json.JsonObject;
+
+import fish.payara.security.annotations.ClaimsDefinition;
+import fish.payara.security.annotations.LogoutDefinition;
+import fish.payara.security.openid.OpenIdUtil;
+import fish.payara.security.openid.api.OpenIdConstant;
+import org.eclipse.microprofile.config.Config;
+import org.eclipse.microprofile.config.ConfigProvider;
 
 /**
  * Build and validate the OpenId Connect client configuration
@@ -72,12 +78,29 @@ import static java.util.stream.Collectors.joining;
  * @author Gaurav Gupta
  */
 @ApplicationScoped
-public class ConfigurationController {
+public class ConfigurationController implements Serializable {
 
     @Inject
-    private ProviderMetadataContoller configurationContoller;
+    private ProviderMetadataContoller providerMetadataContoller;
 
     private static final String SPACE_SEPARATOR = " ";
+
+    private volatile transient LastBuiltConfig lastBuiltConfig;
+
+    @Produces
+    @RequestScoped
+    public OpenIdConfiguration produceConfiguration(OpenIdAuthenticationDefinition definition) {
+        if (lastBuiltConfig == null) {
+            lastBuiltConfig = new LastBuiltConfig(null, null);
+        }
+        OpenIdConfiguration cached = lastBuiltConfig.cachedConfiguration(definition);
+        if (cached != null) {
+            return cached;
+        }
+        OpenIdConfiguration config = buildConfig(definition);
+        lastBuiltConfig = new LastBuiltConfig(definition, config);
+        return config;
+    }
 
     /**
      * Creates the {@link OpenIdConfiguration} using the properties as defined
@@ -102,7 +125,7 @@ public class ConfigurationController {
 
         providerURI = OpenIdUtil.getConfiguredValue(String.class, definition.providerURI(), provider, OpenIdAuthenticationDefinition.OPENID_MP_PROVIDER_URI);
         fish.payara.security.annotations.OpenIdProviderMetadata providerMetadata = definition.providerMetadata();
-        providerDocument = configurationContoller.getDocument(providerURI);
+        providerDocument = providerMetadataContoller.getDocument(providerURI);
 
         if (OpenIdUtil.isEmpty(providerMetadata.authorizationEndpoint()) && providerDocument.containsKey(OpenIdConstant.AUTHORIZATION_ENDPOINT)) {
             authorizationEndpoint = OpenIdUtil.getConfiguredValue(String.class, providerDocument.getString(OpenIdConstant.AUTHORIZATION_ENDPOINT), provider, OpenIdProviderMetadata.OPENID_MP_AUTHORIZATION_ENDPOINT);
@@ -149,9 +172,9 @@ public class ConfigurationController {
         String responseType = OpenIdUtil.getConfiguredValue(String.class, definition.responseType(), provider, OpenIdAuthenticationDefinition.OPENID_MP_RESPONSE_TYPE);
         responseType
                 = Arrays.stream(responseType.trim().split(SPACE_SEPARATOR))
-                .map(String::toLowerCase)
-                .sorted()
-                .collect(joining(SPACE_SEPARATOR));
+                        .map(String::toLowerCase)
+                        .sorted()
+                        .collect(joining(SPACE_SEPARATOR));
 
         String responseMode = OpenIdUtil.getConfiguredValue(String.class, definition.responseMode(), provider, OpenIdAuthenticationDefinition.OPENID_MP_RESPONSE_MODE);
 
@@ -192,33 +215,9 @@ public class ConfigurationController {
 
         boolean tokenAutoRefresh = OpenIdUtil.getConfiguredValue(Boolean.class, definition.tokenAutoRefresh(), provider, OpenIdAuthenticationDefinition.OPENID_MP_TOKEN_AUTO_REFRESH);
         int tokenMinValidity = OpenIdUtil.getConfiguredValue(Integer.class, definition.tokenMinValidity(), provider, OpenIdAuthenticationDefinition.OPENID_MP_TOKEN_MIN_VALIDITY);
+        boolean userClaimsFromIDToken = OpenIdUtil.getConfiguredValue(Boolean.class, definition.userClaimsFromIDToken(), provider, OpenIdAuthenticationDefinition.OPENID_MP_CLAIMS_FROM_ID_TOKEN);
 
-        // Get the client authentication method
-        final String clientAuthenticationMethodProvided = OpenIdUtil.getConfiguredValue(String.class,
-                definition.clientAuthentication().toString().toLowerCase(), provider,
-                OpenIdAuthenticationDefinition.OPENID_MP_CLIENT_AUTHENTICATION);
-        // Convert string value into a enum
-        final ClientAuthenticationMethod clientAuthenticationMethod =
-                ClientAuthenticationMethod.fromName(clientAuthenticationMethodProvided);
-
-        final ClientAuthentication clientAuthentication;
-        if (clientAuthenticationMethod == null) {
-            // Client authentication method is not supported by Payara OpenID implementation.
-            // Make it fail during validation of client configuration.
-            clientAuthentication = new NotSupportedClientAuthentication(clientAuthenticationMethodProvided);
-        } else {
-            switch (clientAuthenticationMethod) {
-                case CLIENT_SECRET_BASIC:
-                    clientAuthentication = new ClientSecretBasic(clientId, clientSecret);
-                    break;
-                case CLIENT_SECRET_POST:
-                default:
-                    clientAuthentication = new ClientSecretPost(clientId, clientSecret);
-                    break;
-            }
-        }
-
-        final OpenIdConfiguration configuration = new OpenIdConfiguration()
+        OpenIdConfiguration configuration = new OpenIdConfiguration()
                 .setProviderMetadata(
                         new fish.payara.security.openid.domain.OpenIdProviderMetadata(providerDocument)
                                 .setAuthorizationEndpoint(authorizationEndpoint)
@@ -259,7 +258,7 @@ public class ConfigurationController {
                 .setJwksReadTimeout(jwksReadTimeout)
                 .setTokenAutoRefresh(tokenAutoRefresh)
                 .setTokenMinValidity(tokenMinValidity)
-                .setClientAuthentication(clientAuthentication);
+                .setClaimsFromIDToken(userClaimsFromIDToken);
 
         validateConfiguration(configuration);
 
@@ -322,6 +321,7 @@ public class ConfigurationController {
         if (configuration.getJwksReadTimeout() <= 0) {
             errorMessages.add("jwksReadTimeout value is not valid");
         }
+
         if (OpenIdUtil.isEmpty(configuration.getResponseType())) {
             errorMessages.add("The response type must contain at least one value");
         } else if (!configuration.getProviderMetadata().getResponseTypeSupported().contains(configuration.getResponseType())
@@ -343,11 +343,82 @@ public class ConfigurationController {
                 }
             }
         }
-        if (configuration.getClientAuthentication().getAuthenticationMethod() == null) {
-            errorMessages.add(String.format("client_authentication_method value is not valid: %s",
-                    configuration.getClientAuthentication()));
-        }
+
         return errorMessages;
+    }
+
+    static class LastBuiltConfig {
+        private final OpenIdAuthenticationDefinition definition;
+        private final OpenIdConfiguration configuration;
+
+        public LastBuiltConfig(OpenIdAuthenticationDefinition definition, OpenIdConfiguration configuration) {
+            this.definition = definition;
+            this.configuration = configuration;
+        }
+
+        OpenIdConfiguration cachedConfiguration(OpenIdAuthenticationDefinition definition) {
+            if (this.definition != null && this.definition.equals(definition)) {
+                return configuration;
+            }
+            return null;
+        }
+    }
+
+    /**
+     * Behavior-relevant attributes of a definition as a key for configuration cache.
+     * This can serve as a key to a cache of OpenIdConfiguration objects if configuration varies among requests, which
+     * is a feature coming soon.
+     */
+    static CacheKey keyFromDefinition(OpenIdAuthenticationDefinition definition) {
+        String[][] values = {
+                {
+                        definition.providerURI(),
+                        definition.clientId(),
+                        definition.clientSecret(),
+                        definition.redirectURI(),
+                        definition.responseType(),
+                        definition.responseMode(),
+                        Arrays.toString(definition.prompt()),
+                        String.valueOf(definition.useNonce()),
+                        String.valueOf(definition.useSession()),
+                        String.valueOf(definition.tokenAutoRefresh()),
+                        String.valueOf(definition.tokenMinValidity())
+                },
+                definition.scope(),
+                definition.extraParameters(),
+                providerMetadataAttrs(definition.providerMetadata()),
+                claimsAttrs(definition.claimsDefinition()),
+                logoutAttrs(definition.logout())
+        };
+
+        // and now concatentate all of these together to form a key
+        return new CacheKey(Stream.of(values).flatMap(Stream::of).toArray(String[]::new));
+    }
+
+    private static String[] logoutAttrs(LogoutDefinition logout) {
+        return logout != null ? new String[] {
+                String.valueOf(logout.notifyProvider()),
+                logout.redirectURI(),
+                String.valueOf(logout.accessTokenExpiry()),
+                String.valueOf(logout.identityTokenExpiry())
+        } : new String[4];
+    }
+
+    private static String[] claimsAttrs(ClaimsDefinition claimsDefinition) {
+        return claimsDefinition != null ? new String[] {
+                claimsDefinition.callerGroupsClaim(),
+                claimsDefinition.callerNameClaim()
+        } : new String[2];
+    }
+
+    private static String[] providerMetadataAttrs(OpenIdProviderMetadata providerMetadata) {
+        return providerMetadata != null ? new String[]{
+                providerMetadata.authorizationEndpoint(),
+                providerMetadata.tokenEndpoint(),
+                providerMetadata.userinfoEndpoint(),
+                providerMetadata.endSessionEndpoint(),
+                providerMetadata.jwksURI(),
+        } : new String[5];
     }
 
 }
