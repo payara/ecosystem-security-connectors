@@ -96,7 +96,7 @@ public class OpenIdContextImplTest {
                 .when(openIdContext).processUserClaimsFromIDToken();
         try {
             claims = openIdContext.getClaimsJson();
-        } catch(IllegalStateException e) {
+        } catch (IllegalStateException e) {
             Assertions.assertNull(claims);
         }
         verify(configuration, times(1)).isUserClaimsFromIDToken();
