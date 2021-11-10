@@ -41,6 +41,7 @@ package fish.payara.security.openid.domain;
 
 import fish.payara.security.openid.api.AccessToken;
 import fish.payara.security.openid.api.OpenIdConstant;
+import fish.payara.security.openid.controller.UserInfoController;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -66,6 +67,9 @@ public class OpenIdContextImplTest {
     @Mock
     private AccessToken accessToken;
 
+    @Mock
+    private UserInfoController userInfoController;
+
     @Spy
     @InjectMocks
     private OpenIdContextImpl openIdContext;
@@ -86,6 +90,7 @@ public class OpenIdContextImplTest {
         Assertions.assertNotNull(claims);
         verify(configuration, times(1)).isUserClaimsFromIDToken();
         verify(openIdContext, times(1)).processUserClaimsFromIDToken();
+        verify(userInfoController, times(0)).getUserInfo(configuration, accessToken);
     }
 
     @Test
@@ -101,6 +106,7 @@ public class OpenIdContextImplTest {
         }
         verify(configuration, times(1)).isUserClaimsFromIDToken();
         verify(openIdContext, times(1)).processUserClaimsFromIDToken();
+        verify(userInfoController, times(0)).getUserInfo(configuration, accessToken);
     }
 
 }
