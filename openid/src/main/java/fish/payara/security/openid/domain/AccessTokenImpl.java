@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Payara Foundation and/or its affiliates. All rights reserved.
+ * Copyright (c) [2020-2021] Payara Foundation and/or its affiliates. All rights reserved.
  *
  *  The contents of this file are subject to the terms of either the GNU
  *  General Public License Version 2 only ("GPL") or the Common Development
@@ -54,7 +54,6 @@ import fish.payara.security.openid.api.OpenIdConstant;
 import fish.payara.security.openid.controller.JWTValidator;
 
 import java.util.Date;
-import java.util.Optional;
 
 import static java.util.Objects.nonNull;
 
@@ -88,7 +87,7 @@ public class AccessTokenImpl implements AccessToken {
         try {
             this.tokenJWT = JWTParser.parse(token);
             jwtClaimsSet = tokenJWT.getJWTClaimsSet();
-            this.claims = jwtClaimsSet.getClaims();
+            this.claims = jwtClaimsSet == null ? null : jwtClaimsSet.getClaims();
         } catch (ParseException ex) {
             // Access token doesn't need to be JWT at all
         }
