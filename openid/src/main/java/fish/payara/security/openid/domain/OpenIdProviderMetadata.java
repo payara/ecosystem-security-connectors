@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Payara Foundation and/or its affiliates. All rights reserved.
+ * Copyright (c) [2020-2021] Payara Foundation and/or its affiliates. All rights reserved.
  *
  *  The contents of this file are subject to the terms of either the GNU
  *  General Public License Version 2 only ("GPL") or the Common Development
@@ -37,26 +37,12 @@
  */
 package fish.payara.security.openid.domain;
 
-import static fish.payara.security.openid.api.OpenIdConstant.CLAIMS_SUPPORTED;
-import static fish.payara.security.openid.api.OpenIdConstant.ID_TOKEN_ENCRYPTION_ALG_VALUES_SUPPORTED;
-import static fish.payara.security.openid.api.OpenIdConstant.ID_TOKEN_ENCRYPTION_ENC_VALUES_SUPPORTED;
-import static fish.payara.security.openid.api.OpenIdConstant.ID_TOKEN_SIGNING_ALG_VALUES_SUPPORTED;
-import static fish.payara.security.openid.api.OpenIdConstant.ISSUER;
-import static fish.payara.security.openid.api.OpenIdConstant.RESPONSE_TYPES_SUPPORTED;
-import static fish.payara.security.openid.api.OpenIdConstant.SCOPES_SUPPORTED;
-import static fish.payara.security.openid.api.OpenIdConstant.SUBJECT_TYPES_SUPPORTED;
 import java.net.URL;
-import static java.util.Collections.emptySet;
-import static java.util.Objects.isNull;
 import java.util.Set;
-import static java.util.stream.Collectors.toSet;
-import javax.json.JsonArray;
 import javax.json.JsonObject;
-import javax.json.JsonString;
-import static javax.json.JsonValue.ValueType.STRING;
 
 /**
- * OpenId Connect provider information
+ * OpenId Connect provider information.
  *
  * @author Gaurav Gupta
  */
@@ -71,22 +57,22 @@ public class OpenIdProviderMetadata {
     private URL jwksURL;
     private final Set<String> scopesSupported;
     private final Set<String> claimsSupported;
-    private final Set<String> responseTypeSupported;
-    private final Set<String> idTokenSigningAlgorithmsSupported;
-    private final Set<String> idTokenEncryptionAlgorithmsSupported;
-    private final Set<String> idTokenEncryptionMethodsSupported;
+    private final Set<String> responseTypesSupported;
+    private final Set<String> idTokenSigningAlgValuesSupported;
+    private final Set<String> idTokenEncryptionAlgValuesSupported;
+    private final Set<String> idTokenEncryptionEncValuesSupported;
     private final Set<String> subjectTypesSupported;
 
-    public OpenIdProviderMetadata(JsonObject document) {
-        this.document = document;
-        this.issuerURI = document.getString(ISSUER);
-        this.scopesSupported = getValues(SCOPES_SUPPORTED);
-        this.claimsSupported = getValues(CLAIMS_SUPPORTED);
-        this.responseTypeSupported = getValues(RESPONSE_TYPES_SUPPORTED);
-        this.idTokenSigningAlgorithmsSupported = getValues(ID_TOKEN_SIGNING_ALG_VALUES_SUPPORTED);
-        this.idTokenEncryptionAlgorithmsSupported = getValues(ID_TOKEN_ENCRYPTION_ALG_VALUES_SUPPORTED);
-        this.idTokenEncryptionMethodsSupported = getValues(ID_TOKEN_ENCRYPTION_ENC_VALUES_SUPPORTED);
-        this.subjectTypesSupported = getValues(SUBJECT_TYPES_SUPPORTED);
+    public OpenIdProviderMetadata(JsonObject providerDocument, String issuerURI, Set<String> scopesSupported, Set<String> claimsSupported, Set<String> responseTypesSupported, Set<String> idTokenSigningAlgValuesSupported, Set<String> idTokenEncryptionAlgValuesSupported, Set<String> idTokenEncryptionEncValuesSupported, Set<String> subjectTypesSupported) {
+        this.document = providerDocument;
+        this.issuerURI = issuerURI;
+        this.scopesSupported = scopesSupported;
+        this.claimsSupported = claimsSupported;
+        this.responseTypesSupported = responseTypesSupported;
+        this.idTokenSigningAlgValuesSupported = idTokenSigningAlgValuesSupported;
+        this.idTokenEncryptionAlgValuesSupported = idTokenEncryptionAlgValuesSupported;
+        this.idTokenEncryptionEncValuesSupported = idTokenEncryptionEncValuesSupported;
+        this.subjectTypesSupported = subjectTypesSupported;
     }
 
     public String getIssuerURI() {
@@ -155,38 +141,24 @@ public class OpenIdProviderMetadata {
         return claimsSupported;
     }
 
-    public Set<String> getResponseTypeSupported() {
-        return responseTypeSupported;
+    public Set<String> getResponseTypesSupported() {
+        return responseTypesSupported;
     }
 
     public Set<String> getSubjectTypesSupported() {
         return subjectTypesSupported;
     }
 
-    public Set<String> getIdTokenSigningAlgorithmsSupported() {
-        return idTokenSigningAlgorithmsSupported;
+    public Set<String> getIdTokenSigningAlgValuesSupported() {
+        return idTokenSigningAlgValuesSupported;
     }
 
-    public Set<String> getIdTokenEncryptionAlgorithmsSupported() {
-        return idTokenEncryptionAlgorithmsSupported;
+    public Set<String> getIdTokenEncryptionAlgValuesSupported() {
+        return idTokenEncryptionAlgValuesSupported;
     }
 
-    public Set<String> getIdTokenEncryptionMethodsSupported() {
-        return idTokenEncryptionMethodsSupported;
-    }
-
-    private Set<String> getValues(String key) {
-        JsonArray jsonArray = document.getJsonArray(key);
-        if (isNull(jsonArray)) {
-            return emptySet();
-        } else {
-            return jsonArray
-                    .stream()
-                    .filter(element -> element.getValueType() == STRING)
-                    .map(element -> (JsonString) element)
-                    .map(JsonString::getString)
-                    .collect(toSet());
-        }
+    public Set<String> getIdTokenEncryptionEncValuesSupported() {
+        return idTokenEncryptionEncValuesSupported;
     }
 
     @Override

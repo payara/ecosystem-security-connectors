@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Payara Foundation and/or its affiliates. All rights reserved.
+ * Copyright (c) [2020-2021] Payara Foundation and/or its affiliates. All rights reserved.
  *
  *  The contents of this file are subject to the terms of either the GNU
  *  General Public License Version 2 only ("GPL") or the Common Development
@@ -40,7 +40,6 @@ package fish.payara.security.openid.controller;
 import java.io.StringReader;
 import java.util.HashMap;
 import java.util.Map;
-import static java.util.Objects.isNull;
 import javax.enterprise.context.ApplicationScoped;
 import javax.json.Json;
 import javax.json.JsonObject;
@@ -60,7 +59,7 @@ import javax.ws.rs.core.Response.Status;
 @ApplicationScoped
 public class ProviderMetadataContoller {
 
-    private static final String WELL_KNOWN_PREFIX = "/.well-known/openid-configuration";
+    private static final String WELL_KNOWN_CONFIGURATION_ADDRESS = "/.well-known/openid-configuration";
 
     private final Map<String, JsonObject> providerDocuments = new HashMap<>();
 
@@ -77,37 +76,47 @@ public class ProviderMetadataContoller {
      *
      */
     public JsonObject getDocument(String providerURI) {
-        if (isNull(providerDocuments.get(providerURI))) {
-            if (providerURI.endsWith("/")) {
-                providerURI = providerURI.substring(0, providerURI.length() - 1);
-            }
-
-            if (!providerURI.endsWith(WELL_KNOWN_PREFIX)) {
-                providerURI = providerURI + WELL_KNOWN_PREFIX;
-            }
-
-            Client client = ClientBuilder.newClient();
-            WebTarget target = client.target(providerURI);
-            Response response = target.request()
-                    .accept(APPLICATION_JSON)
-                    .get();
-
-            if (response.getStatus() == Status.OK.getStatusCode()) {
-                // Get back the result of the REST request
-                String responseBody = response.readEntity(String.class);
-                try (JsonReader reader = Json.createReader(new StringReader(responseBody))) {
-                    JsonObject responseObject = reader.readObject();
-                    providerDocuments.put(providerURI, responseObject);
-                }
+        if (!providerDocuments.containsKey(providerURI)) {
+            JsonObject responseObject;
+            if (providerURI.isEmpty()) {
+                // no providerURI provided, data must be load from @OpenIdProviderMetadata
+                responseObject = JsonObject.EMPTY_JSON_OBJECT;
             } else {
-                throw new IllegalStateException(String.format(
-                        "Unable to retrieve OpenID Provider's [%s] configuration document, HTTP respons code : [%s] ",
-                        providerURI,
-                        response.getStatus()
-                ));
+                responseObject = downloadWellKnownUris(providerURI);
             }
+            providerDocuments.put(providerURI, responseObject);
         }
         return providerDocuments.get(providerURI);
     }
 
+    private JsonObject downloadWellKnownUris(String providerURI) {
+        if (providerURI.endsWith("/")) {
+            providerURI = providerURI.substring(0, providerURI.length() - 1);
+        }
+
+        if (!providerURI.endsWith(WELL_KNOWN_CONFIGURATION_ADDRESS)) {
+            providerURI = providerURI + WELL_KNOWN_CONFIGURATION_ADDRESS;
+        }
+
+        Client client = ClientBuilder.newClient();
+        WebTarget target = client.target(providerURI);
+        Response response = target.request()
+                .accept(APPLICATION_JSON)
+                .get();
+
+        if (response.getStatus() == Status.OK.getStatusCode()) {
+            // Get back the result of the REST request
+            String responseBody = response.readEntity(String.class);
+            try (JsonReader reader = Json.createReader(new StringReader(responseBody))) {
+                JsonObject responseObject = reader.readObject();
+                return responseObject;
+            }
+        } else {
+            throw new IllegalStateException(String.format(
+                    "Unable to retrieve OpenID Provider's [%s] configuration document, HTTP response code : [%s] ",
+                    providerURI,
+                    response.getStatus()
+            ));
+        }
+    }
 }
