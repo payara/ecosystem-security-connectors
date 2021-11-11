@@ -137,7 +137,7 @@ public class ConfigurationController implements Serializable {
         // collect metadata either from the metadata annotation or from the autoconfiguration providerDocument
         issuerURI = OpenIdUtil.readConfiguredValueFromMetadataOrProvider(providerMetadata.issuer(), providerDocument, OpenIdConstant.ISSUER, provider, OpenIdProviderMetadata.OPENID_MP_ISSUER);
 
-        if (issuerURI == null || "".equals(issuerURI)) {
+        if (issuerURI == null || issuerURI.isEmpty()) {
             throw new OpenIdAuthenticationException("issuer URL is not available, specify it either in @OpenIdProviderMetadata or by providerURI and autoconfiguration");
         }
 
