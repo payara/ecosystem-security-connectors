@@ -59,7 +59,7 @@ import javax.ws.rs.core.Response.Status;
 @ApplicationScoped
 public class ProviderMetadataContoller {
 
-    private static final String WELL_KNOWN_PREFIX = "/.well-known/openid-configuration";
+    private static final String WELL_KNOWN_CONFIGURATION_ADDRESS = "/.well-known/openid-configuration";
 
     private final Map<String, JsonObject> providerDocuments = new HashMap<>();
 
@@ -78,7 +78,7 @@ public class ProviderMetadataContoller {
     public JsonObject getDocument(String providerURI) {
         if (!providerDocuments.containsKey(providerURI)) {
             JsonObject responseObject;
-            if ("".equals(providerURI)) {
+            if (providerURI.isEmpty()) {
                 // no providerURI provided, data must be load from @OpenIdProviderMetadata
                 responseObject = JsonObject.EMPTY_JSON_OBJECT;
             } else {
@@ -94,8 +94,8 @@ public class ProviderMetadataContoller {
             providerURI = providerURI.substring(0, providerURI.length() - 1);
         }
 
-        if (!providerURI.endsWith(WELL_KNOWN_PREFIX)) {
-            providerURI = providerURI + WELL_KNOWN_PREFIX;
+        if (!providerURI.endsWith(WELL_KNOWN_CONFIGURATION_ADDRESS)) {
+            providerURI = providerURI + WELL_KNOWN_CONFIGURATION_ADDRESS;
         }
 
         Client client = ClientBuilder.newClient();
@@ -113,7 +113,7 @@ public class ProviderMetadataContoller {
             }
         } else {
             throw new IllegalStateException(String.format(
-                    "Unable to retrieve OpenID Provider's [%s] configuration document, HTTP respons code : [%s] ",
+                    "Unable to retrieve OpenID Provider's [%s] configuration document, HTTP response code : [%s] ",
                     providerURI,
                     response.getStatus()
             ));
