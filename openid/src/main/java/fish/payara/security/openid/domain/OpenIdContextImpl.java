@@ -181,7 +181,7 @@ public class OpenIdContextImpl implements OpenIdContext {
      * Method to get user information from Id Token
      * @return JsonObject with user information
      */
-    private JsonObject processUserClaimsFromIDToken() {
+    protected JsonObject processUserClaimsFromIDToken() {
         JwtClaims identityTokenJWTClaims = identityToken.getJwtClaims();
         JwtClaims accessTokenJWTClaims = accessToken.getJwtClaims();
         //setting profile claims from id token
