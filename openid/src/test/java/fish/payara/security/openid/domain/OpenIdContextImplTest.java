@@ -101,8 +101,9 @@ public class OpenIdContextImplTest {
                 .when(openIdContext).processUserClaimsFromIDToken();
         try {
             claims = openIdContext.getClaimsJson();
+            Assertions.fail("this is not expected to be executed");
         } catch (IllegalStateException e) {
-            Assertions.assertNull(claims);
+            //UserInfo Response is invalid as sub claim must match with the sub Claim in the ID Token
         }
         verify(configuration, times(1)).isUserClaimsFromIDToken();
         verify(openIdContext, times(1)).processUserClaimsFromIDToken();
