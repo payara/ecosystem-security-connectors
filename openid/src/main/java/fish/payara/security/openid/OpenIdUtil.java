@@ -45,7 +45,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import javax.el.ELProcessor;
 import javax.enterprise.inject.spi.BeanManager;
 import javax.json.JsonArray;
@@ -64,9 +63,6 @@ import org.eclipse.microprofile.config.Config;
  */
 public final class OpenIdUtil {
 
-    private static final String SET_DELIMITER = "|";
-    private static final String SET_DELIMITER_REGEX = "[|]";
-
     private OpenIdUtil() {
     }
 
@@ -82,30 +78,17 @@ public final class OpenIdUtil {
 
     public static Set<String> readConfiguredValueFromMetadataOrProvider(String[] metadataValue, JsonObject providerDocument, String openIdConstant, Config provider, String openIdProviderMetadataName) {
         Set<String> value;
-        // PayaraConfig can contain strings from microprofile config, e.g. parse set with '|' as separator.
         if (metadataValue.length == 0 && providerDocument.containsKey(openIdConstant)) {
-            value = parseSet(getConfiguredValue(String.class, null, provider, openIdProviderMetadataName));
-            if (value == null) {
+            String[] valueArr = getConfiguredValue(String[].class, metadataValue, provider, openIdProviderMetadataName);
+            if (valueArr == null) {
                 value = getValues(providerDocument, openIdConstant);
+            } else {
+                value = new HashSet<>(Arrays.asList(valueArr));
             }
         } else {
-            Set<String> metadataValueSet = Stream.of(metadataValue).collect(Collectors.toSet());
-            value = parseSet(getConfiguredValue(String.class, null, provider, openIdProviderMetadataName));
-            if (value == null) {
-                value = metadataValueSet;
-            }
+            value = new HashSet<>(Arrays.asList(getConfiguredValue(String[].class, metadataValue, provider, openIdProviderMetadataName)));
         }
         return value;
-    }
-
-    private static Set<String> parseSet(String val) {
-        if (val == null) {
-            return null;
-        } else {
-            Set<String> set = new HashSet<>();
-            set.addAll(Arrays.asList(val.split(SET_DELIMITER_REGEX)));
-            return set;
-        }
     }
 
     private static Set<String> getValues(JsonObject document, String key) {
