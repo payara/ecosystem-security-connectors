@@ -94,6 +94,7 @@ public class GoogleDefinitionConverter {
                 return googleDefinition.clientAuthentication();
             }
 
+
             @Override
             public String redirectURI() {
                 return googleDefinition.redirectURI();

@@ -107,6 +107,7 @@ public class AzureDefinitionConverter {
                 return azureDefinition.clientAuthentication();
             }
 
+
             @Override
             public String redirectURI() {
                 return azureDefinition.redirectURI();
