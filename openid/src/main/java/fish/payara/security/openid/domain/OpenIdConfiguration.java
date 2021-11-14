@@ -72,7 +72,6 @@ public class OpenIdConfiguration {
     private boolean tokenAutoRefresh;
     private int tokenMinValidity;
     private ClientAuthentication clientAuthentication;
-    private JWTValidator validator;
     private boolean userClaimsFromIDToken;
 
     static final String BASE_URL_EXPRESSION = "${baseURL}";
@@ -266,6 +265,15 @@ public class OpenIdConfiguration {
         return this;
     }
 
+    public ClientAuthentication getClientAuthentication() {
+        return clientAuthentication;
+    }
+
+    public OpenIdConfiguration setClientAuthentication(ClientAuthentication clientAuthentication) {
+        this.clientAuthentication = clientAuthentication;
+        return this;
+    }
+
     @Override
     public String toString() {
         return OpenIdConfiguration.class.getSimpleName()
@@ -287,6 +295,7 @@ public class OpenIdConfiguration {
                 + ", tokenAutoRefresh=" + tokenAutoRefresh
                 + ", tokenMinValidity=" + tokenMinValidity
                 + ", userClaimsFromIDToken=" + userClaimsFromIDToken
+                + ", clientAuthentication=" + clientAuthentication
                 + '}';
     }
 }

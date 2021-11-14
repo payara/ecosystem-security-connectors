@@ -38,11 +38,11 @@
 package fish.payara.security.openid;
 
 import fish.payara.security.annotations.ClaimsDefinition;
+import fish.payara.security.openid.api.ClientAuthenticationMethod;
 import fish.payara.security.annotations.GoogleAuthenticationDefinition;
 import fish.payara.security.annotations.LogoutDefinition;
 import fish.payara.security.annotations.OpenIdAuthenticationDefinition;
 import fish.payara.security.annotations.OpenIdProviderMetadata;
-import fish.payara.security.openid.api.ClientAuthenticationMethod;
 import fish.payara.security.openid.api.DisplayType;
 import fish.payara.security.openid.api.PromptType;
 

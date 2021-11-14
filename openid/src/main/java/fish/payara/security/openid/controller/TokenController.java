@@ -199,8 +199,6 @@ public class TokenController {
     public Response refreshTokens(RefreshToken refreshToken) {
 
         Form form = new Form()
-                .param(OpenIdConstant.CLIENT_ID, configuration.getClientId())
-                .param(OpenIdConstant.CLIENT_SECRET, new String(configuration.getClientSecret()))
                 .param(OpenIdConstant.GRANT_TYPE, OpenIdConstant.REFRESH_TOKEN)
                 .param(OpenIdConstant.REFRESH_TOKEN, refreshToken.getToken());
 
