@@ -77,10 +77,10 @@ public class TokenController {
     private NonceController nonceController;
 
     @Inject
-    OpenIdConfiguration configuration;
+    private OpenIdConfiguration configuration;
 
     @Inject
-    JWTValidator validator;
+    private JWTValidator validator;
 
     /**
      * (4) A Client makes a token request to the token endpoint and the OpenId
@@ -94,7 +94,7 @@ public class TokenController {
         /**
          * one-time authorization code that RP exchange for an Access / Id token
          */
-        String authorizationCode = request.getParameter(OpenIdConstant.CODE);
+        final String authorizationCode = request.getParameter(OpenIdConstant.CODE);
 
         /**
          * The Client sends the parameters to the Token Endpoint using the Form
@@ -105,7 +105,7 @@ public class TokenController {
          * 3. Ensure that the redirect_uri parameter value is identical to the
          * initial authorization request's redirect_uri parameter value.
          */
-        Form form = new Form()
+        final Form form = new Form()
                 .param(OpenIdConstant.GRANT_TYPE, OpenIdConstant.AUTHORIZATION_CODE)
                 .param(OpenIdConstant.CODE, authorizationCode)
                 .param(OpenIdConstant.REDIRECT_URI, configuration.buildRedirectURI(request));
@@ -154,7 +154,7 @@ public class TokenController {
      * @return JWT Claims
      */
     public JWTClaimsSet validateRefreshedIdToken(IdentityToken previousIdToken, IdentityTokenImpl newIdToken) {
-        JWTClaimsSetVerifier jwtVerifier = new RefreshedIdTokenClaimsSetVerifier(previousIdToken, configuration);
+        final JWTClaimsSetVerifier jwtVerifier = new RefreshedIdTokenClaimsSetVerifier(previousIdToken, configuration);
         JWTClaimsSet claimsSet = validator.validateBearerToken(newIdToken.getTokenJWT(), jwtVerifier);
         return claimsSet;
     }
@@ -197,8 +197,7 @@ public class TokenController {
      * from the Token endpoint.
      */
     public Response refreshTokens(RefreshToken refreshToken) {
-
-        Form form = new Form()
+        final Form form = new Form()
                 .param(OpenIdConstant.GRANT_TYPE, OpenIdConstant.REFRESH_TOKEN)
                 .param(OpenIdConstant.REFRESH_TOKEN, refreshToken.getToken());
 
