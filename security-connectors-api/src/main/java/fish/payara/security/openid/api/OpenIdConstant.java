@@ -167,5 +167,6 @@ public interface OpenIdConstant {
     // Authorization headers
     String AUTHORIZATION_HEADER = "Authorization";
     String BEARER_TYPE = "Bearer ";
-
+    // Original user Request
+    String ORIGINAL_REQUEST = "oidc.original.request";
 }

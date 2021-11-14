@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Payara Foundation and/or its affiliates. All rights reserved.
+ * Copyright (c) 2021 Payara Foundation and/or its affiliates. All rights reserved.
  *
  *  The contents of this file are subject to the terms of either the GNU
  *  General Public License Version 2 only ("GPL") or the Common Development
@@ -43,6 +43,8 @@ import java.util.Arrays;
 import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 
+import fish.payara.security.openid.controller.JWTValidator;
+
 /**
  * OpenId Connect client configuration
  *
@@ -71,6 +73,7 @@ public class OpenIdConfiguration {
     private int tokenMinValidity;
     private ClientAuthentication clientAuthentication;
     private JWTValidator validator;
+    private boolean userClaimsFromIDToken;
 
     static final String BASE_URL_EXPRESSION = "${baseURL}";
 
@@ -254,21 +257,13 @@ public class OpenIdConfiguration {
         return this;
     }
 
-
-    public ClientAuthentication getClientAuthentication() {
-        return clientAuthentication;
+    public boolean isUserClaimsFromIDToken() {
+        return userClaimsFromIDToken;
     }
 
-    public OpenIdConfiguration setClientAuthentication(ClientAuthentication clientAuthentication) {
-        this.clientAuthentication = clientAuthentication;
+    public OpenIdConfiguration setUserClaimsFromIDToken(boolean userClaimsFromIDToken) {
+        this.userClaimsFromIDToken = userClaimsFromIDToken;
         return this;
-    }
-
-    public JWTValidator getJWTValidator() {
-        if (this.validator == null) {
-            this.validator = new JWTValidator(this);
-        }
-        return this.validator;
     }
 
     @Override
@@ -291,7 +286,7 @@ public class OpenIdConfiguration {
                 + ", encryptionMetadata=" + encryptionMetadata
                 + ", tokenAutoRefresh=" + tokenAutoRefresh
                 + ", tokenMinValidity=" + tokenMinValidity
-                + ", clientAuthentication=" + clientAuthentication
+                + ", userClaimsFromIDToken=" + userClaimsFromIDToken
                 + '}';
     }
 }
