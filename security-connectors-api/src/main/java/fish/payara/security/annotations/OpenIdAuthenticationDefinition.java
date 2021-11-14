@@ -392,4 +392,9 @@ public @interface OpenIdAuthenticationDefinition {
      * and get the user information from ID Token is <code>{@value}</code>
      */
     String OPENID_MP_USER_CLAIMS_FROM_ID_TOKEN = "payara.security.openid.userClaimsFromIDToken";
+
+    /**
+     * The Microprofile Config key for the client authentication is <code>{@value}</code>
+     */
+    String OPENID_MP_CLIENT_AUTHENTICATION = "payara.security.openid.clientAuthentication";
 }
