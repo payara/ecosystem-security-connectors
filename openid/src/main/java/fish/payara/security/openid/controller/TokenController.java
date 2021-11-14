@@ -100,7 +100,7 @@ public class TokenController {
          * The Client sends the parameters to the Token Endpoint using the Form
          * Serialization with all parameters to :
          *
-         * 1. Authenticate client using CLIENT_ID & CLIENT_SECRET <br>
+         * 1. Authenticate client using a client authentication method (Client Secret Basic, Client Secret Post) <br>
          * 2. Verify that the Authorization Code is valid <br>
          * 3. Ensure that the redirect_uri parameter value is identical to the
          * initial authorization request's redirect_uri parameter value.
