@@ -39,11 +39,9 @@ package fish.payara.security.openid.domain;
 
 import fish.payara.security.openid.controller.ClientAuthentication;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.Arrays;
 import java.util.Map;
-import javax.servlet.http.HttpServletRequest;
-
-import fish.payara.security.openid.controller.JWTValidator;
 
 /**
  * OpenId Connect client configuration
@@ -71,8 +69,8 @@ public class OpenIdConfiguration {
     private LogoutConfiguration logoutConfiguration;
     private boolean tokenAutoRefresh;
     private int tokenMinValidity;
-    private ClientAuthentication clientAuthentication;
     private boolean userClaimsFromIDToken;
+    private ClientAuthentication clientAuthentication;
 
     static final String BASE_URL_EXPRESSION = "${baseURL}";
 
@@ -273,6 +271,7 @@ public class OpenIdConfiguration {
         this.clientAuthentication = clientAuthentication;
         return this;
     }
+
 
     @Override
     public String toString() {
