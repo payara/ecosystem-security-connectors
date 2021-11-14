@@ -37,6 +37,8 @@
  */
 package fish.payara.security.openid.domain;
 
+import fish.payara.security.openid.controller.ClientAuthentication;
+
 import java.util.Arrays;
 import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
@@ -69,6 +71,7 @@ public class OpenIdConfiguration {
     private LogoutConfiguration logoutConfiguration;
     private boolean tokenAutoRefresh;
     private int tokenMinValidity;
+    private ClientAuthentication clientAuthentication;
     private JWTValidator validator;
     private boolean userClaimsFromIDToken;
 
@@ -286,5 +289,4 @@ public class OpenIdConfiguration {
                 + ", userClaimsFromIDToken=" + userClaimsFromIDToken
                 + '}';
     }
-
 }

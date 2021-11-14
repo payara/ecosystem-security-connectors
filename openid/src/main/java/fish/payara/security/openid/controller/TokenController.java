@@ -41,15 +41,12 @@ import com.nimbusds.jose.Algorithm;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.proc.JWTClaimsSetVerifier;
 import fish.payara.security.openid.api.IdentityToken;
+import fish.payara.security.openid.api.OpenIdConstant;
 import fish.payara.security.openid.api.RefreshToken;
 import fish.payara.security.openid.domain.AccessTokenImpl;
 import fish.payara.security.openid.domain.IdentityTokenImpl;
 import fish.payara.security.openid.domain.OpenIdConfiguration;
 import fish.payara.security.openid.domain.OpenIdNonce;
-import fish.payara.security.openid.api.OpenIdConstant;
-
-import static java.util.Collections.emptyMap;
-import java.util.Map;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -59,10 +56,14 @@ import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.Invocation;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Form;
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.util.Map;
+
+import static java.util.Collections.emptyMap;
 
 /**
  * Controller for Token endpoint
@@ -105,18 +106,12 @@ public class TokenController {
          * initial authorization request's redirect_uri parameter value.
          */
         Form form = new Form()
-                .param(OpenIdConstant.CLIENT_ID, configuration.getClientId())
-                .param(OpenIdConstant.CLIENT_SECRET, new String(configuration.getClientSecret()))
                 .param(OpenIdConstant.GRANT_TYPE, OpenIdConstant.AUTHORIZATION_CODE)
                 .param(OpenIdConstant.CODE, authorizationCode)
                 .param(OpenIdConstant.REDIRECT_URI, configuration.buildRedirectURI(request));
 
         //  ID Token and Access Token Request
-        Client client = ClientBuilder.newClient();
-        WebTarget target = client.target(configuration.getProviderMetadata().getTokenEndpoint());
-        return target.request()
-                .accept(APPLICATION_JSON)
-                .post(Entity.form(form));
+        return postTokenRequest(form, configuration);
     }
 
     /**
@@ -187,7 +182,7 @@ public class TokenController {
 //            JWTClaimsSet claimsSet = validateBearerToken(accessToken.getTokenJWT(), jwtVerifier, configuration);
 //            claims = claimsSet.getClaims();
 //        } else {
-            jwtVerifier.validateAccessToken();
+        jwtVerifier.validateAccessToken();
 //        }
 
         return claims;
@@ -209,16 +204,29 @@ public class TokenController {
                 .param(OpenIdConstant.GRANT_TYPE, OpenIdConstant.REFRESH_TOKEN)
                 .param(OpenIdConstant.REFRESH_TOKEN, refreshToken.getToken());
 
-        // Access Token and RefreshToken Request
-        Client client = ClientBuilder.newClient();
-        WebTarget target = client.target(configuration.getProviderMetadata().getTokenEndpoint());
-        return target.request()
-                .accept(APPLICATION_JSON)
-                .post(Entity.form(form));
+        // Add client authentication request parameters, if any
+        return postTokenRequest(form, configuration);
     }
 
+    /**
+     * Perform the HTTP POST token request
+     *
+     * @param form          the form parameters
+     * @param configuration the OpenId Connect client configuration configuration
+     * @return the HTTP response
+     */
+    private Response postTokenRequest(final Form form, final OpenIdConfiguration configuration) {
+        // Add client authentication parameters to the form, if any
+        configuration.getClientAuthentication().getRequestParameters().forEach(form::param);
 
-
-
-
+        final Client client = ClientBuilder.newClient();
+        final WebTarget target = client.target(configuration.getProviderMetadata().getTokenEndpoint());
+        final Invocation.Builder request = target.request();
+        // Or, add client authentication parameters in the header, if any
+        configuration.getClientAuthentication().getRequestHeaders().forEach(request::header);
+        // Perform the HTTP POST request
+        return request
+                .accept(MediaType.APPLICATION_JSON)
+                .post(Entity.form(form));
+    }
 }
