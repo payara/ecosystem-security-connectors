@@ -318,9 +318,6 @@ public class ConfigurationController implements Serializable {
         if (configuration.getProviderMetadata().getResponseTypesSupported().isEmpty()) {
             errorMessages.add("response_types_supported metadata is mandatory");
         }
-        if (configuration.getProviderMetadata().getResponseTypesSupported().isEmpty()) {
-            errorMessages.add("subject_types_supported metadata is mandatory");
-        }
         if (configuration.getProviderMetadata().getIdTokenSigningAlgValuesSupported().isEmpty()) {
             errorMessages.add("id_token_signing_alg_values_supported metadata is mandatory");
         }
