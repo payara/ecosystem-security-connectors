@@ -239,6 +239,7 @@ public class ConfigurationController implements Serializable {
             clientAuthentication = new NotSupportedClientAuthentication(clientAuthenticationMethodProvided);
         }
 
+
         fish.payara.security.openid.domain.OpenIdProviderMetadata openIdProviderMetadata = new fish.payara.security.openid.domain.OpenIdProviderMetadata(
                 providerDocument,
                 issuerURI,
