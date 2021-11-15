@@ -156,7 +156,8 @@ public @interface OpenIdProviderMetadata {
     //    OPTIONAL. List of the Authentication Context Class References that this OP supports.
     //
     /**
-     * Required: List of the Subject Identifier types that this OP supports. Valid types include pairwise and public.
+     * Required by standard, but not used by Payara for now: List of the Subject Identifier types that this OP supports.
+     * Valid types include pairwise and public.
      *
      * To set this using Microprofile Config use {@code payara.security.openid.provider.subjectTypesSupported}
      *
