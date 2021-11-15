@@ -38,13 +38,11 @@
 package fish.payara.security.openid;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashSet;
 import static java.util.Objects.isNull;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 import javax.el.ELProcessor;
 import javax.enterprise.inject.spi.BeanManager;
 import javax.json.JsonArray;
@@ -77,31 +75,26 @@ public final class OpenIdUtil {
     }
 
     public static Set<String> readConfiguredValueFromMetadataOrProvider(String[] metadataValue, JsonObject providerDocument, String openIdConstant, Config provider, String openIdProviderMetadataName) {
-        Set<String> value;
+        String[] valueArr;
         if (metadataValue.length == 0 && providerDocument.containsKey(openIdConstant)) {
-            String[] valueArr = getConfiguredValue(String[].class, metadataValue, provider, openIdProviderMetadataName);
-            if (valueArr == null) {
-                value = getValues(providerDocument, openIdConstant);
-            } else {
-                value = new HashSet<>(Arrays.asList(valueArr));
-            }
+            valueArr = getConfiguredValue(String[].class, getValues(providerDocument, openIdConstant), provider, openIdProviderMetadataName);
         } else {
-            value = new HashSet<>(Arrays.asList(getConfiguredValue(String[].class, metadataValue, provider, openIdProviderMetadataName)));
+            valueArr = getConfiguredValue(String[].class, metadataValue, provider, openIdProviderMetadataName);
         }
-        return value;
+        return new HashSet<>(Arrays.asList(valueArr));
     }
 
-    private static Set<String> getValues(JsonObject document, String key) {
+    private static String[] getValues(JsonObject document, String key) {
         JsonArray jsonArray = document.getJsonArray(key);
         if (isNull(jsonArray)) {
-            return Collections.emptySet();
+            return new String[]{};
         } else {
             return jsonArray
                     .stream()
                     .filter(element -> element.getValueType() == STRING)
                     .map(element -> (JsonString) element)
                     .map(JsonString::getString)
-                    .collect(Collectors.toSet());
+                    .toArray(String[]::new);
         }
     }
 
