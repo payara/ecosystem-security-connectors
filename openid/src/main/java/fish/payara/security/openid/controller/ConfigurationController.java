@@ -192,7 +192,7 @@ public class ConfigurationController implements Serializable {
                 .collect(joining(SPACE_SEPARATOR));
         prompt = OpenIdUtil.getConfiguredValue(String.class, prompt, provider, OpenIdAuthenticationDefinition.OPENID_MP_PROMPT);
 
-        String extraParametersFromAnnotation = createUrlQuery(definition.extraParameters());
+        String extraParametersFromAnnotation = createUrlQuery("extraParameters", definition.extraParameters());
 
         boolean useNonce = OpenIdUtil.getConfiguredValue(Boolean.class, definition.useNonce(), provider, OpenIdAuthenticationDefinition.OPENID_MP_USE_NONCE);
         boolean useSession = OpenIdUtil.getConfiguredValue(Boolean.class, definition.useSession(), provider, OpenIdAuthenticationDefinition.OPENID_MP_USE_SESSION);
@@ -367,17 +367,23 @@ public class ConfigurationController implements Serializable {
     /**
      * Create Url query from pairs of parameters.
      */
-    public String createUrlQuery(String[] parameters) {
+    public static String createUrlQuery(String paramsName, String[] parameters) {
         StringBuilder extraParametersFromAnnotationBuf = new StringBuilder();
         String extraParamDelim = "";
         for (String extraParameter : parameters) {
             String[] parts = extraParameter.split("=");
+            if (parts.length == 0 || parts[0].length() == 0) {
+                throw new OpenIdAuthenticationException(paramsName + " contain parameter without key: '" + extraParameter + "', expected format: key=value");
+            }
             String key = parts[0];
             String value = parts.length > 1 ? parts[1] : null;
             extraParametersFromAnnotationBuf.append(extraParamDelim)
-                    .append(URLEncoder.encode(key, StandardCharsets.UTF_8))
-                    .append("=")
-                    .append(URLEncoder.encode(value, StandardCharsets.UTF_8));
+                    .append(URLEncoder.encode(key, StandardCharsets.UTF_8));
+            if (value != null) {
+                extraParametersFromAnnotationBuf
+                        .append("=")
+                        .append(URLEncoder.encode(value, StandardCharsets.UTF_8));
+            }
             extraParamDelim = "&";
         }
         return extraParametersFromAnnotationBuf.toString();
@@ -386,18 +392,14 @@ public class ConfigurationController implements Serializable {
     /**
      * Parse Url query format to multimap.
      */
-    private Map<String, List<String>> parseMultiMapFromUrlQuery(String query) {
+    public static Map<String, List<String>> parseMultiMapFromUrlQuery(String query) {
         Map<String, List<String>> multiMap = new LinkedHashMap<>();
         String[] pairs = query.split("&");
         for (String pair : pairs) {
             String[] keyValue = pair.split("=");
             String key = keyValue[0];
             String value = keyValue.length > 1 ? URLDecoder.decode(keyValue[1], StandardCharsets.UTF_8) : null;
-            List<String> values = multiMap.get(key);
-            if (values == null) {
-                values = new ArrayList<>();
-                multiMap.put(key, values);
-            }
+            List<String> values = multiMap.computeIfAbsent(key, k -> new ArrayList<>());
             values.add(value);
         }
         return multiMap;
