@@ -38,13 +38,10 @@
 package fish.payara.security.openid;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashSet;
 import static java.util.Objects.isNull;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import java.util.function.Predicate;
 import jakarta.el.ELProcessor;
 import jakarta.enterprise.inject.spi.BeanManager;
@@ -64,9 +61,6 @@ import org.eclipse.microprofile.config.Config;
  */
 public final class OpenIdUtil {
 
-    private static final String SET_DELIMITER = "|";
-    private static final String SET_DELIMITER_REGEX = "[|]";
-
     private OpenIdUtil() {
     }
 
@@ -81,44 +75,26 @@ public final class OpenIdUtil {
     }
 
     public static Set<String> readConfiguredValueFromMetadataOrProvider(String[] metadataValue, JsonObject providerDocument, String openIdConstant, Config provider, String openIdProviderMetadataName) {
-        Set<String> value;
-        // PayaraConfig can contain strings from microprofile config, e.g. parse set with '|' as separator.
+        String[] valueArr;
         if (metadataValue.length == 0 && providerDocument.containsKey(openIdConstant)) {
-            value = parseSet(getConfiguredValue(String.class, null, provider, openIdProviderMetadataName));
-            if (value == null) {
-                value = getValues(providerDocument, openIdConstant);
-            }
+            valueArr = getConfiguredValue(String[].class, getValues(providerDocument, openIdConstant), provider, openIdProviderMetadataName);
         } else {
-            Set<String> metadataValueSet = Stream.of(metadataValue).collect(Collectors.toSet());
-            value = parseSet(getConfiguredValue(String.class, null, provider, openIdProviderMetadataName));
-            if (value == null) {
-                value = metadataValueSet;
-            }
+            valueArr = getConfiguredValue(String[].class, metadataValue, provider, openIdProviderMetadataName);
         }
-        return value;
+        return new HashSet<>(Arrays.asList(valueArr));
     }
 
-    private static Set<String> parseSet(String val) {
-        if (val == null) {
-            return null;
-        } else {
-            Set<String> set = new HashSet<>();
-            set.addAll(Arrays.asList(val.split(SET_DELIMITER_REGEX)));
-            return set;
-        }
-    }
-
-    private static Set<String> getValues(JsonObject document, String key) {
+    private static String[] getValues(JsonObject document, String key) {
         JsonArray jsonArray = document.getJsonArray(key);
         if (isNull(jsonArray)) {
-            return Collections.emptySet();
+            return new String[]{};
         } else {
             return jsonArray
                     .stream()
                     .filter(element -> element.getValueType() == STRING)
                     .map(element -> (JsonString) element)
                     .map(JsonString::getString)
-                    .collect(Collectors.toSet());
+                    .toArray(String[]::new);
         }
     }
 
