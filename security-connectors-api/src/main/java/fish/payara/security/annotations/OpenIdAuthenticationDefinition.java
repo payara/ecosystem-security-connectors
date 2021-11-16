@@ -192,6 +192,9 @@ public @interface OpenIdAuthenticationDefinition {
      * These must be in the form of {@code "key=value"} i.e.
      * <code> extraParameters={"key1=value", "key2=value2"} </code>
      *
+     * To set this using Microprofile Config use {@code payara.security.openid.extraParams.raw}, in URL query format:
+     * {@code key=value&key2=value+with+spaces}. The keys may repeat.
+     *
      * @return
      */
     String[] extraParameters() default {};
@@ -372,4 +375,10 @@ public @interface OpenIdAuthenticationDefinition {
      * and get the user information from ID Token is <code>{@value}</code>
      */
     String OPENID_MP_USER_CLAIMS_FROM_ID_TOKEN = "payara.security.openid.userClaimsFromIDToken";
+
+    /**
+     * The Microprofile Config key for extraParams is <code>{@value}</code>. Use URL query format to store key/value
+     * pairs: {@code key=value&key2=value+with+spaces}. The keys may repeat.
+     */
+    String OPENID_MP_EXTRA_PARAMS_RAW = "payara.security.openid.extraParams.raw";
 }

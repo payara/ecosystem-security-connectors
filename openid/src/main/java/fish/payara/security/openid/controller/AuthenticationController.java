@@ -126,7 +126,11 @@ public class AuthenticationController {
             authRequest.queryParam(OpenIdConstant.PROMPT, configuration.getPrompt());
         }
 
-        configuration.getExtraParameters().forEach(authRequest::queryParam);
+        configuration.getExtraParameters().forEach(
+                (key, values) -> values.stream().forEach(
+                        value -> authRequest.queryParam(key, value)
+                )
+        );
 
         String authUrl = authRequest.toString();
         LOGGER.log(FINEST, "Redirecting for authentication to {0}", authUrl);
