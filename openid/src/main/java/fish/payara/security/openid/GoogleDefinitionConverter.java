@@ -162,6 +162,11 @@ public class GoogleDefinitionConverter {
             public boolean userClaimsFromIDToken() {
                 return googleDefinition.userClaimsFromIDToken();
             }
+
+            @Override
+            public boolean disableScopeValidation() {
+                return googleDefinition.providerMetadata().disableScopeValidation();
+            }
         };
     }
 

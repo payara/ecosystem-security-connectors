@@ -174,6 +174,11 @@ public class AzureDefinitionConverter {
             public boolean userClaimsFromIDToken() {
                 return azureDefinition.userClaimsFromIDToken();
             }
+
+            @Override
+            public boolean disableScopeValidation() {
+                return azureDefinition.providerMetadata().disableScopeValidation();
+            }
         };
     }
 
