@@ -50,7 +50,6 @@ import javax.enterprise.inject.Instance;
 import javax.enterprise.inject.Typed;
 import javax.inject.Inject;
 import javax.json.Json;
-import javax.json.JsonNumber;
 import javax.json.JsonObject;
 import javax.json.JsonReader;
 import javax.security.auth.callback.Callback;
@@ -74,7 +73,6 @@ import fish.payara.security.openid.api.RefreshToken;
 import fish.payara.security.openid.controller.AuthenticationController;
 import fish.payara.security.openid.controller.StateController;
 import fish.payara.security.openid.controller.TokenController;
-import fish.payara.security.openid.domain.AccessTokenImpl;
 import fish.payara.security.openid.domain.LogoutConfiguration;
 import fish.payara.security.openid.domain.OpenIdConfiguration;
 import fish.payara.security.openid.domain.OpenIdContextImpl;
@@ -417,9 +415,9 @@ public class OpenIdAuthenticationMechanism implements HttpAuthenticationMechanis
         if (nonNull(refreshToken)) {
             context.setRefreshToken(new RefreshTokenImpl(refreshToken));
         }
-        JsonNumber expiresIn = tokensObject.getJsonNumber(EXPIRES_IN);
+        Long expiresIn = OpenIdUtil.parseLong(tokensObject, EXPIRES_IN);
         if (nonNull(expiresIn)) {
-            context.setExpiresIn(expiresIn.longValue());
+            context.setExpiresIn(expiresIn);
         }
     }
 
