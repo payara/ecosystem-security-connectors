@@ -381,4 +381,9 @@ public @interface OpenIdAuthenticationDefinition {
      * pairs: {@code key=value&key2=value+with+spaces}. The keys may repeat.
      */
     String OPENID_MP_EXTRA_PARAMS_RAW = "payara.security.openid.extraParams.raw";
+
+    /**
+     * The Microprofile Config key to disable scope validation is <code>{@value}</code>
+     */
+    String OPENID_MP_DISABLE_SCOPE_VALIDATION = "payara.security.openid.disableScopeValidation";
 }

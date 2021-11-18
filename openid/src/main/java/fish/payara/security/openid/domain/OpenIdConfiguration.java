@@ -72,6 +72,7 @@ public class OpenIdConfiguration {
     private int tokenMinValidity;
     private JWTValidator validator;
     private boolean userClaimsFromIDToken;
+    private boolean disableScopeValidation;
 
     static final String BASE_URL_EXPRESSION = "${baseURL}";
 
@@ -264,6 +265,15 @@ public class OpenIdConfiguration {
         return this;
     }
 
+    public boolean isDisableScopeValidation() {
+        return disableScopeValidation;
+    }
+
+    public OpenIdConfiguration setDisableScopeValidation(boolean disableScopeValidation) {
+        this.disableScopeValidation = disableScopeValidation;
+        return this;
+    }
+
     @Override
     public String toString() {
         return OpenIdConfiguration.class.getSimpleName()
@@ -285,6 +295,7 @@ public class OpenIdConfiguration {
                 + ", tokenAutoRefresh=" + tokenAutoRefresh
                 + ", tokenMinValidity=" + tokenMinValidity
                 + ", userClaimsFromIDToken=" + userClaimsFromIDToken
+                + ", disableScopeValidation=" + disableScopeValidation
                 + '}';
     }
 
