@@ -217,7 +217,7 @@ public class ConfigurationController implements Serializable {
         boolean userClaimsFromIDToken = OpenIdUtil.getConfiguredValue(Boolean.class, definition.userClaimsFromIDToken(), provider, OpenIdAuthenticationDefinition.OPENID_MP_USER_CLAIMS_FROM_ID_TOKEN);
         String extraParamsRaw = OpenIdUtil.getConfiguredValue(String.class, extraParametersFromAnnotation, provider, OpenIdAuthenticationDefinition.OPENID_MP_EXTRA_PARAMS_RAW);
         Map<String, List<String>> extraParameters = parseMultiMapFromUrlQuery(extraParamsRaw);
-        boolean disableScopeValidation = OpenIdUtil.getConfiguredValue(Boolean.class, null, provider, OpenIdAuthenticationDefinition.OPENID_MP_DISABLE_SCOPE_VALIDATION);
+        boolean disableScopeValidation = OpenIdUtil.getConfiguredValue(Boolean.class, false, provider, OpenIdAuthenticationDefinition.OPENID_MP_DISABLE_SCOPE_VALIDATION);
 
         fish.payara.security.openid.domain.OpenIdProviderMetadata openIdProviderMetadata = new fish.payara.security.openid.domain.OpenIdProviderMetadata(
                 providerDocument,
