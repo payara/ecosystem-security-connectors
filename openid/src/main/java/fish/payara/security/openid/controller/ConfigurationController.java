@@ -217,6 +217,7 @@ public class ConfigurationController implements Serializable {
         boolean userClaimsFromIDToken = OpenIdUtil.getConfiguredValue(Boolean.class, definition.userClaimsFromIDToken(), provider, OpenIdAuthenticationDefinition.OPENID_MP_USER_CLAIMS_FROM_ID_TOKEN);
         String extraParamsRaw = OpenIdUtil.getConfiguredValue(String.class, extraParametersFromAnnotation, provider, OpenIdAuthenticationDefinition.OPENID_MP_EXTRA_PARAMS_RAW);
         Map<String, List<String>> extraParameters = parseMultiMapFromUrlQuery(extraParamsRaw);
+        boolean disableScopeValidation = OpenIdUtil.getConfiguredValue(Boolean.class, null, provider, OpenIdAuthenticationDefinition.OPENID_MP_DISABLE_SCOPE_VALIDATION);
 
         fish.payara.security.openid.domain.OpenIdProviderMetadata openIdProviderMetadata = new fish.payara.security.openid.domain.OpenIdProviderMetadata(
                 providerDocument,
@@ -270,7 +271,8 @@ public class ConfigurationController implements Serializable {
                 .setJwksReadTimeout(jwksReadTimeout)
                 .setTokenAutoRefresh(tokenAutoRefresh)
                 .setTokenMinValidity(tokenMinValidity)
-                .setUserClaimsFromIDToken(userClaimsFromIDToken);
+                .setUserClaimsFromIDToken(userClaimsFromIDToken)
+                .setDisableScopeValidation(disableScopeValidation);
 
         validateConfiguration(configuration);
 
@@ -348,15 +350,17 @@ public class ConfigurationController implements Serializable {
             errorMessages.add("Unsupported OpenID Connect response type value : " + configuration.getResponseType());
         }
 
-        Set<String> supportedScopes = configuration.getProviderMetadata().getScopesSupported();
-        if (!supportedScopes.isEmpty()) {
-            for (String scope : configuration.getScopes().split(SPACE_SEPARATOR)) {
-                if (!supportedScopes.contains(scope)) {
-                    errorMessages.add(String.format(
-                            "%s scope is not supported by %s OpenId Connect provider",
-                            scope,
-                            configuration.getProviderMetadata().getIssuerURI())
-                    );
+        if(!configuration.isDisableScopeValidation()) {
+            Set<String> supportedScopes = configuration.getProviderMetadata().getScopesSupported();
+            if (!supportedScopes.isEmpty()) {
+                for (String scope : configuration.getScopes().split(SPACE_SEPARATOR)) {
+                    if (!supportedScopes.contains(scope)) {
+                        errorMessages.add(String.format(
+                                "%s scope is not supported by %s OpenId Connect provider",
+                                scope,
+                                configuration.getProviderMetadata().getIssuerURI())
+                        );
+                    }
                 }
             }
         }
