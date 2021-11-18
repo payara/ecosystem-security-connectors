@@ -63,9 +63,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.stream.Stream;
 
@@ -189,13 +187,7 @@ public class ConfigurationController implements Serializable {
                 .collect(joining(SPACE_SEPARATOR));
         prompt = OpenIdUtil.getConfiguredValue(String.class, prompt, provider, OpenIdAuthenticationDefinition.OPENID_MP_PROMPT);
 
-        Map<String, String> extraParameters = new HashMap<>();
-        for (String extraParameter : definition.extraParameters()) {
-            String[] parts = extraParameter.split("=");
-            String key = parts[0];
-            String value = parts[1];
-            extraParameters.put(key, value);
-        }
+        String extraParametersFromAnnotation = createUrlQuery("extraParameters", definition.extraParameters());
 
         boolean useNonce = OpenIdUtil.getConfiguredValue(Boolean.class, definition.useNonce(), provider, OpenIdAuthenticationDefinition.OPENID_MP_USE_NONCE);
         boolean useSession = OpenIdUtil.getConfiguredValue(Boolean.class, definition.useSession(), provider, OpenIdAuthenticationDefinition.OPENID_MP_USE_SESSION);
@@ -218,6 +210,9 @@ public class ConfigurationController implements Serializable {
         boolean tokenAutoRefresh = OpenIdUtil.getConfiguredValue(Boolean.class, definition.tokenAutoRefresh(), provider, OpenIdAuthenticationDefinition.OPENID_MP_TOKEN_AUTO_REFRESH);
         int tokenMinValidity = OpenIdUtil.getConfiguredValue(Integer.class, definition.tokenMinValidity(), provider, OpenIdAuthenticationDefinition.OPENID_MP_TOKEN_MIN_VALIDITY);
         boolean userClaimsFromIDToken = OpenIdUtil.getConfiguredValue(Boolean.class, definition.userClaimsFromIDToken(), provider, OpenIdAuthenticationDefinition.OPENID_MP_USER_CLAIMS_FROM_ID_TOKEN);
+        String extraParamsRaw = OpenIdUtil.getConfiguredValue(String.class, extraParametersFromAnnotation, provider, OpenIdAuthenticationDefinition.OPENID_MP_EXTRA_PARAMS_RAW);
+        Map<String, List<String>> extraParameters = parseMultiMapFromUrlQuery(extraParamsRaw);
+        boolean disableScopeValidation = OpenIdUtil.getConfiguredValue(Boolean.class, false, provider, OpenIdAuthenticationDefinition.OPENID_MP_DISABLE_SCOPE_VALIDATION);
 
         // Get the client authentication method
         final String clientAuthenticationMethodProvided = OpenIdUtil.getConfiguredValue(String.class,
@@ -293,6 +288,7 @@ public class ConfigurationController implements Serializable {
                 .setTokenAutoRefresh(tokenAutoRefresh)
                 .setTokenMinValidity(tokenMinValidity)
                 .setUserClaimsFromIDToken(userClaimsFromIDToken)
+                .setDisableScopeValidation(disableScopeValidation)
                 .setClientAuthentication(clientAuthentication);
 
         validateConfiguration(configuration);
@@ -371,15 +367,17 @@ public class ConfigurationController implements Serializable {
             errorMessages.add("Unsupported OpenID Connect response type value : " + configuration.getResponseType());
         }
 
-        Set<String> supportedScopes = configuration.getProviderMetadata().getScopesSupported();
-        if (!supportedScopes.isEmpty()) {
-            for (String scope : configuration.getScopes().split(SPACE_SEPARATOR)) {
-                if (!supportedScopes.contains(scope)) {
-                    errorMessages.add(String.format(
-                            "%s scope is not supported by %s OpenId Connect provider",
-                            scope,
-                            configuration.getProviderMetadata().getIssuerURI())
-                    );
+        if(!configuration.isDisableScopeValidation()) {
+            Set<String> supportedScopes = configuration.getProviderMetadata().getScopesSupported();
+            if (!supportedScopes.isEmpty()) {
+                for (String scope : configuration.getScopes().split(SPACE_SEPARATOR)) {
+                    if (!supportedScopes.contains(scope)) {
+                        errorMessages.add(String.format(
+                                "%s scope is not supported by %s OpenId Connect provider",
+                                scope,
+                                configuration.getProviderMetadata().getIssuerURI())
+                        );
+                    }
                 }
             }
         }
@@ -390,6 +388,47 @@ public class ConfigurationController implements Serializable {
         }
 
         return errorMessages;
+    }
+
+    /**
+     * Create Url query from pairs of parameters.
+     */
+    public static String createUrlQuery(String paramsName, String[] parameters) {
+        StringBuilder extraParametersFromAnnotationBuf = new StringBuilder();
+        String extraParamDelim = "";
+        for (String extraParameter : parameters) {
+            String[] parts = extraParameter.split("=");
+            if (parts.length == 0 || parts[0].length() == 0) {
+                throw new OpenIdAuthenticationException(paramsName + " contain parameter without key: '" + extraParameter + "', expected format: key=value");
+            }
+            String key = parts[0];
+            String value = parts.length > 1 ? parts[1] : null;
+            extraParametersFromAnnotationBuf.append(extraParamDelim)
+                    .append(URLEncoder.encode(key, StandardCharsets.UTF_8));
+            if (value != null) {
+                extraParametersFromAnnotationBuf
+                        .append("=")
+                        .append(URLEncoder.encode(value, StandardCharsets.UTF_8));
+            }
+            extraParamDelim = "&";
+        }
+        return extraParametersFromAnnotationBuf.toString();
+    }
+
+    /**
+     * Parse Url query format to multimap.
+     */
+    public static Map<String, List<String>> parseMultiMapFromUrlQuery(String query) {
+        Map<String, List<String>> multiMap = new LinkedHashMap<>();
+        String[] pairs = query.split("&");
+        for (String pair : pairs) {
+            String[] keyValue = pair.split("=");
+            String key = keyValue[0];
+            String value = keyValue.length > 1 ? URLDecoder.decode(keyValue[1], StandardCharsets.UTF_8) : null;
+            List<String> values = multiMap.computeIfAbsent(key, k -> new ArrayList<>());
+            values.add(value);
+        }
+        return multiMap;
     }
 
     static class LastBuiltConfig {

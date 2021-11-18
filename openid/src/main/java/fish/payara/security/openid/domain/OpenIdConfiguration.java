@@ -42,6 +42,7 @@ import fish.payara.security.openid.controller.ClientAuthentication;
 import javax.servlet.http.HttpServletRequest;
 import java.util.Arrays;
 import java.util.Map;
+import java.util.List;
 
 /**
  * OpenId Connect client configuration
@@ -56,7 +57,9 @@ public class OpenIdConfiguration {
     private String scopes;
     private String responseType;
     private String responseMode;
-    private Map<String, String> extraParameters;
+    private 
+      
+      <String, List<String>> extraParameters;
     private String prompt;
     private String display;
     private boolean useNonce;
@@ -70,6 +73,7 @@ public class OpenIdConfiguration {
     private boolean tokenAutoRefresh;
     private int tokenMinValidity;
     private boolean userClaimsFromIDToken;
+    private boolean disableScopeValidation;
     private ClientAuthentication clientAuthentication;
 
     static final String BASE_URL_EXPRESSION = "${baseURL}";
@@ -137,11 +141,11 @@ public class OpenIdConfiguration {
         return this;
     }
 
-    public Map<String, String> getExtraParameters() {
+    public Map<String, List<String>> getExtraParameters() {
         return extraParameters;
     }
 
-    public OpenIdConfiguration setExtraParameters(Map<String, String> extraParameters) {
+    public OpenIdConfiguration setExtraParameters(Map<String, List<String>> extraParameters) {
         this.extraParameters = extraParameters;
         return this;
     }
@@ -263,6 +267,15 @@ public class OpenIdConfiguration {
         return this;
     }
 
+    public boolean isDisableScopeValidation() {
+        return disableScopeValidation;
+    }
+
+    public OpenIdConfiguration setDisableScopeValidation(boolean disableScopeValidation) {
+        this.disableScopeValidation = disableScopeValidation;
+        return this;
+    }
+
     public ClientAuthentication getClientAuthentication() {
         return clientAuthentication;
     }
@@ -271,8 +284,7 @@ public class OpenIdConfiguration {
         this.clientAuthentication = clientAuthentication;
         return this;
     }
-
-
+    
     @Override
     public String toString() {
         return OpenIdConfiguration.class.getSimpleName()
@@ -294,6 +306,7 @@ public class OpenIdConfiguration {
                 + ", tokenAutoRefresh=" + tokenAutoRefresh
                 + ", tokenMinValidity=" + tokenMinValidity
                 + ", userClaimsFromIDToken=" + userClaimsFromIDToken
+                + ", disableScopeValidation=" + disableScopeValidation
                 + ", clientAuthentication=" + clientAuthentication
                 + '}';
     }
