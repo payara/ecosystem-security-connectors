@@ -38,6 +38,7 @@
 package fish.payara.security.openid.controller;
 
 import fish.payara.security.openid.api.ClientAuthenticationMethod;
+import fish.payara.security.openid.domain.ClientAuthentication;
 
 /**
  * Client authentication method not supported by Payara OpenID implementation.

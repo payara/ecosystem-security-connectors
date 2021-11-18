@@ -37,27 +37,17 @@
  */
 package fish.payara.security.openid.controller;
 
-import fish.payara.security.annotations.ClaimsDefinition;
-import fish.payara.security.annotations.LogoutDefinition;
+
 import fish.payara.security.annotations.OpenIdAuthenticationDefinition;
 import fish.payara.security.annotations.OpenIdProviderMetadata;
-import fish.payara.security.openid.OpenIdAuthenticationException;
-import fish.payara.security.openid.OpenIdUtil;
 import fish.payara.security.openid.api.ClientAuthenticationMethod;
-import fish.payara.security.openid.api.OpenIdConstant;
 import fish.payara.security.openid.api.PromptType;
 import fish.payara.security.openid.domain.ClaimsConfiguration;
+import fish.payara.security.openid.domain.ClientAuthentication;
 import fish.payara.security.openid.domain.LogoutConfiguration;
 import fish.payara.security.openid.domain.OpenIdConfiguration;
 import fish.payara.security.openid.domain.OpenIdTokenEncryptionMetadata;
-import org.eclipse.microprofile.config.Config;
-import org.eclipse.microprofile.config.ConfigProvider;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.context.RequestScoped;
-import javax.enterprise.inject.Produces;
-import javax.inject.Inject;
-import javax.json.JsonObject;
 import java.io.Serializable;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -68,6 +58,24 @@ import java.util.Set;
 import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.joining;
+import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.context.RequestScoped;
+import javax.enterprise.inject.Produces;
+import javax.inject.Inject;
+import javax.json.JsonObject;
+
+import fish.payara.security.annotations.ClaimsDefinition;
+import fish.payara.security.annotations.LogoutDefinition;
+import fish.payara.security.openid.OpenIdAuthenticationException;
+import fish.payara.security.openid.OpenIdUtil;
+import fish.payara.security.openid.api.OpenIdConstant;
+import java.net.URLDecoder;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import org.eclipse.microprofile.config.Config;
+import org.eclipse.microprofile.config.ConfigProvider;
 
 /**
  * Build and validate the OpenId Connect client configuration

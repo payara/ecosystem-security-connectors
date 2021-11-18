@@ -35,7 +35,7 @@
  *  only if the new code is made subject to such option by the copyright
  *  holder.
  */
-package fish.payara.security.openid.controller;
+package fish.payara.security.openid.domain;
 
 import fish.payara.security.openid.api.ClientAuthenticationMethod;
 

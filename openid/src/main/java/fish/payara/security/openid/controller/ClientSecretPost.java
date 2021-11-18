@@ -39,6 +39,7 @@ package fish.payara.security.openid.controller;
 
 import fish.payara.security.openid.api.ClientAuthenticationMethod;
 import fish.payara.security.openid.api.OpenIdConstant;
+import fish.payara.security.openid.domain.ClientAuthentication;
 
 import java.util.Arrays;
 import java.util.HashMap;

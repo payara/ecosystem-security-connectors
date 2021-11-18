@@ -37,8 +37,6 @@
  */
 package fish.payara.security.openid.domain;
 
-import fish.payara.security.openid.controller.ClientAuthentication;
-
 import javax.servlet.http.HttpServletRequest;
 import java.util.Arrays;
 import java.util.Map;
@@ -57,9 +55,7 @@ public class OpenIdConfiguration {
     private String scopes;
     private String responseType;
     private String responseMode;
-    private 
-      
-      <String, List<String>> extraParameters;
+    private Map<String, List<String>> extraParameters;
     private String prompt;
     private String display;
     private boolean useNonce;
