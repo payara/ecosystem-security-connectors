@@ -46,7 +46,6 @@ import static fish.payara.security.openid.api.OpenIdConstant.SCOPE;
 import static fish.payara.security.openid.api.OpenIdConstant.TOKEN_TYPE;
 import fish.payara.security.openid.domain.AccessTokenImpl;
 import fish.payara.security.openid.domain.IdentityTokenImpl;
-import fish.payara.security.openid.domain.OpenIdConfiguration;
 
 import static java.util.Objects.nonNull;
 import jakarta.json.JsonObject;
@@ -72,8 +71,8 @@ public class OpenIdCredential implements Credential {
         this.identityToken = new IdentityTokenImpl(tokensObject.getString(IDENTITY_TOKEN), tokenMinValidity);
         String accessTokenString = tokensObject.getString(ACCESS_TOKEN, null);
         Long expiresIn = null;
-        if(nonNull(tokensObject.getJsonNumber(EXPIRES_IN))){
-            expiresIn = tokensObject.getJsonNumber(EXPIRES_IN).longValue();
+        if (tokensObject.containsKey(EXPIRES_IN)) {
+            expiresIn = OpenIdUtil.parseLong(tokensObject, EXPIRES_IN);
         }
         String tokenType = tokensObject.getString(TOKEN_TYPE, null);
         String scopeString = tokensObject.getString(SCOPE, null);
