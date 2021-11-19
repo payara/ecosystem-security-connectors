@@ -210,6 +210,13 @@ public @interface OpenIdProviderMetadata {
     String[] claimsSupported() default {};
 
     /**
+     * Optional: Indicates to disable the scope validation.
+     *
+     * @return
+     */
+    boolean disableScopeValidation() default false;
+
+    /**
      * The Microprofile Config key for the issuer url is <code>{@value}</code>.
      */
     String OPENID_MP_ISSUER = "payara.security.openid.provider.issuer";

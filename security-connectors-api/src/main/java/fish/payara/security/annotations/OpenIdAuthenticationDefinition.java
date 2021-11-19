@@ -243,6 +243,13 @@ public @interface OpenIdAuthenticationDefinition {
     boolean userClaimsFromIDToken() default false;
 
     /**
+     * Optional: Indicates to disable the scope validation.
+     *
+     * @return
+     */
+    boolean disableScopeValidation() default false;
+
+    /**
      * The Microprofile Config key for the provider uri is <code>{@value}</code>
      */
     String OPENID_MP_PROVIDER_URI = "payara.security.openid.providerURI";
