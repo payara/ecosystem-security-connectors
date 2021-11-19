@@ -105,6 +105,12 @@ public class ConfigurationControllerTest {
     }
 
     @Test
+    public void parseMultiMapFromUrlEmptyString() {
+        Map<String, List<String>> result = new HashMap<>();
+        assertEquals(result, ConfigurationController.parseMultiMapFromUrlQuery(""));
+    }
+
+    @Test
     public void parseMultiMapFromUrlQuery() {
         Map<String, List<String>> result = new HashMap<>();
         result.put("a", Arrays.asList("b"));

@@ -401,10 +401,13 @@ public class ConfigurationController implements Serializable {
         String[] pairs = query.split("&");
         for (String pair : pairs) {
             String[] keyValue = pair.split("=");
-            String key = keyValue[0];
-            String value = keyValue.length > 1 ? URLDecoder.decode(keyValue[1], StandardCharsets.UTF_8) : null;
-            List<String> values = multiMap.computeIfAbsent(key, k -> new ArrayList<>());
-            values.add(value);
+            if (keyValue.length > 0 && keyValue[0].length() > 0) {
+                // process only key-value pairs with key
+                String key = keyValue[0];
+                String value = keyValue.length > 1 ? URLDecoder.decode(keyValue[1], StandardCharsets.UTF_8) : null;
+                List<String> values = multiMap.computeIfAbsent(key, k -> new ArrayList<>());
+                values.add(value);
+            }
         }
         return multiMap;
     }
