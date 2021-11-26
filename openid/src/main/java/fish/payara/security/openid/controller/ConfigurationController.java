@@ -66,9 +66,9 @@ import fish.payara.security.annotations.LogoutDefinition;
 import fish.payara.security.openid.OpenIdAuthenticationException;
 import fish.payara.security.openid.OpenIdUtil;
 import fish.payara.security.openid.api.OpenIdConstant;
+import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import org.eclipse.microprofile.config.Config;
@@ -381,12 +381,16 @@ public class ConfigurationController implements Serializable {
             }
             String key = parts[0];
             String value = parts.length > 1 ? parts[1] : null;
-            extraParametersFromAnnotationBuf.append(extraParamDelim)
-                    .append(URLEncoder.encode(key, StandardCharsets.UTF_8));
-            if (value != null) {
-                extraParametersFromAnnotationBuf
-                        .append("=")
-                        .append(URLEncoder.encode(value, StandardCharsets.UTF_8));
+            try {
+                extraParametersFromAnnotationBuf.append(extraParamDelim)
+                        .append(URLEncoder.encode(key, "UTF-8"));
+                if (value != null) {
+                    extraParametersFromAnnotationBuf
+                            .append("=")
+                            .append(URLEncoder.encode(value, "UTF-8"));
+                }
+            } catch (UnsupportedEncodingException e) {
+                throw new OpenIdAuthenticationException("UTF-8 is no more supported");
             }
             extraParamDelim = "&";
         }
@@ -403,10 +407,14 @@ public class ConfigurationController implements Serializable {
             String[] keyValue = pair.split("=");
             if (keyValue.length > 0 && keyValue[0].length() > 0) {
                 // process only key-value pairs with key
-                String key = keyValue[0];
-                String value = keyValue.length > 1 ? URLDecoder.decode(keyValue[1], StandardCharsets.UTF_8) : null;
-                List<String> values = multiMap.computeIfAbsent(key, k -> new ArrayList<>());
-                values.add(value);
+                try {
+                    String key = keyValue[0];
+                    String value = keyValue.length > 1 ? URLDecoder.decode(keyValue[1], "UTF-8") : null;
+                    List<String> values = multiMap.computeIfAbsent(key, k -> new ArrayList<>());
+                    values.add(value);
+                } catch (UnsupportedEncodingException e) {
+                    throw new OpenIdAuthenticationException("UTF-8 is no more supported");
+                }
             }
         }
         return multiMap;
