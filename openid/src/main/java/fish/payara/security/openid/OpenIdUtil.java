@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2021 Payara Foundation and/or its affiliates. All rights reserved.
+ * Copyright (c) [2020-2021] Payara Foundation and/or its affiliates. All rights reserved.
  *
  *  The contents of this file are subject to the terms of either the GNU
  *  General Public License Version 2 only ("GPL") or the Common Development
@@ -37,21 +37,67 @@
  */
 package fish.payara.security.openid;
 
+import java.util.Arrays;
+import java.util.HashSet;
+import static java.util.Objects.isNull;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Predicate;
 import jakarta.el.ELProcessor;
 import jakarta.enterprise.inject.spi.BeanManager;
+import jakarta.json.JsonArray;
+import jakarta.json.JsonObject;
+import jakarta.json.JsonString;
+import jakarta.json.JsonValue;
+import jakarta.json.JsonNumber;
+import static jakarta.json.JsonValue.ValueType.STRING;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 import org.eclipse.microprofile.config.Config;
 
 /**
+ * Utility class for evaluation of OpenId values.
  *
  * @author Gaurav Gupta
+ * @author Petr Aubrecht
  */
 public final class OpenIdUtil {
 
     private OpenIdUtil() {
+    }
+
+    public static String readConfiguredValueFromMetadataOrProvider(String metadataValue, JsonObject providerDocument, String openIdConstant, Config provider, String openIdProviderMetadataName) {
+        String value;
+        if (isEmpty(metadataValue) && providerDocument.containsKey(openIdConstant)) {
+            value = getConfiguredValue(String.class, providerDocument.getString(openIdConstant), provider, openIdProviderMetadataName);
+        } else {
+            value = getConfiguredValue(String.class, metadataValue, provider, openIdProviderMetadataName);
+        }
+        return value;
+    }
+
+    public static Set<String> readConfiguredValueFromMetadataOrProvider(String[] metadataValue, JsonObject providerDocument, String openIdConstant, Config provider, String openIdProviderMetadataName) {
+        String[] valueArr;
+        if (metadataValue.length == 0 && providerDocument.containsKey(openIdConstant)) {
+            valueArr = getConfiguredValue(String[].class, getValues(providerDocument, openIdConstant), provider, openIdProviderMetadataName);
+        } else {
+            valueArr = getConfiguredValue(String[].class, metadataValue, provider, openIdProviderMetadataName);
+        }
+        return new HashSet<>(Arrays.asList(valueArr));
+    }
+
+    private static String[] getValues(JsonObject document, String key) {
+        JsonArray jsonArray = document.getJsonArray(key);
+        if (isNull(jsonArray)) {
+            return new String[]{};
+        } else {
+            return jsonArray
+                    .stream()
+                    .filter(element -> element.getValueType() == STRING)
+                    .map(element -> (JsonString) element)
+                    .map(JsonString::getString)
+                    .toArray(String[]::new);
+        }
     }
 
     public static <T> T getConfiguredValue(Class<T> type, T value, Config provider, String mpConfigKey) {
@@ -107,5 +153,24 @@ public final class OpenIdUtil {
      */
     public static boolean isEmpty(String value) {
         return value == null || value.trim().length() == 0;
+    }
+
+    /**
+     * Parse a JSON value as long even if it is provided as a string.
+     *
+     * @param json json object
+     * @param fieldName name of the field (key)
+     * @return long representation of the field
+     */
+    public static Long parseLong(JsonObject json, String fieldName) {
+        Long longField = null;
+        JsonValue jsonField = json.get(fieldName);
+        if (jsonField instanceof JsonNumber) {
+            longField = ((JsonNumber) jsonField).longValue();
+        } else if (jsonField instanceof JsonString) {
+            // Microsoft Azure AD B2C returns expires_in value as a string
+            longField = Long.valueOf(((JsonString) jsonField).getString());
+        }
+        return longField;
     }
 }

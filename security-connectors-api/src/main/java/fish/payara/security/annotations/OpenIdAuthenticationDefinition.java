@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Payara Foundation and/or its affiliates. All rights reserved.
+ * Copyright (c) 2021 Payara Foundation and/or its affiliates. All rights reserved.
  *
  *  The contents of this file are subject to the terms of either the GNU
  *  General Public License Version 2 only ("GPL") or the Common Development
@@ -192,6 +192,9 @@ public @interface OpenIdAuthenticationDefinition {
      * These must be in the form of {@code "key=value"} i.e.
      * <code> extraParameters={"key1=value", "key2=value2"} </code>
      *
+     * To set this using Microprofile Config use {@code payara.security.openid.extraParams.raw}, in URL query format:
+     * {@code key=value&key2=value+with+spaces}. The keys may repeat.
+     *
      * @return
      */
     String[] extraParameters() default {};
@@ -231,6 +234,13 @@ public @interface OpenIdAuthenticationDefinition {
      * @return
      */
     int tokenMinValidity() default 10 * 1000;
+
+    /**
+     * Optional. Indicates to skip the /userinfo endpoint call and get the user information from ID Token.
+     *
+     * @return
+     */
+    boolean userClaimsFromIDToken() default false;
 
     /**
      * The Microprofile Config key for the provider uri is <code>{@value}</code>
@@ -359,4 +369,21 @@ public @interface OpenIdAuthenticationDefinition {
      * The Microprofile Config key for evaluating EL expressions for every HTTP session is <code>{@value}</code>
      */
     String OPENID_MP_SESSION_SCOPED_CONFIGURATION = "payara.security.openid.sessionScopedConfiguration";
+
+    /**
+     * The Microprofile Config key to skip the /userinfo endpoint call
+     * and get the user information from ID Token is <code>{@value}</code>
+     */
+    String OPENID_MP_USER_CLAIMS_FROM_ID_TOKEN = "payara.security.openid.userClaimsFromIDToken";
+
+    /**
+     * The Microprofile Config key for extraParams is <code>{@value}</code>. Use URL query format to store key/value
+     * pairs: {@code key=value&key2=value+with+spaces}. The keys may repeat.
+     */
+    String OPENID_MP_EXTRA_PARAMS_RAW = "payara.security.openid.extraParams.raw";
+
+    /**
+     * The Microprofile Config key to disable scope validation is <code>{@value}</code>
+     */
+    String OPENID_MP_DISABLE_SCOPE_VALIDATION = "payara.security.openid.disableScopeValidation";
 }

@@ -408,9 +408,9 @@ public class OpenIdAuthenticationMechanism implements HttpAuthenticationMechanis
         if (nonNull(refreshToken)) {
             context.setRefreshToken(new RefreshTokenImpl(refreshToken));
         }
-        JsonNumber expiresIn = tokensObject.getJsonNumber(EXPIRES_IN);
+        Long expiresIn = OpenIdUtil.parseLong(tokensObject, EXPIRES_IN);
         if (nonNull(expiresIn)) {
-            context.setExpiresIn(expiresIn.longValue());
+            context.setExpiresIn(expiresIn);
         }
     }
 
