@@ -151,10 +151,6 @@
                             org.eclipse.microprofile.config;version="[1.0,3)", 
                             org.eclipse.*, *;resolution:=optional
                         </Import-Package>
-                        <!-- Package NimbusDS with the connector, so that server doesn't need to
-                             distribute it explicitly -->
-                        <Embed-Dependency>nimbus-jose-jwt;inline=true,
-                            jcip-annotations;inline=true</Embed-Dependency>
                         <Embed-Transitive>true</Embed-Transitive>
                     </instructions>
                 </configuration>
