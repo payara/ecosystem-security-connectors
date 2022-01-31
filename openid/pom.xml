@@ -150,7 +150,7 @@
                         <!-- Import API classes, other are NimbusDS optional dependencies -->
                         <Import-Package>
                             javax.*, fish.payara.*, 
-                            org.eclipse.microprofile.config;version="[1.0,3)", 
+                            org.eclipse.microprofile.config;version="[3.0,4)", 
                             org.eclipse.*, *;resolution:=optional
                         </Import-Package>
                         <!-- Package NimbusDS with the connector, so that server doesn't need to
