@@ -1,5 +1,5 @@
 /*
- * Copyright (c) [2020-2021] Payara Foundation and/or its affiliates. All rights reserved.
+ * Copyright (c) [2020-2022] Payara Foundation and/or its affiliates. All rights reserved.
  *
  *  The contents of this file are subject to the terms of either the GNU
  *  General Public License Version 2 only ("GPL") or the Common Development
@@ -37,42 +37,36 @@
  */
 package fish.payara.security.openid.controller;
 
+import fish.payara.security.annotations.ClaimsDefinition;
+import fish.payara.security.annotations.LogoutDefinition;
 import fish.payara.security.annotations.OpenIdAuthenticationDefinition;
 import fish.payara.security.annotations.OpenIdProviderMetadata;
+import fish.payara.security.openid.OpenIdAuthenticationException;
+import fish.payara.security.openid.OpenIdUtil;
+import fish.payara.security.openid.api.OpenIdConstant;
 import fish.payara.security.openid.api.PromptType;
 import fish.payara.security.openid.domain.ClaimsConfiguration;
 import fish.payara.security.openid.domain.LogoutConfiguration;
 import fish.payara.security.openid.domain.OpenIdConfiguration;
 import fish.payara.security.openid.domain.OpenIdTokenEncryptionMetadata;
+import org.eclipse.microprofile.config.Config;
+import org.eclipse.microprofile.config.ConfigProvider;
 
-import java.io.Serializable;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Stream;
-
-import static java.util.stream.Collectors.joining;
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.context.RequestScoped;
 import javax.enterprise.inject.Produces;
 import javax.inject.Inject;
 import javax.json.JsonObject;
-
-import fish.payara.security.annotations.ClaimsDefinition;
-import fish.payara.security.annotations.LogoutDefinition;
-import fish.payara.security.openid.OpenIdAuthenticationException;
-import fish.payara.security.openid.OpenIdUtil;
-import fish.payara.security.openid.api.OpenIdConstant;
+import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import org.eclipse.microprofile.config.Config;
-import org.eclipse.microprofile.config.ConfigProvider;
+import java.util.*;
+import java.util.stream.Stream;
+
+import static java.util.stream.Collectors.joining;
 
 /**
  * Build and validate the OpenId Connect client configuration
@@ -162,8 +156,8 @@ public class ConfigurationController implements Serializable {
         idTokenEncryptionEncValuesSupported = OpenIdUtil.readConfiguredValueFromMetadataOrProvider(providerMetadata.idTokenEncryptionEncValuesSupported(), providerDocument, OpenIdConstant.ID_TOKEN_ENCRYPTION_ENC_VALUES_SUPPORTED, provider, OpenIdProviderMetadata.OPENID_MP_ID_TOKEN_ENCRYPTION_ENC_VALUES_SUPPORTED);
         claimsSupported = OpenIdUtil.readConfiguredValueFromMetadataOrProvider(providerMetadata.claimsSupported(), providerDocument, OpenIdConstant.CLAIMS_SUPPORTED, provider, OpenIdProviderMetadata.OPENID_MP_CLAIMS_SUPPORTED);
 
-        String clientId = OpenIdUtil.getConfiguredValue(String.class, definition.clientId(), provider, OpenIdAuthenticationDefinition.OPENID_MP_CLIENT_ID);
-        char[] clientSecret = OpenIdUtil.getConfiguredValue(String.class, definition.clientSecret(), provider, OpenIdAuthenticationDefinition.OPENID_MP_CLIENT_SECRET).toCharArray();
+        String clientId = getEnvironmentProperty(OpenIdUtil.getConfiguredValue(String.class, definition.clientId(), provider, OpenIdAuthenticationDefinition.OPENID_MP_CLIENT_ID));
+        char[] clientSecret = getEnvironmentProperty(OpenIdUtil.getConfiguredValue(String.class, definition.clientSecret(), provider, OpenIdAuthenticationDefinition.OPENID_MP_CLIENT_SECRET)).toCharArray();
         String redirectURI = OpenIdUtil.getConfiguredValue(String.class, definition.redirectURI(), provider, OpenIdAuthenticationDefinition.OPENID_MP_REDIRECT_URI);
 
         String scopes = Arrays.stream(definition.scope()).collect(joining(SPACE_SEPARATOR));
@@ -492,6 +486,21 @@ public class ConfigurationController implements Serializable {
                 providerMetadata.endSessionEndpoint(),
                 providerMetadata.jwksURI(),
         } : new String[5];
+    }
+
+    private String getEnvironmentProperty(String property) {
+        /*
+         * Example of property String ${ENV=OIDC_CLIENTID}
+         * Substring leaves the String OIDC_CLIENTID
+         * Returns property or environment value if not null
+         */
+        String envProperty = property.substring(6, property.length() - 1);
+        String value = System.getProperty(envProperty);
+        if (value == null) {
+            value = System.getenv(envProperty);
+        }
+
+        return value != null ? value : property;
     }
 
 }
