@@ -149,7 +149,7 @@
                         </Export-Package>
                         <!-- Import API classes, other are NimbusDS optional dependencies -->
                         <Import-Package>
-                            javax.*, fish.payara.*, 
+                            javax.*, jakarta.*, fish.payara.*, 
                             org.eclipse.microprofile.config;version="[3.0,4)", 
                             org.eclipse.*, *;resolution:=optional
                         </Import-Package>
