@@ -100,7 +100,7 @@
                         <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
                         <Bundle-Version>${project.version}</Bundle-Version>
                         <Import-Package>
-                            org.eclipse.microprofile.config;version="[1.0,3)",
+                            org.eclipse.microprofile.config;version="[3.0,4)",
                             *
                         </Import-Package>
                         <Export-Package>
