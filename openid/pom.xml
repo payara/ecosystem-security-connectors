@@ -151,14 +151,64 @@
                         <Import-Package>
                             javax.*, fish.payara.*, 
                             org.eclipse.microprofile.config;version="[1.0,3)", 
-                            org.eclipse.*, *;resolution:=optional
+                            *;resolution:=optional
                         </Import-Package>
                         <!-- Package NimbusDS with the connector, so that server doesn't need to
                              distribute it explicitly -->
-                        <Embed-Dependency>nimbus-jose-jwt;inline=true,
-                            jcip-annotations;inline=true</Embed-Dependency>
+                        <Embed-Dependency>
+                            nimbus-jose-jwt;inline=true,
+                            jcip-annotations;inline=true
+                        </Embed-Dependency>
                         <Embed-Transitive>true</Embed-Transitive>
                     </instructions>
+                </configuration>
+            </plugin>
+            <plugin>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>3.2.4</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                    </execution>
+                </executions>
+
+                <configuration>
+                    <createDependencyReducedPom>false</createDependencyReducedPom>
+                    <createSourcesJar>true</createSourcesJar>
+                    <artifactSet>
+                        <includes>
+                            <include>com.nimbusds:*</include>
+                            <include>com.github.stephenc.jcip:*</include>
+                        </includes>
+                    </artifactSet>
+                    <filters>
+                        <!-- bundle plugin already inlined the classes, so we can skip the contents -->
+                        <filter>
+                            <artifact>com.nimbusds:*</artifact>
+                            <excludes>
+                                <exclude>**</exclude>
+                            </excludes>
+                        </filter>
+                        <filter>
+                            <artifact>com.github.stephenc.jcip:*</artifact>
+                            <excludes>
+                                <exclude>**</exclude>
+                            </excludes>
+                        </filter>
+                    </filters>
+                    <relocations>
+                        <relocation>
+                            <pattern>com</pattern>
+                            <shadedPattern>fish.payara.security.shaded</shadedPattern>
+                        </relocation>
+                        <relocation>
+                            <pattern>net</pattern>
+                            <shadedPattern>fish.payara.security.shaded</shadedPattern>
+                        </relocation>
+                    </relocations>
                 </configuration>
             </plugin>
         </plugins>

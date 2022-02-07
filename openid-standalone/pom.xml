@@ -94,14 +94,6 @@
                             <pattern>fish.payara.security</pattern>
                             <shadedPattern>fish.payara.security.connectors</shadedPattern>
                         </relocation>
-                        <relocation>
-                            <pattern>com</pattern>
-                            <shadedPattern>fish.payara.security.connectors.shaded</shadedPattern>
-                        </relocation>
-                        <relocation>
-                            <pattern>net</pattern>
-                            <shadedPattern>fish.payara.security.connectors.shaded</shadedPattern>
-                        </relocation>
                     </relocations>
                     <transformers>
                         <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
