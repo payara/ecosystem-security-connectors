@@ -2,7 +2,7 @@
 <!--
   DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
-  Copyright (c) [2019-2021] Payara Foundation and/or its affiliates. All rights reserved.
+  Copyright (c) 2019-2022 Payara Foundation and/or its affiliates. All rights reserved.
 
   The contents of this file are subject to the terms of either the GNU
   General Public License Version 2 only ("GPL") or the Common Development
@@ -44,7 +44,7 @@
 
     <groupId>fish.payara.security.connectors</groupId>
     <artifactId>security-connectors-parent</artifactId>
-    <version>3.0.alpha2-SNAPSHOT</version>
+    <version>3.0.alpha4-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>Payara Security Connectors</name>
 
@@ -97,6 +97,8 @@
         <jakarta.security.enterprise.version>2.0.1</jakarta.security.enterprise.version>
         <nimbus-jose-jwt.version>9.10.1</nimbus-jose-jwt.version>
         <accessors-smart.version>1.2.payara-p2</accessors-smart.version>
+        <microprofile.version>5.0</microprofile.version>
+
         <maven.compiler.source>8</maven.compiler.source>
         <maven.compiler.target>8</maven.compiler.target>
     </properties>
@@ -106,7 +108,7 @@
             <dependency>
                 <groupId>org.eclipse.microprofile</groupId>
                 <artifactId>microprofile</artifactId>
-                <version>4.0.1</version>
+                <version>${microprofile.version}</version>
                 <type>pom</type>
                 <scope>provided</scope>
             </dependency>
