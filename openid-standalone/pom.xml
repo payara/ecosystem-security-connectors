@@ -43,7 +43,7 @@
     <parent>
         <artifactId>security-connectors-parent</artifactId>
         <groupId>fish.payara.security.connectors</groupId>
-        <version>3.0.alpha4-SNAPSHOT</version>
+        <version>3.0.alpha4</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -93,14 +93,6 @@
                         <relocation>
                             <pattern>fish.payara.security</pattern>
                             <shadedPattern>fish.payara.security.connectors</shadedPattern>
-                        </relocation>
-                        <relocation>
-                            <pattern>com</pattern>
-                            <shadedPattern>fish.payara.security.connectors.shaded</shadedPattern>
-                        </relocation>
-                        <relocation>
-                            <pattern>net</pattern>
-                            <shadedPattern>fish.payara.security.connectors.shaded</shadedPattern>
                         </relocation>
                     </relocations>
                     <transformers>
