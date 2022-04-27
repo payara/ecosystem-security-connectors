@@ -55,7 +55,7 @@ public @interface ClaimsDefinition {
      * The Microprofile Config key for the callerName claim is
      * <code>{@value}</code>
      */
-    public static final String OPENID_MP_CALLER_NAME_CLAIM = "payara.security.openid.callerNameClaim";
+    String OPENID_MP_CALLER_NAME_CLAIM = "payara.security.openid.callerNameClaim";
 
     /**
      * Maps the callerNameClaim's value to caller name value in
@@ -74,7 +74,7 @@ public @interface ClaimsDefinition {
      * The Microprofile Config key for the callerGroups claim is
      * <code>{@value}</code>
      */
-    public static final String OPENID_MP_CALLER_GROUP_CLAIM = "payara.security.openid.callerGroupsClaim";
+    String OPENID_MP_CALLER_GROUP_CLAIM = "payara.security.openid.callerGroupsClaim";
 
     /**
      * Maps the callerGroupsClaim's value to caller groups value in

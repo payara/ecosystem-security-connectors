@@ -127,12 +127,12 @@ public class AuthenticationController {
         }
 
         configuration.getExtraParameters().forEach(
-                (key, values) -> values.stream().forEach(
+                (key, values) -> values.forEach(
                         value -> authRequest.queryParam(key, value)
                 )
         );
 
-        String authUrl = authRequest.toString();
+        String authUrl = authRequest.build().toASCIIString();
         LOGGER.log(FINEST, "Redirecting for authentication to {0}", authUrl);
         try {
             response.sendRedirect(authUrl);

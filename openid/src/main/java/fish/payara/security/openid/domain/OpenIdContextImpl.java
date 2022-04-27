@@ -241,7 +241,7 @@ public class OpenIdContextImpl implements OpenIdContext {
                 // User Agent redirected to POST_LOGOUT_REDIRECT_URI after a logout operation performed in OP.
                 logoutURI.queryParam(OpenIdConstant.POST_LOGOUT_REDIRECT_URI, logout.buildRedirectURI(request));
             }
-            redirect(response, logoutURI.toString());
+            redirect(response, logoutURI.build().toASCIIString());
         } else if (!OpenIdUtil.isEmpty(logout.getRedirectURI())) {
             redirect(response, logout.buildRedirectURI(request));
         } else {
