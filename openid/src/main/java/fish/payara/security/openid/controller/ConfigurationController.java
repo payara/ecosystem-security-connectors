@@ -69,9 +69,9 @@ import fish.payara.security.annotations.LogoutDefinition;
 import fish.payara.security.openid.OpenIdAuthenticationException;
 import fish.payara.security.openid.OpenIdUtil;
 import fish.payara.security.openid.api.OpenIdConstant;
+import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import org.eclipse.microprofile.config.Config;
@@ -220,7 +220,7 @@ public class ConfigurationController implements Serializable {
         boolean userClaimsFromIDToken = OpenIdUtil.getConfiguredValue(Boolean.class, definition.userClaimsFromIDToken(), provider, OpenIdAuthenticationDefinition.OPENID_MP_USER_CLAIMS_FROM_ID_TOKEN);
         String extraParamsRaw = OpenIdUtil.getConfiguredValue(String.class, extraParametersFromAnnotation, provider, OpenIdAuthenticationDefinition.OPENID_MP_EXTRA_PARAMS_RAW);
         Map<String, List<String>> extraParameters = parseMultiMapFromUrlQuery(extraParamsRaw);
-        boolean disableScopeValidation = OpenIdUtil.getConfiguredValue(Boolean.class, false, provider, OpenIdAuthenticationDefinition.OPENID_MP_DISABLE_SCOPE_VALIDATION);
+        boolean disableScopeValidation = OpenIdUtil.getConfiguredValue(Boolean.class, providerMetadata.disableScopeValidation(), provider, OpenIdAuthenticationDefinition.OPENID_MP_DISABLE_SCOPE_VALIDATION);
 
         // Get the client authentication method
         final String clientAuthenticationMethodProvided = OpenIdUtil.getConfiguredValue(String.class,
@@ -411,12 +411,16 @@ public class ConfigurationController implements Serializable {
             }
             String key = parts[0];
             String value = parts.length > 1 ? parts[1] : null;
-            extraParametersFromAnnotationBuf.append(extraParamDelim)
-                    .append(URLEncoder.encode(key, StandardCharsets.UTF_8));
-            if (value != null) {
-                extraParametersFromAnnotationBuf
-                        .append("=")
-                        .append(URLEncoder.encode(value, StandardCharsets.UTF_8));
+            try {
+                extraParametersFromAnnotationBuf.append(extraParamDelim)
+                        .append(URLEncoder.encode(key, "UTF-8"));
+                if (value != null) {
+                    extraParametersFromAnnotationBuf
+                            .append("=")
+                            .append(URLEncoder.encode(value, "UTF-8"));
+                }
+            } catch (UnsupportedEncodingException e) {
+                throw new OpenIdAuthenticationException("UTF-8 is no more supported");
             }
             extraParamDelim = "&";
         }
@@ -431,10 +435,17 @@ public class ConfigurationController implements Serializable {
         String[] pairs = query.split("&");
         for (String pair : pairs) {
             String[] keyValue = pair.split("=");
-            String key = keyValue[0];
-            String value = keyValue.length > 1 ? URLDecoder.decode(keyValue[1], StandardCharsets.UTF_8) : null;
-            List<String> values = multiMap.computeIfAbsent(key, k -> new ArrayList<>());
-            values.add(value);
+            if (keyValue.length > 0 && keyValue[0].length() > 0) {
+                // process only key-value pairs with key
+                try {
+                    String key = keyValue[0];
+                    String value = keyValue.length > 1 ? URLDecoder.decode(keyValue[1], "UTF-8") : null;
+                    List<String> values = multiMap.computeIfAbsent(key, k -> new ArrayList<>());
+                    values.add(value);
+                } catch (UnsupportedEncodingException e) {
+                    throw new OpenIdAuthenticationException("UTF-8 is no more supported");
+                }
+            }
         }
         return multiMap;
     }

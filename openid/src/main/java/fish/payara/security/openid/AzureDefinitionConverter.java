@@ -37,23 +37,22 @@
  */
 package fish.payara.security.openid;
 
+import java.lang.annotation.Annotation;
+
 import fish.payara.security.annotations.AzureAuthenticationDefinition;
-import static fish.payara.security.annotations.AzureAuthenticationDefinition.OPENID_MP_AZURE_TENANT_ID;
 import fish.payara.security.annotations.ClaimsDefinition;
 import fish.payara.security.openid.api.ClientAuthenticationMethod;
 import fish.payara.security.annotations.LogoutDefinition;
 import fish.payara.security.annotations.OpenIdAuthenticationDefinition;
 import fish.payara.security.annotations.OpenIdProviderMetadata;
-
-import static fish.payara.security.openid.OpenIdUtil.getConfiguredValue;
-import static fish.payara.security.openid.OpenIdUtil.isEmpty;
-
 import fish.payara.security.openid.api.DisplayType;
 import fish.payara.security.openid.api.PromptType;
-import java.lang.annotation.Annotation;
-
 import org.eclipse.microprofile.config.Config;
 import org.eclipse.microprofile.config.ConfigProvider;
+
+import static fish.payara.security.annotations.AzureAuthenticationDefinition.OPENID_MP_AZURE_TENANT_ID;
+import static fish.payara.security.openid.OpenIdUtil.getConfiguredValue;
+import static fish.payara.security.openid.OpenIdUtil.isEmpty;
 
 /**
  * Interpret {@link AzureAuthenticationDefinition}
@@ -182,6 +181,7 @@ public class AzureDefinitionConverter {
             public boolean userClaimsFromIDToken() {
                 return azureDefinition.userClaimsFromIDToken();
             }
+
         };
     }
 

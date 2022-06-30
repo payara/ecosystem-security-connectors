@@ -46,8 +46,10 @@ import java.util.function.Predicate;
 import javax.el.ELProcessor;
 import javax.enterprise.inject.spi.BeanManager;
 import javax.json.JsonArray;
+import javax.json.JsonNumber;
 import javax.json.JsonObject;
 import javax.json.JsonString;
+import javax.json.JsonValue;
 import static javax.json.JsonValue.ValueType.STRING;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
@@ -151,5 +153,24 @@ public final class OpenIdUtil {
      */
     public static boolean isEmpty(String value) {
         return value == null || value.trim().length() == 0;
+    }
+
+    /**
+     * Parse a JSON value as long even if it is provided as a string.
+     *
+     * @param json json object
+     * @param fieldName name of the field (key)
+     * @return long representation of the field
+     */
+    public static Long parseLong(JsonObject json, String fieldName) {
+        Long longField = null;
+        JsonValue jsonField = json.get(fieldName);
+        if (jsonField instanceof JsonNumber) {
+            longField = ((JsonNumber) jsonField).longValue();
+        } else if (jsonField instanceof JsonString) {
+            // Microsoft Azure AD B2C returns expires_in value as a string
+            longField = Long.valueOf(((JsonString) jsonField).getString());
+        }
+        return longField;
     }
 }
