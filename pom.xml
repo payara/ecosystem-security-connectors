@@ -92,15 +92,15 @@
     </modules>
 
     <properties>
-        <javase.version>1.8</javase.version>
-        <jakartaee.api.version>9.1.0</jakartaee.api.version>
-        <jakarta.security.enterprise.version>2.0.1</jakarta.security.enterprise.version>
-        <nimbus-jose-jwt.version>9.10.1</nimbus-jose-jwt.version>
-        <accessors-smart.version>1.2.payara-p2</accessors-smart.version>
+        <javase.version>11</javase.version>
+        <jakartaee.api.version>10.0.0</jakartaee.api.version>
+        <jakarta.security.enterprise.version>3.0.0</jakarta.security.enterprise.version>
+        <nimbus-jose-jwt.version>9.23</nimbus-jose-jwt.version>
+        <accessors-smart.version>2.4.8</accessors-smart.version>
         <microprofile.version>5.0</microprofile.version>
 
-        <maven.compiler.source>8</maven.compiler.source>
-        <maven.compiler.target>8</maven.compiler.target>
+        <maven.compiler.source>${javase.version}</maven.compiler.source>
+        <maven.compiler.target>${javase.version}</maven.compiler.target>
     </properties>
 
     <dependencyManagement>
@@ -355,6 +355,11 @@
             <snapshots>
                 <enabled>false</enabled>
             </snapshots>
+        </repository>
+        <!-- Temporal for Jakarta EE 10 development until the jar files are available on maven central -->
+        <repository>
+            <id>staged-jakarta-releases</id>
+            <url>https://jakarta.oss.sonatype.org/content/groups/staging/</url>
         </repository>
     </repositories>
 </project>
