@@ -126,7 +126,7 @@ public class AccessTokenIdentityStore implements IdentityStore {
         public void verify(JWTClaimsSet claims, SecurityContext c) throws BadJWTException {
             StandardVerifications standardVerifications = new StandardVerifications(configuration, claims);
 
-            standardVerifications.requireSameIssuer();
+            standardVerifications.requireIssuer(configuration.getProviderMetadata().getAccessTokenIssuerURI());
             standardVerifications.requireSubject();
             standardVerifications.requireValidTimestamp();
             // Validating audience is left to application now. We generally expect that we'll accept the token from

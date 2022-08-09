@@ -218,6 +218,8 @@ public class ConfigurationController implements Serializable {
         String extraParamsRaw = OpenIdUtil.getConfiguredValue(String.class, extraParametersFromAnnotation, provider, OpenIdAuthenticationDefinition.OPENID_MP_EXTRA_PARAMS_RAW);
         Map<String, List<String>> extraParameters = parseMultiMapFromUrlQuery(extraParamsRaw);
         boolean disableScopeValidation = OpenIdUtil.getConfiguredValue(Boolean.class, providerMetadata.disableScopeValidation(), provider, OpenIdAuthenticationDefinition.OPENID_MP_DISABLE_SCOPE_VALIDATION);
+        String accessTokenIssuerURI = OpenIdUtil.getConfiguredValue(String.class, providerMetadata.accessTokenIssuer(), provider,
+                OpenIdProviderMetadata.OPENID_MP_ACCESS_TOKEN_ISSUER);
 
         fish.payara.security.openid.domain.OpenIdProviderMetadata openIdProviderMetadata = new fish.payara.security.openid.domain.OpenIdProviderMetadata(
                 providerDocument,
@@ -233,7 +235,8 @@ public class ConfigurationController implements Serializable {
                 .setTokenEndpoint(tokenEndpoint)
                 .setUserinfoEndpoint(userinfoEndpoint)
                 .setEndSessionEndpoint(endSessionEndpoint)
-                .setJwksURL(jwksURL);
+                .setJwksURL(jwksURL)
+                .setAccessTokenIssuerURI(accessTokenIssuerURI);
 
         OpenIdConfiguration configuration = new OpenIdConfiguration()
                 .setProviderMetadata(
