@@ -38,9 +38,10 @@
 package fish.payara.security.openid.domain;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
-import jakarta.servlet.http.HttpServletRequest;
 
+import javax.servlet.http.HttpServletRequest;
 import fish.payara.security.openid.controller.JWTValidator;
 import java.util.List;
 
@@ -70,7 +71,6 @@ public class OpenIdConfiguration {
     private LogoutConfiguration logoutConfiguration;
     private boolean tokenAutoRefresh;
     private int tokenMinValidity;
-    private JWTValidator validator;
     private boolean userClaimsFromIDToken;
     private boolean disableScopeValidation;
 
