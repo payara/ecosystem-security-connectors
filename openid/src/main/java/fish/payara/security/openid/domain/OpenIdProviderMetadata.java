@@ -53,17 +53,31 @@ public class OpenIdProviderMetadata {
     private String authorizationEndpoint;
     private String tokenEndpoint;
     private String userinfoEndpoint;
+
     private String endSessionEndpoint;
+
     private URL jwksURL;
+
     private final Set<String> scopesSupported;
+
     private final Set<String> claimsSupported;
+
     private final Set<String> responseTypesSupported;
+
     private final Set<String> idTokenSigningAlgValuesSupported;
+
     private final Set<String> idTokenEncryptionAlgValuesSupported;
+
     private final Set<String> idTokenEncryptionEncValuesSupported;
+
     private final Set<String> subjectTypesSupported;
 
-    public OpenIdProviderMetadata(JsonObject providerDocument, String issuerURI, Set<String> scopesSupported, Set<String> claimsSupported, Set<String> responseTypesSupported, Set<String> idTokenSigningAlgValuesSupported, Set<String> idTokenEncryptionAlgValuesSupported, Set<String> idTokenEncryptionEncValuesSupported, Set<String> subjectTypesSupported) {
+    private String accessTokenIssuerURI;
+
+    public OpenIdProviderMetadata(JsonObject providerDocument, String issuerURI, Set<String> scopesSupported, Set<String> claimsSupported,
+                                  Set<String> responseTypesSupported, Set<String> idTokenSigningAlgValuesSupported,
+                                  Set<String> idTokenEncryptionAlgValuesSupported, Set<String> idTokenEncryptionEncValuesSupported,
+                                  Set<String> subjectTypesSupported) {
         this.document = providerDocument;
         this.issuerURI = issuerURI;
         this.scopesSupported = scopesSupported;
@@ -161,6 +175,22 @@ public class OpenIdProviderMetadata {
         return idTokenEncryptionEncValuesSupported;
     }
 
+    public String getAccessTokenIssuerURI() {
+        if (accessTokenIssuerURI == null) {
+            return issuerURI;
+        }
+        return accessTokenIssuerURI;
+    }
+
+    public OpenIdProviderMetadata setAccessTokenIssuerURI(String accessTokenIssuerURI) {
+        if (accessTokenIssuerURI != null && !accessTokenIssuerURI.isEmpty()) {
+            this.accessTokenIssuerURI = accessTokenIssuerURI;
+        } else {
+            this.accessTokenIssuerURI = null;
+        }
+        return this;
+    }
+
     @Override
     public String toString() {
         return OpenIdProviderMetadata.class.getSimpleName()
@@ -170,6 +200,7 @@ public class OpenIdProviderMetadata {
                 + ", tokenEndpoint=" + tokenEndpoint
                 + ", userinfoEndpoint=" + userinfoEndpoint
                 + ", jwksURI=" + jwksURL
+                + ", accessTokenIssuerURI=" + accessTokenIssuerURI
                 + '}';
     }
 
