@@ -49,9 +49,10 @@ import javax.ws.rs.Path;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.UriInfo;
 
+import com.nimbusds.jose.JOSEException;
+import com.nimbusds.jose.jwk.JWKSet;
 import com.nimbusds.jwt.JWT;
 import com.nimbusds.jwt.JWTClaimsSet;
-import com.nimbusds.jwt.PlainJWT;
 import fish.payara.security.openid.idp.AbstractIdProvider;
 import fish.payara.security.openid.idp.AuthCode;
 import fish.payara.security.openid.idp.Token;
@@ -81,13 +82,18 @@ public class SimpleIdProvider extends AbstractIdProvider {
     }
 
     @Override
+    protected JWKSet getKeyset() {
+        return new JWKSet(rsaKey());
+    }
+
+    @Override
     protected Token exchangeToken(TokenRequest request) throws AuthException {
         throw new AuthException("not_supported");
     }
 
     @Override
-    protected JWT encodeJWT(JWTClaimsSet claims) {
-        return new PlainJWT(claims);
+    protected JWT encodeJWT(JWTClaimsSet claims) throws JOSEException {
+        return rs256(claims);
     }
 
     @Override

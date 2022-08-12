@@ -65,8 +65,20 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
 
+import com.nimbusds.jose.JOSEException;
+import com.nimbusds.jose.JWSAlgorithm;
+import com.nimbusds.jose.JWSHeader;
+import com.nimbusds.jose.crypto.ECDSASigner;
+import com.nimbusds.jose.crypto.RSASSASigner;
+import com.nimbusds.jose.jwk.Curve;
+import com.nimbusds.jose.jwk.ECKey;
+import com.nimbusds.jose.jwk.JWKSet;
+import com.nimbusds.jose.jwk.RSAKey;
+import com.nimbusds.jose.jwk.gen.ECKeyGenerator;
+import com.nimbusds.jose.jwk.gen.RSAKeyGenerator;
 import com.nimbusds.jwt.JWT;
 import com.nimbusds.jwt.JWTClaimsSet;
+import com.nimbusds.jwt.SignedJWT;
 
 import static fish.payara.security.connectors.openid.api.OpenIdConstant.*;
 import static java.util.logging.Level.INFO;
@@ -185,7 +197,7 @@ public abstract class AbstractIdProvider {
             }
             JsonObjectBuilder builder = Json.createObjectBuilder();
             JWT idToken = encodeJWT(result.getIdToken());
-            String accessToken = result.getAccessToken(this::encodeJWT);
+            String accessToken = result.getAccessToken(this::encodeJWTHandlingExceptions);
             builder.add(IDENTITY_TOKEN, idToken.serialize())
                     .add(ACCESS_TOKEN, accessToken)
                     .add(TOKEN_TYPE, BEARER_TYPE)
@@ -202,14 +214,47 @@ public abstract class AbstractIdProvider {
             LOGGER.log(SEVERE, "Token exchange Exception", e);
             return Response.serverError().type(APPLICATION_JSON).entity(new AuthException("server_error").asJson()).build();
         }
+    }
 
+    private JWT encodeJWTHandlingExceptions(JWTClaimsSet set) {
+        try {
+            return encodeJWT(set);
+        } catch (JOSEException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Path("jwks")
+    @GET
+    public String getKeystore() {
+        return getKeyset().toString(true);
+    }
+
+    protected JWKSet getKeyset() {
+        return new JWKSet();
     }
 
     protected abstract Token exchangeToken(AuthCode code) throws AuthException;
 
     protected abstract Token exchangeToken(TokenRequest request) throws AuthException;
 
-    protected abstract JWT encodeJWT(JWTClaimsSet claims);
+    protected abstract JWT encodeJWT(JWTClaimsSet claims) throws JOSEException;
+
+    protected JWT rs256(JWTClaimsSet claims) throws JOSEException {
+        SignedJWT signed = new SignedJWT(
+                new JWSHeader.Builder(JWSAlgorithm.RS256).keyID(rsaKey().getKeyID()).build(),
+                claims);
+        signed.sign(new RSASSASigner(rsaKey()));
+        return signed;
+    }
+
+    protected JWT es256(JWTClaimsSet claims) throws JOSEException {
+        SignedJWT signed = new SignedJWT(
+                new JWSHeader.Builder(JWSAlgorithm.ES256).keyID(ecKey().getKeyID()).build(),
+                claims);
+        signed.sign(new ECDSASigner(ecKey()));
+        return signed;
+    }
 
     @Path("userinfo")
     @Produces(APPLICATION_JSON)
@@ -232,6 +277,34 @@ public abstract class AbstractIdProvider {
             LOGGER.log(SEVERE, "User info Exception", e);
             return Response.serverError().entity(new AuthException("server_error").asJson()).build();
         }
+    }
+
+
+    protected static ECKey EC_KEY;
+
+    protected static ECKey ecKey() {
+        if (EC_KEY == null) {
+            try {
+                EC_KEY = new ECKeyGenerator(Curve.P_256).keyID("ec").generate();
+            } catch (JOSEException e) {
+            }
+        }
+        return EC_KEY;
+    }
+
+    protected static RSAKey RSA_KEY;
+
+    protected static RSAKey rsaKey() {
+        if (RSA_KEY == null) {
+            try {
+                RSA_KEY = new RSAKeyGenerator(2048)
+                        .keyID("rsa")
+                        .generate();
+            } catch (JOSEException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        return RSA_KEY;
     }
 
     protected abstract JsonObject userInfo(Token token);
