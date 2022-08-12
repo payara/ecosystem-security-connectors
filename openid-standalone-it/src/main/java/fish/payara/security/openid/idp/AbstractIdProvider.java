@@ -101,6 +101,9 @@ public abstract class AbstractIdProvider {
 
     private static final ConcurrentMap<String, Token> tokenRepo = new ConcurrentHashMap<>();
 
+    @Context
+    protected UriInfo uriInfo;
+
     protected static void clear() {
         tokenRepo.clear();
         codeRepo.clear();
@@ -236,7 +239,9 @@ public abstract class AbstractIdProvider {
 
     protected abstract Token exchangeToken(AuthCode code) throws AuthException;
 
-    protected abstract Token exchangeToken(TokenRequest request) throws AuthException;
+    protected Token exchangeToken(TokenRequest request) throws AuthException {
+        throw new AuthException("not_supported");
+    }
 
     protected abstract JWT encodeJWT(JWTClaimsSet claims) throws JOSEException;
 
@@ -433,6 +438,26 @@ public abstract class AbstractIdProvider {
             clientSecret = allParams.getFirst(CLIENT_SECRET);
             grantType = allParams.getFirst(GRANT_TYPE);
             redirectUri = allParams.getFirst(REDIRECT_URI);
+        }
+
+        public String getClientId() {
+            return clientId;
+        }
+
+        public String getClientSecret() {
+            return clientSecret;
+        }
+
+        public String getGrantType() {
+            return grantType;
+        }
+
+        public String getCode() {
+            return code;
+        }
+
+        public String getRedirectUri() {
+            return redirectUri;
         }
 
         public String getParameter(String parameterName) {
