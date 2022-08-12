@@ -196,12 +196,17 @@ public class OpenIdAuthenticationMechanism implements HttpAuthenticationMechanis
 
         if (isNull(request.getUserPrincipal())) {
             LOGGER.fine("UserPrincipal is not set, authenticate user using OpenId Connect protocol.");
-            if (httpContext.isProtected() && hasBearerAuthorization(request)) {
-                return authenticateBearer(request, response, httpContext);
+            if (httpContext.isProtected()) {
+                if (hasBearerAuthorization(request)) {
+                    return authenticateBearer(request, response, httpContext);
+                } else {
+                    // User is not authenticated
+                    // Perform steps (1) to (6)
+                    return this.authenticate(request, response, httpContext);
+                }
+            } else {
+                return httpContext.doNothing();
             }
-            // User is not authenticated
-            // Perform steps (1) to (6)
-            return this.authenticate(request, response, httpContext);
         } else {
             // User has been authenticated in request before
 
