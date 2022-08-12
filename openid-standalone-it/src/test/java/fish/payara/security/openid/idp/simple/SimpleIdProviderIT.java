@@ -42,7 +42,10 @@
 
 package fish.payara.security.openid.idp.simple;
 
+import java.io.IOException;
 import java.net.URI;
+import java.text.ParseException;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -54,6 +57,14 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Form;
 import javax.ws.rs.core.MediaType;
 
+import com.nimbusds.jose.JOSEException;
+import com.nimbusds.jose.JWSHeader;
+import com.nimbusds.jose.crypto.RSASSAVerifier;
+import com.nimbusds.jose.jwk.JWK;
+import com.nimbusds.jose.jwk.JWKMatcher;
+import com.nimbusds.jose.jwk.JWKSelector;
+import com.nimbusds.jose.jwk.JWKSet;
+import com.nimbusds.jwt.SignedJWT;
 import fish.payara.security.openid.idp.LogExceptionOnServerSide;
 import fish.payara.security.openid.idp.OpenIdDeployment;
 import org.glassfish.jersey.logging.LoggingFeature;
@@ -76,6 +87,7 @@ import static fish.payara.security.connectors.openid.api.OpenIdConstant.RESPONSE
 import static fish.payara.security.connectors.openid.api.OpenIdConstant.SCOPE;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * Validates that AbstractIdProvider behaves as expected for the simplest case without actually using connector.
@@ -121,7 +133,7 @@ public class SimpleIdProviderIT {
     }
 
     @Test
-    public void codeExchangeFlowWorks() {
+    public void codeExchangeFlowWorks() throws ParseException, IOException, JOSEException {
         Client client = ClientBuilder.newClient().register(new LoggingFeature(LOGGER,
                 Level.INFO, LoggingFeature.Verbosity.PAYLOAD_ANY, 10000));
         String nonce = "123098";
@@ -134,7 +146,7 @@ public class SimpleIdProviderIT {
                 .queryParam(SCOPE, "openid")
                 .request().get(String.class);
         // idp redirects to callback endpoint of relying party
-        assertNotNull(code);
+        assertNotNull(code, "Code should be returned as response to authorization request");
         // relaying party obtains the tokens
         Form tokenRequest = new Form();
         tokenRequest.param(GRANT_TYPE, "authorization_code")
@@ -147,6 +159,19 @@ public class SimpleIdProviderIT {
         JsonObject userinfo = client.target(config.getString("userinfo_endpoint"))
                 .request().header("Authorization", "Bearer " + accessToken)
                 .get(JsonObject.class);
-        assertNotNull(userinfo);
+        assertNotNull(userinfo, "User info should be returned");
+
+        JWKSet keyset = JWKSet.load(URI.create(config.getString("jwks_uri")).toURL());
+        SignedJWT jwt = SignedJWT.parse(token.getString("id_token"));
+        JWSHeader jwsHeader = jwt.getHeader();
+        List<JWK> matches = new JWKSelector(JWKMatcher.forJWSHeader(jwsHeader))
+                .select(keyset);
+
+        if (!matches.isEmpty()) {
+            assertTrue(jwt.verify(new RSASSAVerifier(matches.get(0).toRSAKey())), "JWT should pass signature validation");
+        } else {
+            fail("No key from keyset matched signature of JWT");
+        }
+
     }
 }
