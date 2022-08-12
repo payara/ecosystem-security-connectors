@@ -97,11 +97,15 @@ public class Token {
         return new JWTClaimsSet.Builder()
                 .audience(code.getClientId())
                 .subject(subject)
-                .expirationTime(new Date(validityStart.plus(duration).toEpochMilli()))
+                .expirationTime(getExpirationTime())
                 .issuer(issuer.toString())
                 .notBeforeTime(new Date())
                 .issueTime(new Date())
                 .claim("nonce", code.getNonce());
+    }
+
+    public Date getExpirationTime() {
+        return new Date(validityStart.plus(duration).toEpochMilli());
     }
 
     public void setRefreshToken(String refreshToken) {

@@ -40,29 +40,39 @@
  *
  */
 
-package fish.payara.security.openid.idp;
+package fish.payara.security.openid.adfs;
 
-import java.io.File;
+import java.security.Principal;
 
-import fish.payara.security.connectors.openid.OpenIdExtension;
-import org.jboss.shrinkwrap.api.ShrinkWrap;
-import org.jboss.shrinkwrap.api.spec.WebArchive;
-import org.jboss.shrinkwrap.resolver.api.maven.Maven;
+import javax.annotation.security.DeclareRoles;
+import javax.annotation.security.RolesAllowed;
+import javax.enterprise.context.RequestScoped;
+import javax.inject.Inject;
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
 
-public class OpenIdDeployment {
+import fish.payara.security.connectors.annotations.OpenIdAuthenticationDefinition;
+import fish.payara.security.connectors.annotations.OpenIdProviderMetadata;
 
-    public static WebArchive withAbstractProvider() {
-        return withAbstractProvider(ShrinkWrap.create(WebArchive.class));
-    }
+@RequestScoped
+@OpenIdAuthenticationDefinition(
+        clientId = "test_client",
+        clientSecret = "test_client",
+        providerURI = "#{urlExtractor.providerUrl}",
+        useSession = false,
+        providerMetadata = @OpenIdProviderMetadata(
+                accessTokenIssuer = "http://someone-else"
+        )
+)
+@Path("client")
+@RolesAllowed("authenticated")
+@DeclareRoles("authenticated")
+public class AdfsAuth {
+    @Inject
+    Principal principal;
 
-    public static WebArchive withAbstractProvider(WebArchive webArchive) {
-        File[] libs = Maven.resolver().loadPomFromFile("pom.xml")
-                .resolve("com.nimbusds:nimbus-jose-jwt")
-                .withTransitivity().asFile();
-        // maven resolver resolves version from bom, not the current snapshot, so we'll use this trick:
-        String openidStandaloneJar = OpenIdExtension.class.getProtectionDomain().getCodeSource().getLocation().getFile();
-        return webArchive.addPackage(AbstractIdProvider.class.getPackage())
-                .addAsLibraries(libs)
-                .addAsLibraries(new File(openidStandaloneJar));
+    @GET
+    public String whoAmI() {
+        return principal.getName();
     }
 }

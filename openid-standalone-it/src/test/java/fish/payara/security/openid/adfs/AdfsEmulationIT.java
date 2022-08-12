@@ -40,29 +40,49 @@
  *
  */
 
-package fish.payara.security.openid.idp;
+package fish.payara.security.openid.adfs;
 
-import java.io.File;
+import java.io.IOException;
+import java.net.URI;
 
-import fish.payara.security.connectors.openid.OpenIdExtension;
-import org.jboss.shrinkwrap.api.ShrinkWrap;
+import javax.json.JsonObject;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.Form;
+
+import fish.payara.security.openid.idp.LogExceptionOnServerSide;
+import fish.payara.security.openid.idp.OpenIdDeployment;
+import org.jboss.arquillian.container.test.api.Deployment;
+import org.jboss.arquillian.junit5.ArquillianExtension;
+import org.jboss.arquillian.test.api.ArquillianResource;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
-import org.jboss.shrinkwrap.resolver.api.maven.Maven;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
-public class OpenIdDeployment {
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-    public static WebArchive withAbstractProvider() {
-        return withAbstractProvider(ShrinkWrap.create(WebArchive.class));
+@ExtendWith(ArquillianExtension.class)
+@ExtendWith(LogExceptionOnServerSide.class)
+public class AdfsEmulationIT {
+    @Deployment
+    public static WebArchive deployment() {
+        return OpenIdDeployment.withAbstractProvider().addClasses(JaxrsApplication.class, AdfsEmulation.class, AdfsAuth.class,
+                AccessTokenRoleMapping.class, UrlExtractor.class);
     }
 
-    public static WebArchive withAbstractProvider(WebArchive webArchive) {
-        File[] libs = Maven.resolver().loadPomFromFile("pom.xml")
-                .resolve("com.nimbusds:nimbus-jose-jwt")
-                .withTransitivity().asFile();
-        // maven resolver resolves version from bom, not the current snapshot, so we'll use this trick:
-        String openidStandaloneJar = OpenIdExtension.class.getProtectionDomain().getCodeSource().getLocation().getFile();
-        return webArchive.addPackage(AbstractIdProvider.class.getPackage())
-                .addAsLibraries(libs)
-                .addAsLibraries(new File(openidStandaloneJar));
+    @ArquillianResource
+    URI baseUri;
+
+    @Test
+    public void accessTokenGetsAccepted() throws IOException {
+        Client client = ClientBuilder.newClient();
+        WebTarget base = client.target(baseUri);
+        JsonObject token = base.path("idp/token").request().post(Entity.form(new Form().param("grant_type", "gimme")),
+                JsonObject.class);
+        String accessToken = token.getString("access_token");
+        String myself = base.path("client").request().header("Authorization", "Bearer " + accessToken).get(String.class);
+        assertEquals("test_subject", myself);
     }
 }

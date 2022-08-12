@@ -89,6 +89,7 @@
         <dependency>
             <groupId>fish.payara.security.connectors</groupId>
             <artifactId>openid-standalone</artifactId>
+            <version>${project.version}</version>
         </dependency>
 
         <dependency>

@@ -40,29 +40,24 @@
  *
  */
 
-package fish.payara.security.openid.idp;
+package fish.payara.security.openid.adfs;
 
-import java.io.File;
+import javax.enterprise.inject.Model;
+import javax.inject.Inject;
+import javax.servlet.http.HttpServletRequest;
 
-import fish.payara.security.connectors.openid.OpenIdExtension;
-import org.jboss.shrinkwrap.api.ShrinkWrap;
-import org.jboss.shrinkwrap.api.spec.WebArchive;
-import org.jboss.shrinkwrap.resolver.api.maven.Maven;
+@Model
+public class UrlExtractor {
+    @Inject
+    HttpServletRequest request;
 
-public class OpenIdDeployment {
-
-    public static WebArchive withAbstractProvider() {
-        return withAbstractProvider(ShrinkWrap.create(WebArchive.class));
-    }
-
-    public static WebArchive withAbstractProvider(WebArchive webArchive) {
-        File[] libs = Maven.resolver().loadPomFromFile("pom.xml")
-                .resolve("com.nimbusds:nimbus-jose-jwt")
-                .withTransitivity().asFile();
-        // maven resolver resolves version from bom, not the current snapshot, so we'll use this trick:
-        String openidStandaloneJar = OpenIdExtension.class.getProtectionDomain().getCodeSource().getLocation().getFile();
-        return webArchive.addPackage(AbstractIdProvider.class.getPackage())
-                .addAsLibraries(libs)
-                .addAsLibraries(new File(openidStandaloneJar));
+    /**
+     * Used to determine IdP url at first protected request
+     *
+     * @return
+     */
+    public String getProviderUrl() {
+        StringBuffer uri = request.getRequestURL();
+        return uri.substring(0, uri.lastIndexOf("/")) + "/idp/";
     }
 }
