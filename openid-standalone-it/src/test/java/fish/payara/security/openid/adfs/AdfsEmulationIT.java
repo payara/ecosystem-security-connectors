@@ -45,14 +45,19 @@ package fish.payara.security.openid.adfs;
 import java.io.IOException;
 import java.net.URI;
 
+import javax.json.Json;
+import javax.json.JsonArray;
 import javax.json.JsonObject;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Form;
+import javax.ws.rs.core.Response;
 
+import fish.payara.arquillian.jersey.client.ClientProperties;
 import fish.payara.security.openid.idp.LogExceptionOnServerSide;
+import fish.payara.security.openid.idp.NaiveCookieManager;
 import fish.payara.security.openid.idp.OpenIdDeployment;
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.junit5.ArquillianExtension;
@@ -69,7 +74,7 @@ public class AdfsEmulationIT {
     @Deployment
     public static WebArchive deployment() {
         return OpenIdDeployment.withAbstractProvider().addClasses(JaxrsApplication.class, AdfsEmulation.class, AdfsAuth.class,
-                AccessTokenRoleMapping.class, UrlExtractor.class);
+                AccessTokenRoleMapping.class, UrlExtractor.class, OpenIdCallback.class, NaiveCookieManager.class);
     }
 
     @ArquillianResource
@@ -84,5 +89,28 @@ public class AdfsEmulationIT {
         String accessToken = token.getString("access_token");
         String myself = base.path("client").request().header("Authorization", "Bearer " + accessToken).get(String.class);
         assertEquals("test_subject", myself);
+    }
+
+    @Test
+    public void userInfoEndpointIsNotTouched() {
+        Client client = ClientBuilder.newClient().register(new NaiveCookieManager()).property(ClientProperties.FOLLOW_REDIRECTS, false);
+
+        WebTarget base = client.target(baseUri);
+        // this request redirects takes client to code authorization endpoint, and gets redirected to openid callback
+        // we need to manually follow these redirects otherwise our naive cookie manager will not collect relevant cookies
+        // to identify ourselves when we land back at callback
+
+        // client redirects us to idp code
+        Response response = base.path("client").request().get();
+        assertEquals(Response.Status.Family.REDIRECTION, response.getStatusInfo().getFamily());
+
+        // code redirects to OAuth callback
+        response = client.target(response.getLocation()).request().get();
+        assertEquals(Response.Status.Family.REDIRECTION, response.getStatusInfo().getFamily());
+
+        // oauth callback returns list of groups for us
+        response = client.target(response.getLocation()).request().get();
+        JsonArray groups = response.readEntity(JsonArray.class);
+        assertEquals(Json.createArrayBuilder().add("authenticated").add("code_exchange").build(), groups);
     }
 }

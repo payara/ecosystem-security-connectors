@@ -88,6 +88,12 @@
     <dependencies>
         <dependency>
             <groupId>fish.payara.security.connectors</groupId>
+            <artifactId>security-connectors-api</artifactId>
+            <version>${project.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>fish.payara.security.connectors</groupId>
             <artifactId>openid-standalone</artifactId>
             <version>${project.version}</version>
         </dependency>
@@ -177,6 +183,12 @@
                     <groupId>fish.payara.arquillian</groupId>
                     <artifactId>arquillian-payara-server-remote</artifactId>
                     <scope>test</scope>
+                </dependency>
+
+                <dependency>
+                    <groupId>jakarta.xml.bind</groupId>
+                    <artifactId>jakarta.xml.bind-api</artifactId>
+                    <scope>runtime</scope>
                 </dependency>
             </dependencies>
         </profile>
