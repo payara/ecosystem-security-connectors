@@ -40,39 +40,43 @@
  *
  */
 
-package fish.payara.security.openid.adfs;
+package fish.payara.security.openid.idp;
 
-import java.security.Principal;
+import java.io.IOException;
+import java.net.URI;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
-import javax.annotation.security.DeclareRoles;
-import javax.annotation.security.RolesAllowed;
-import javax.enterprise.context.RequestScoped;
-import javax.inject.Inject;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
+import javax.ws.rs.client.ClientRequestContext;
+import javax.ws.rs.client.ClientRequestFilter;
+import javax.ws.rs.client.ClientResponseContext;
+import javax.ws.rs.client.ClientResponseFilter;
+import javax.ws.rs.core.Cookie;
+import javax.ws.rs.core.NewCookie;
 
-import fish.payara.security.connectors.annotations.OpenIdAuthenticationDefinition;
-import fish.payara.security.connectors.annotations.OpenIdProviderMetadata;
+public class NaiveCookieManager implements ClientRequestFilter, ClientResponseFilter {
+    private static Map<String, Cookie> cookies = new ConcurrentHashMap<>();
 
-@RequestScoped
-@OpenIdAuthenticationDefinition(
-        clientId = "test_client",
-        clientSecret = "test_client",
-        providerURI = "#{urlExtractor.providerUrl}",
-        providerMetadata = @OpenIdProviderMetadata(
-                accessTokenIssuer = "http://someone-else"
-        ),
-        userClaimsFromIDToken = true
-)
-@Path("client")
-@RolesAllowed("authenticated")
-@DeclareRoles("authenticated")
-public class AdfsAuth {
-    @Inject
-    Principal principal;
+    @Override
+    public void filter(ClientRequestContext requestContext) throws IOException {
+        for (Cookie cookie : cookies.values()) {
+            if (matchesDomain(requestContext.getUri(), cookie)) {
+                requestContext.getHeaders().add("Cookie", cookie.toString());
+            }
+        }
+    }
 
-    @GET
-    public String whoAmI() {
-        return principal.getName();
+    private boolean matchesDomain(URI uri, Cookie cookie) {
+        // let's not think about domains right now
+        return uri.getPath().startsWith(cookie.getPath());
+    }
+
+
+    @Override
+    public void filter(ClientRequestContext requestContext, ClientResponseContext responseContext) throws IOException {
+        for (NewCookie cookie : responseContext.getCookies().values()) {
+            Cookie c = new Cookie(cookie.getName(), cookie.getValue(), cookie.getPath(), cookie.getDomain(), cookie.getVersion());
+            cookies.put(c.getDomain() + "/" + c.getName(), c);
+        }
     }
 }

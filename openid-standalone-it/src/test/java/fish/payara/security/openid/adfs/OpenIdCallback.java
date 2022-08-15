@@ -43,36 +43,36 @@
 package fish.payara.security.openid.adfs;
 
 import java.security.Principal;
+import java.util.logging.Logger;
 
-import javax.annotation.security.DeclareRoles;
-import javax.annotation.security.RolesAllowed;
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
+import javax.json.Json;
+import javax.json.JsonArray;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
 
-import fish.payara.security.connectors.annotations.OpenIdAuthenticationDefinition;
-import fish.payara.security.connectors.annotations.OpenIdProviderMetadata;
+import fish.payara.security.connectors.openid.api.OpenIdContext;
 
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+
+@Path("Callback")
 @RequestScoped
-@OpenIdAuthenticationDefinition(
-        clientId = "test_client",
-        clientSecret = "test_client",
-        providerURI = "#{urlExtractor.providerUrl}",
-        providerMetadata = @OpenIdProviderMetadata(
-                accessTokenIssuer = "http://someone-else"
-        ),
-        userClaimsFromIDToken = true
-)
-@Path("client")
-@RolesAllowed("authenticated")
-@DeclareRoles("authenticated")
-public class AdfsAuth {
+public class OpenIdCallback {
+    private static final Logger LOGGER = Logger.getLogger(OpenIdCallback.class.getName());
+
     @Inject
     Principal principal;
 
+    @Inject
+    OpenIdContext context;
+
     @GET
-    public String whoAmI() {
-        return principal.getName();
+    @Produces(APPLICATION_JSON)
+    public JsonArray userGroups() {
+        LOGGER.info("Request of " + principal.getName());
+        LOGGER.info("Request of " + context.getSubject());
+        return Json.createArrayBuilder(context.getCallerGroups()).build();
     }
 }

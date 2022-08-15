@@ -180,9 +180,8 @@ public abstract class AbstractIdProvider {
     @Path("token")
     @POST
     @Consumes(APPLICATION_FORM_URLENCODED)
-    public Response tokenEndpoint(@BeanParam TokenRequest tokenRequest, MultivaluedMap<String, String> allParams) {
-        //TokenRequest tokenRequest = new TokenRequest(allParams);
-        tokenRequest.allParams = allParams;
+    public Response tokenEndpoint(MultivaluedMap<String, String> allParams) {
+        TokenRequest tokenRequest = new TokenRequest(allParams);
 
         try {
             Token result;
@@ -434,6 +433,7 @@ public abstract class AbstractIdProvider {
 
         public TokenRequest(MultivaluedMap<String, String> allParams) {
             this.allParams = allParams;
+            code = allParams.getFirst(CODE);
             clientId = allParams.getFirst(CLIENT_ID);
             clientSecret = allParams.getFirst(CLIENT_SECRET);
             grantType = allParams.getFirst(GRANT_TYPE);

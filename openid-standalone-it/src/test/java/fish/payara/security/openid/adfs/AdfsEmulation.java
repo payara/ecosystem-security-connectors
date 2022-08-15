@@ -43,6 +43,7 @@
 package fish.payara.security.openid.adfs;
 
 import java.net.URI;
+import java.util.Arrays;
 import java.util.Date;
 
 import javax.json.JsonObject;
@@ -93,7 +94,8 @@ public class AdfsEmulation extends AbstractIdProvider {
     @Override
     protected Token exchangeToken(AuthCode code) throws AuthException {
         Token result = new Token();
-        result.setIdToken(result.claimsFor(code, providerRoot(uriInfo), "test_object"));
+        result.setIdToken(result.claimsFor(code, providerRoot(uriInfo).resolve("idp/"), "test_object").claim("groups", Arrays.asList("authenticated",
+                "code_exchange")));
         result.setAccessToken(result.claimsFor(code, URI.create("http://someone-else"), "test_object"));
         return result;
     }
@@ -110,6 +112,6 @@ public class AdfsEmulation extends AbstractIdProvider {
 
     @Override
     protected JsonObject userInfo(Token token) {
-        throw new NotAuthorizedException("ADFS throws 401 here", (Response) null);
+        throw new NotAuthorizedException("ADFS throws 401 here", Response.status(401).build());
     }
 }
