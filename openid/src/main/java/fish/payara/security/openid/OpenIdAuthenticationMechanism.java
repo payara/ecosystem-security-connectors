@@ -79,6 +79,7 @@ import fish.payara.security.openid.domain.OpenIdContextImpl;
 import fish.payara.security.openid.domain.RefreshTokenImpl;
 
 import static fish.payara.security.openid.OpenIdUtil.isEmpty;
+import static fish.payara.security.openid.api.OpenIdConstant.CODE;
 import static fish.payara.security.openid.api.OpenIdConstant.ERROR_DESCRIPTION_PARAM;
 import static fish.payara.security.openid.api.OpenIdConstant.ERROR_PARAM;
 import static fish.payara.security.openid.api.OpenIdConstant.EXPIRES_IN;
@@ -196,17 +197,12 @@ public class OpenIdAuthenticationMechanism implements HttpAuthenticationMechanis
 
         if (isNull(request.getUserPrincipal())) {
             LOGGER.fine("UserPrincipal is not set, authenticate user using OpenId Connect protocol.");
-            if (httpContext.isProtected()) {
-                if (hasBearerAuthorization(request)) {
-                    return authenticateBearer(request, response, httpContext);
-                } else {
-                    // User is not authenticated
-                    // Perform steps (1) to (6)
-                    return this.authenticate(request, response, httpContext);
-                }
-            } else {
-                return httpContext.doNothing();
+            if (httpContext.isProtected() && hasBearerAuthorization(request)) {
+                return authenticateBearer(request, response, httpContext);
             }
+            // User is not authenticated, and this potentially may be an OAuth callback
+            // Perform steps (1) to (6)
+            return this.authenticate(request, response, httpContext);
         } else {
             // User has been authenticated in request before
 
@@ -290,11 +286,17 @@ public class OpenIdAuthenticationMechanism implements HttpAuthenticationMechanis
             return authenticationController.authenticateUser(request, response);
         }
 
+        // Check if the request is potential OAuth callback
+        if (!"GET".equals(request.getMethod())) {
+            return httpContext.doNothing();
+        }
         Optional<OpenIdState> receivedState = OpenIdState.from(request.getParameter(STATE));
-        String redirectURI = configuration.buildRedirectURI(request);
-        if (receivedState.isPresent()) {
+        if (receivedState.isPresent() && request.getParameter(CODE) != null) {
+            // this is OAuth callback
+            String redirectURI = configuration.buildRedirectURI(request);
             if (!request.getRequestURL().toString().equals(redirectURI)) {
-                LOGGER.log(INFO, "OpenID Redirect URL {0} not matched with request URL {1}", new Object[]{redirectURI, request.getRequestURL().toString()});
+                LOGGER.log(INFO, "OpenID Redirect URL {0} not matched with request URL {1}", new Object[]{redirectURI,
+                        request.getRequestURL().toString()});
                 return httpContext.notifyContainerAboutLogin(NOT_VALIDATED_RESULT);
             }
             Optional<OpenIdState> expectedState = stateController.get(request, response);
