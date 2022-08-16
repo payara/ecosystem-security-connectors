@@ -46,12 +46,6 @@ import java.net.URI;
 import java.util.Arrays;
 import java.util.Date;
 
-import javax.json.JsonObject;
-import javax.json.JsonObjectBuilder;
-import javax.ws.rs.NotAuthorizedException;
-import javax.ws.rs.Path;
-import javax.ws.rs.core.Response;
-
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.jwk.JWKSet;
 import com.nimbusds.jwt.JWT;
@@ -59,6 +53,11 @@ import com.nimbusds.jwt.JWTClaimsSet;
 import fish.payara.security.openid.idp.AbstractIdProvider;
 import fish.payara.security.openid.idp.AuthCode;
 import fish.payara.security.openid.idp.Token;
+import jakarta.json.JsonObject;
+import jakarta.json.JsonObjectBuilder;
+import jakarta.ws.rs.NotAuthorizedException;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.core.Response;
 
 @Path("idp")
 public class AdfsEmulation extends AbstractIdProvider {

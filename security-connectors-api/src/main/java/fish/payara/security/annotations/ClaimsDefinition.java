@@ -37,9 +37,10 @@
  */
 package fish.payara.security.annotations;
 
+import java.lang.annotation.Retention;
+
 import fish.payara.security.openid.api.OpenIdConstant;
 
-import java.lang.annotation.Retention;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
@@ -59,7 +60,7 @@ public @interface ClaimsDefinition {
 
     /**
      * Maps the callerNameClaim's value to caller name value in
-     * javax.security.enterprise.identitystore.IdentityStore#validate
+     * jakarta.security.enterprise.identitystore.IdentityStore#validate
      *
      * <p>
      * To set this using Microprofile Config use
@@ -78,7 +79,7 @@ public @interface ClaimsDefinition {
 
     /**
      * Maps the callerGroupsClaim's value to caller groups value in
-     * javax.security.enterprise.identitystore.IdentityStore#validate
+     * jakarta.security.enterprise.identitystore.IdentityStore#validate
      *
      * <p>
      * To set this using Microprofile Config use

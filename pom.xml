@@ -359,6 +359,9 @@
         <repository>
             <id>staged-jakarta-releases</id>
             <url>https://jakarta.oss.sonatype.org/content/groups/staging/</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
         </repository>
     </repositories>
 </project>

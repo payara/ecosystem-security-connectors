@@ -42,9 +42,9 @@
 
 package fish.payara.security.openid.adfs;
 
-import javax.enterprise.inject.Model;
-import javax.inject.Inject;
-import javax.servlet.http.HttpServletRequest;
+import jakarta.enterprise.inject.Model;
+import jakarta.inject.Inject;
+import jakarta.servlet.http.HttpServletRequest;
 
 @Model
 public class UrlExtractor {
