@@ -47,14 +47,14 @@
     <parent>
         <artifactId>security-connectors-parent</artifactId>
         <groupId>fish.payara.security.connectors</groupId>
-        <version>2.4.0-SNAPSHOT</version>
+        <version>3.0.Alpha6-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>openid-standalone-it</artifactId>
 
     <properties>
-        <version.payara>5.2022.2</version.payara>
+        <version.payara>6.2022.1.Alpha3</version.payara>
         <version.arquillian>1.7.0.Alpha12</version.arquillian>
         <version.junit>5.9.0</version.junit>
     </properties>
@@ -112,7 +112,7 @@
 
         <dependency>
             <groupId>org.jboss.arquillian.protocol</groupId>
-            <artifactId>arquillian-protocol-servlet</artifactId>
+            <artifactId>arquillian-protocol-servlet-jakarta</artifactId>
             <scope>test</scope>
         </dependency>
 
@@ -135,6 +135,11 @@
         <dependency>
             <groupId>org.glassfish.jersey.core</groupId>
             <artifactId>jersey-common</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.jersey.core</groupId>
+            <artifactId>jersey-client</artifactId>
             <scope>provided</scope>
         </dependency>
     </dependencies>

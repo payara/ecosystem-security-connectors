@@ -42,13 +42,6 @@
 
 package fish.payara.security.openid.idp.simple;
 
-import javax.enterprise.context.RequestScoped;
-import javax.json.JsonObject;
-import javax.json.JsonValue;
-import javax.ws.rs.Path;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.UriInfo;
-
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.jwk.JWKSet;
 import com.nimbusds.jwt.JWT;
@@ -56,6 +49,12 @@ import com.nimbusds.jwt.JWTClaimsSet;
 import fish.payara.security.openid.idp.AbstractIdProvider;
 import fish.payara.security.openid.idp.AuthCode;
 import fish.payara.security.openid.idp.Token;
+import jakarta.enterprise.context.RequestScoped;
+import jakarta.json.JsonObject;
+import jakarta.json.JsonValue;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.core.Context;
+import jakarta.ws.rs.core.UriInfo;
 
 @Path("simple/")
 @RequestScoped

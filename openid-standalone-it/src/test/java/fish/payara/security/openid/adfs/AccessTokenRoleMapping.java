@@ -45,10 +45,9 @@ package fish.payara.security.openid.adfs;
 import java.util.Collections;
 import java.util.Set;
 
-import javax.enterprise.context.ApplicationScoped;
-
 import fish.payara.security.connectors.openid.api.AccessTokenCallerPrincipal;
 import fish.payara.security.connectors.openid.api.BearerGroupsIdentityStore;
+import jakarta.enterprise.context.ApplicationScoped;
 
 @ApplicationScoped
 public class AccessTokenRoleMapping extends BearerGroupsIdentityStore {

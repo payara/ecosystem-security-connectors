@@ -44,15 +44,14 @@ package fish.payara.security.openid.adfs;
 
 import java.security.Principal;
 
-import javax.annotation.security.DeclareRoles;
-import javax.annotation.security.RolesAllowed;
-import javax.enterprise.context.RequestScoped;
-import javax.inject.Inject;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-
 import fish.payara.security.connectors.annotations.OpenIdAuthenticationDefinition;
 import fish.payara.security.connectors.annotations.OpenIdProviderMetadata;
+import jakarta.annotation.security.DeclareRoles;
+import jakarta.annotation.security.RolesAllowed;
+import jakarta.enterprise.context.RequestScoped;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.Path;
 
 @RequestScoped
 @OpenIdAuthenticationDefinition(
