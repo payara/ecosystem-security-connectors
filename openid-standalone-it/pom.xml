@@ -200,6 +200,11 @@
                     <artifactId>arquillian-payara-server-managed</artifactId>
                     <scope>test</scope>
                 </dependency>
+                <dependency>
+                    <groupId>jakarta.xml.bind</groupId>
+                    <artifactId>jakarta.xml.bind-api</artifactId>
+                    <scope>runtime</scope>
+                </dependency>
             </dependencies>
             <build>
                 <plugins>
@@ -239,7 +244,7 @@
                         <configuration>
                             <systemPropertyVariables>
                                 <!-- Pass location of server installation to arquillian container -->
-                                <payara.home>${session.executionRootDirectory}/target/payara6</payara.home>
+                                <payara.home>${session.executionRootDirectory}/target/payara5</payara.home>
                             </systemPropertyVariables>
                         </configuration>
                     </plugin>
