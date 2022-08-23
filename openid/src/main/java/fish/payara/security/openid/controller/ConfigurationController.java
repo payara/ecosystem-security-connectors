@@ -37,24 +37,20 @@
  */
 package fish.payara.security.openid.controller;
 
-import fish.payara.security.annotations.OpenIdAuthenticationDefinition;
-import fish.payara.security.annotations.OpenIdProviderMetadata;
-import fish.payara.security.openid.api.PromptType;
-import fish.payara.security.openid.domain.ClaimsConfiguration;
-import fish.payara.security.openid.domain.LogoutConfiguration;
-import fish.payara.security.openid.domain.OpenIdConfiguration;
-import fish.payara.security.openid.domain.OpenIdTokenEncryptionMetadata;
-
 import java.io.Serializable;
+import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLDecoder;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Stream;
 
-import static java.util.stream.Collectors.joining;
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.context.RequestScoped;
 import javax.enterprise.inject.Produces;
@@ -63,16 +59,20 @@ import javax.json.JsonObject;
 
 import fish.payara.security.annotations.ClaimsDefinition;
 import fish.payara.security.annotations.LogoutDefinition;
+import fish.payara.security.annotations.OpenIdAuthenticationDefinition;
+import fish.payara.security.annotations.OpenIdProviderMetadata;
 import fish.payara.security.openid.OpenIdAuthenticationException;
 import fish.payara.security.openid.OpenIdUtil;
 import fish.payara.security.openid.api.OpenIdConstant;
-import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
-import java.net.URLEncoder;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import fish.payara.security.openid.api.PromptType;
+import fish.payara.security.openid.domain.ClaimsConfiguration;
+import fish.payara.security.openid.domain.LogoutConfiguration;
+import fish.payara.security.openid.domain.OpenIdConfiguration;
+import fish.payara.security.openid.domain.OpenIdTokenEncryptionMetadata;
 import org.eclipse.microprofile.config.Config;
 import org.eclipse.microprofile.config.ConfigProvider;
+
+import static java.util.stream.Collectors.joining;
 
 /**
  * Build and validate the OpenId Connect client configuration
@@ -207,19 +207,31 @@ public class ConfigurationController implements Serializable {
         String callerNameClaim = OpenIdUtil.getConfiguredValue(String.class, definition.claimsDefinition().callerNameClaim(), provider, ClaimsDefinition.OPENID_MP_CALLER_NAME_CLAIM);
         String callerGroupsClaim = OpenIdUtil.getConfiguredValue(String.class, definition.claimsDefinition().callerGroupsClaim(), provider, ClaimsDefinition.OPENID_MP_CALLER_GROUP_CLAIM);
 
-        Boolean notifyProvider = OpenIdUtil.getConfiguredValue(Boolean.class, definition.logout().notifyProvider(), provider, LogoutDefinition.OPENID_MP_PROVIDER_NOTIFY_LOGOUT);
-        String logoutRedirectURI = OpenIdUtil.getConfiguredValue(String.class, definition.logout().redirectURI(), provider, LogoutDefinition.OPENID_MP_POST_LOGOUT_REDIRECT_URI);
-        Boolean accessTokenExpiry = OpenIdUtil.getConfiguredValue(Boolean.class, definition.logout().accessTokenExpiry(), provider, LogoutDefinition.OPENID_MP_LOGOUT_ON_ACCESS_TOKEN_EXPIRY);
-        Boolean identityTokenExpiry = OpenIdUtil.getConfiguredValue(Boolean.class, definition.logout().identityTokenExpiry(), provider, LogoutDefinition.OPENID_MP_LOGOUT_ON_IDENTITY_TOKEN_EXPIRY);
+        Boolean notifyProvider = OpenIdUtil.getConfiguredValue(Boolean.class, definition.logout().notifyProvider(), provider,
+                LogoutDefinition.OPENID_MP_PROVIDER_NOTIFY_LOGOUT);
+        String logoutRedirectURI = OpenIdUtil.getConfiguredValue(String.class, definition.logout().redirectURI(), provider,
+                LogoutDefinition.OPENID_MP_POST_LOGOUT_REDIRECT_URI);
+        Boolean accessTokenExpiry = OpenIdUtil.getConfiguredValue(Boolean.class, definition.logout().accessTokenExpiry(), provider,
+                LogoutDefinition.OPENID_MP_LOGOUT_ON_ACCESS_TOKEN_EXPIRY);
+        Boolean identityTokenExpiry = OpenIdUtil.getConfiguredValue(Boolean.class, definition.logout().identityTokenExpiry(), provider,
+                LogoutDefinition.OPENID_MP_LOGOUT_ON_IDENTITY_TOKEN_EXPIRY);
 
-        boolean tokenAutoRefresh = OpenIdUtil.getConfiguredValue(Boolean.class, definition.tokenAutoRefresh(), provider, OpenIdAuthenticationDefinition.OPENID_MP_TOKEN_AUTO_REFRESH);
-        int tokenMinValidity = OpenIdUtil.getConfiguredValue(Integer.class, definition.tokenMinValidity(), provider, OpenIdAuthenticationDefinition.OPENID_MP_TOKEN_MIN_VALIDITY);
-        boolean userClaimsFromIDToken = OpenIdUtil.getConfiguredValue(Boolean.class, definition.userClaimsFromIDToken(), provider, OpenIdAuthenticationDefinition.OPENID_MP_USER_CLAIMS_FROM_ID_TOKEN);
-        String extraParamsRaw = OpenIdUtil.getConfiguredValue(String.class, extraParametersFromAnnotation, provider, OpenIdAuthenticationDefinition.OPENID_MP_EXTRA_PARAMS_RAW);
+        boolean tokenAutoRefresh = OpenIdUtil.getConfiguredValue(Boolean.class, definition.tokenAutoRefresh(), provider,
+                OpenIdAuthenticationDefinition.OPENID_MP_TOKEN_AUTO_REFRESH);
+        int tokenMinValidity = OpenIdUtil.getConfiguredValue(Integer.class, definition.tokenMinValidity(), provider,
+                OpenIdAuthenticationDefinition.OPENID_MP_TOKEN_MIN_VALIDITY);
+        boolean userClaimsFromIDToken = OpenIdUtil.getConfiguredValue(Boolean.class, definition.userClaimsFromIDToken(), provider,
+                OpenIdAuthenticationDefinition.OPENID_MP_USER_CLAIMS_FROM_ID_TOKEN);
+        String extraParamsRaw = OpenIdUtil.getConfiguredValue(String.class, extraParametersFromAnnotation, provider,
+                OpenIdAuthenticationDefinition.OPENID_MP_EXTRA_PARAMS_RAW);
         Map<String, List<String>> extraParameters = parseMultiMapFromUrlQuery(extraParamsRaw);
-        boolean disableScopeValidation = OpenIdUtil.getConfiguredValue(Boolean.class, providerMetadata.disableScopeValidation(), provider, OpenIdAuthenticationDefinition.OPENID_MP_DISABLE_SCOPE_VALIDATION);
+        boolean disableScopeValidation = OpenIdUtil.getConfiguredValue(Boolean.class, providerMetadata.disableScopeValidation(), provider,
+                OpenIdAuthenticationDefinition.OPENID_MP_DISABLE_SCOPE_VALIDATION);
+        String accessTokenIssuerURI = OpenIdUtil.getConfiguredValue(String.class, providerMetadata.accessTokenIssuer(), provider,
+                OpenIdProviderMetadata.OPENID_MP_ACCESS_TOKEN_ISSUER);
 
-        fish.payara.security.openid.domain.OpenIdProviderMetadata openIdProviderMetadata = new fish.payara.security.openid.domain.OpenIdProviderMetadata(
+        fish.payara.security.openid.domain.OpenIdProviderMetadata openIdProviderMetadata =
+                new fish.payara.security.openid.domain.OpenIdProviderMetadata(
                 providerDocument,
                 issuerURI,
                 scopesSupported,
@@ -233,7 +245,8 @@ public class ConfigurationController implements Serializable {
                 .setTokenEndpoint(tokenEndpoint)
                 .setUserinfoEndpoint(userinfoEndpoint)
                 .setEndSessionEndpoint(endSessionEndpoint)
-                .setJwksURL(jwksURL);
+                .setJwksURL(jwksURL)
+                .setAccessTokenIssuerURI(accessTokenIssuerURI);
 
         OpenIdConfiguration configuration = new OpenIdConfiguration()
                 .setProviderMetadata(

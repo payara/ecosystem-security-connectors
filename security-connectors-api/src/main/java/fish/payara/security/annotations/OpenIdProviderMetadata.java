@@ -38,6 +38,7 @@
 package fish.payara.security.annotations;
 
 import java.lang.annotation.Retention;
+
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
@@ -87,7 +88,8 @@ public @interface OpenIdProviderMetadata {
     String tokenEndpoint() default "";
 
     /**
-     * Required: An OAuth 2.0 Protected Resource that returns Claims about the     * authenticated End-User.
+     * Required: An OAuth 2.0 Protected Resource that returns Claims about the
+     * authenticated End-User.
      * <p>
      * To set this using Microprofile Config use
      * {@code payara.security.openid.provider.userinfoEndpoint}
@@ -98,7 +100,8 @@ public @interface OpenIdProviderMetadata {
     String userinfoEndpoint() default "";
 
     /**
-     * Optional: OP endpoint to notify that the End-User has logged out of the     * site and might want to log out of the OP as well.
+     * Optional: OP endpoint to notify that the End-User has logged out of the
+     * site and might want to log out of the OP as well.
      * <p>
      * To set this using Microprofile Config use
      * {@code payara.security.openid.provider.endSessionEndpoint}
@@ -217,6 +220,16 @@ public @interface OpenIdProviderMetadata {
     boolean disableScopeValidation() default false;
 
     /**
+     * Specify issuer of Access Token to validate against. Microsoft Active Directory Federation Services (ADFS) is known
+     * to use different issuer for its access token, this value must be configured so access token validations would pass.
+     * <p>
+     * To set this using Microrprofile config use <code>{@value #OPENID_MP_ACCESS_TOKEN_ISSUER}</code>
+     *
+     * @return
+     */
+    String accessTokenIssuer() default "";
+
+    /**
      * The Microprofile Config key for the issuer url is <code>{@value}</code>.
      */
     String OPENID_MP_ISSUER = "payara.security.openid.provider.issuer";
@@ -281,5 +294,10 @@ public @interface OpenIdProviderMetadata {
      * The Microprofile Config key for the supported claims supported is <code>{@value}</code>
      */
     String OPENID_MP_CLAIMS_SUPPORTED = "payara.security.openid.provider.claimsSupported";
+
+    /**
+     * The Microprofile Config key for non-standard Access Token Issuer is <code>@{value}</code>
+     */
+    String OPENID_MP_ACCESS_TOKEN_ISSUER = "payara.security.openid.provider.accessTokenIssuer";
 
 }

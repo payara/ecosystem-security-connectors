@@ -89,6 +89,7 @@
         <module>openid</module>
         <module>oauth2</module>
         <module>openid-standalone</module>
+        <module>openid-standalone-it</module>
     </modules>
 
     <properties>
@@ -350,16 +351,14 @@
 
     <repositories>
         <repository>
-            <id>payara-patched-externals</id>
-            <name>Payara Patched Externals</name>
-            <url>https://raw.github.com/payara/Payara_PatchedProjects/master</url>
-            <!--<url>file:///opt/PayaraDev/Payara_PatchedProjects</url>-->
             <releases>
                 <enabled>true</enabled>
             </releases>
             <snapshots>
                 <enabled>false</enabled>
             </snapshots>
+            <id>payara-nexus-artifacts</id>
+            <url>https://nexus.payara.fish/repository/payara-artifacts</url>
         </repository>
     </repositories>
 </project>
