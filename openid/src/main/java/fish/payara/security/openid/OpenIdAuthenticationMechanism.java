@@ -62,8 +62,6 @@ import jakarta.inject.Inject;
 import jakarta.json.Json;
 import jakarta.json.JsonObject;
 import jakarta.json.JsonReader;
-import jakarta.security.auth.callback.Callback;
-import jakarta.security.auth.callback.UnsupportedCallbackException;
 import jakarta.security.auth.message.callback.CallerPrincipalCallback;
 import jakarta.security.enterprise.AuthenticationException;
 import jakarta.security.enterprise.AuthenticationStatus;
@@ -92,6 +90,8 @@ import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 import static java.util.logging.Level.INFO;
 import static java.util.logging.Level.WARNING;
+import javax.security.auth.callback.Callback;
+import javax.security.auth.callback.UnsupportedCallbackException;
 
 /**
  * The AuthenticationMechanism used to authenticate users using the OpenId
