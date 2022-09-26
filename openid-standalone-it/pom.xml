@@ -54,7 +54,7 @@
     <artifactId>openid-standalone-it</artifactId>
 
     <properties>
-        <version.payara>5.2022.2</version.payara>
+        <version.payara>5.2022.3</version.payara>
         <version.arquillian>1.7.0.Alpha12</version.arquillian>
         <version.junit>5.9.1</version.junit>
     </properties>
