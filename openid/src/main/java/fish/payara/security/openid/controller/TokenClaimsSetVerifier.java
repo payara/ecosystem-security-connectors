@@ -37,16 +37,16 @@
  */
 package fish.payara.security.openid.controller;
 
+import java.util.Date;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+
 import com.nimbusds.jose.proc.SecurityContext;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.proc.BadJWTException;
 import com.nimbusds.jwt.proc.JWTClaimsSetVerifier;
-import fish.payara.security.openid.domain.OpenIdConfiguration;
 import fish.payara.security.openid.api.OpenIdConstant;
-
-import java.util.Date;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
+import fish.payara.security.openid.domain.OpenIdConfiguration;
 
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
@@ -83,7 +83,16 @@ public abstract class TokenClaimsSetVerifier implements JWTClaimsSetVerifier {
                 throw new IllegalStateException("Missing issuer (iss) claim");
             }
             if (!claims.getIssuer().equals(configuration.getProviderMetadata().getIssuerURI())) {
-                throw new IllegalStateException("Invalid issuer : " + configuration.getProviderMetadata().getIssuerURI());
+                throw new IllegalStateException("Invalid issuer : " + claims.getIssuer());
+            }
+        }
+
+        public void requireIssuer(String issuer) {
+            if (isNull(claims.getIssuer())) {
+                throw new IllegalStateException("Missing issuer (iss) claim");
+            }
+            if (!claims.getIssuer().equals(issuer)) {
+                throw new IllegalStateException("Invalid issuer : " + claims.getIssuer());
             }
         }
 
