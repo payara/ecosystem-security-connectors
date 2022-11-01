@@ -1,4 +1,4 @@
-# Security Connectors Suites
+# Security Connectors Suite
 
 ### Ecosystem Plugin Support
 Support for the Security Connectors Suites is handled in the [Ecosystem Support Repository](https://github.com/payara/ecosystem-support)
