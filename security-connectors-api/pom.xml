@@ -43,12 +43,12 @@
     <parent>
     <artifactId>security-connectors-parent</artifactId>
     <groupId>fish.payara.security.connectors</groupId>
-    <version>3.0.alpha7-SNAPSHOT</version>
+    <version>3.0.alpha7</version>
   </parent>
 
     <groupId>fish.payara.security.connectors</groupId>
     <artifactId>security-connectors-api</artifactId>
-    <version>3.0.alpha7-SNAPSHOT</version>
+    <version>3.0.alpha7</version>
     <packaging>bundle</packaging>
 
     <name>Payara Security Connnectors API</name>
@@ -63,6 +63,11 @@
             <artifactId>jakarta.jakartaee-api</artifactId>
             <version>${jakartaee.api.version}</version>
             <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>net.minidev</groupId>
+            <artifactId>json-smart</artifactId>
+            <version>${json-smart.version}</version>
         </dependency>
     </dependencies>
 
