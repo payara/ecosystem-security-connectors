@@ -44,7 +44,7 @@
 
     <groupId>fish.payara.security.connectors</groupId>
     <artifactId>security-connectors-parent</artifactId>
-    <version>3.0.alpha7</version>
+    <version>3.0.alpha9-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>Payara Security Connectors</name>
 
@@ -96,10 +96,10 @@
         <javase.version>11</javase.version>
         <jakartaee.api.version>10.0.0</jakartaee.api.version>
         <jakarta.security.enterprise.version>3.0.0</jakarta.security.enterprise.version>
-        <nimbus-jose-jwt.version>9.23</nimbus-jose-jwt.version>
-        <accessors-smart.version>2.4.8</accessors-smart.version>
+        <nimbus-jose-jwt.version>9.35</nimbus-jose-jwt.version>
+        <accessors-smart.version>2.4.11</accessors-smart.version>
         <microprofile.version>5.0</microprofile.version>
-        <json-smart.version>2.4.10</json-smart.version>
+        <json-smart.version>2.4.11</json-smart.version>
 
         <maven.compiler.source>${javase.version}</maven.compiler.source>
         <maven.compiler.target>${javase.version}</maven.compiler.target>
