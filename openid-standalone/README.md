@@ -9,7 +9,7 @@ If you use this standalone connector, import classes with the with the `fish.pay
 
 ## Download the standalone OpenID Connect connector
 
-You can access the latest version in the [Payara Artifacts Maven Repository](https://nexus.payara.fish/service/rest/repository/browse/payara-artifacts/fish/payara/security/connectors/openid-standalone/). 
+You can access the latest version in the [Payara Artifacts Maven Repository](https://nexus.dev.payara.fish/service/rest/repository/browse/payara-artifacts/fish/payara/security/connectors/openid-standalone/). 
 
 You can also add the Payara Artifacts repository into your pom.xml and define the dependency as follows (replace VERSION with the latest version):
 
@@ -17,7 +17,7 @@ You can also add the Payara Artifacts repository into your pom.xml and define th
     <repositories>
         <repository>
             <id>payara-nexus-artifacts</id>
-            <url>https://nexus.payara.fish/repository/payara-artifacts</url>
+            <url>https://nexus.dev.payara.fish/repository/payara-artifacts</url>
             <releases>
                 <enabled>true</enabled>
             </releases>
