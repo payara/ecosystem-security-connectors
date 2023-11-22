@@ -277,14 +277,14 @@
                 <repository>
                     <id>payara-enterprise</id>
                     <name>Payara Enterprise Nexus</name>
-                    <url>https://nexus.payara.fish/content/repositories/payara-enterprise</url>
+                    <url>https://nexus.dev.payara.fish/content/repositories/payara-enterprise</url>
                 </repository>
             </distributionManagement>
             <repositories>
                 <repository>
                     <id>payara-enterprise</id>
                     <name>Payara Enterprise Nexus</name>
-                    <url>https://nexus.payara.fish/content/repositories/payara-enterprise</url>
+                    <url>https://nexus.dev.payara.fish/content/repositories/payara-enterprise</url>
                     <releases>
                         <enabled>true</enabled>
                     </releases>
@@ -331,14 +331,14 @@
                 <repository>
                     <id>payara-artifacts</id>
                     <name>Payara Artifacts</name>
-                    <url>https://nexus.payara.fish/content/repositories/payara-artifacts</url>
+                    <url>https://nexus.dev.payara.fish/content/repositories/payara-artifacts</url>
                 </repository>
             </distributionManagement>
             <repositories>
                 <repository>
                     <id>payara-artifacts</id>
                     <name>Payara Artifacts</name>
-                    <url>https://nexus.payara.fish/content/repositories/payara-artifacts</url>
+                    <url>https://nexus.dev.payara.fish/content/repositories/payara-artifacts</url>
                     <releases>
                         <enabled>true</enabled>
                     </releases>
@@ -359,7 +359,7 @@
                 <enabled>false</enabled>
             </snapshots>
             <id>payara-nexus-artifacts</id>
-            <url>https://nexus.payara.fish/repository/payara-artifacts</url>
+            <url>https://nexus.dev.payara.fish/repository/payara-artifacts</url>
         </repository>
     </repositories>
 </project>
