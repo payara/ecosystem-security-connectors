@@ -239,11 +239,11 @@ public class OpenIdContextImpl implements OpenIdContext {
                     .queryParam(OpenIdConstant.ID_TOKEN_HINT, getIdentityToken().getToken());
             if (!OpenIdUtil.isEmpty(logout.getRedirectURI())) {
                 // User Agent redirected to POST_LOGOUT_REDIRECT_URI after a logout operation performed in OP.
-                logoutURI.queryParam(OpenIdConstant.POST_LOGOUT_REDIRECT_URI, logout.buildRedirectURI(request));
+                logoutURI.queryParam(OpenIdConstant.POST_LOGOUT_REDIRECT_URI, logout.buildRedirectURI(configuration.getProxyConfiguration(), request));
             }
             redirect(response, logoutURI.build().toASCIIString());
         } else if (!OpenIdUtil.isEmpty(logout.getRedirectURI())) {
-            redirect(response, logout.buildRedirectURI(request));
+            redirect(response, logout.buildRedirectURI(configuration.getProxyConfiguration(), request));
         } else {
             // Redirect user to OpenID connect provider for re-authentication
             authenticationController.authenticateUser(request, response);

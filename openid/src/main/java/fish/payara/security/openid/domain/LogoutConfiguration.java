@@ -72,13 +72,21 @@ public class LogoutConfiguration {
         return this;
     }
 
-    public String buildRedirectURI(HttpServletRequest request) {
+   public String buildRedirectURI(ProxyConfiguration proxyConfiguration, HttpServletRequest request) {
+        String uri = redirectURI;
         if (redirectURI.contains(BASE_URL_EXPRESSION)) {
             String baseURL = request.getRequestURL().substring(0, request.getRequestURL().length() - request.getRequestURI().length())
                     + request.getContextPath();
-            return redirectURI.replace(BASE_URL_EXPRESSION, baseURL);
+            uri = redirectURI.replace(BASE_URL_EXPRESSION, baseURL);
         }
-        return redirectURI;
+        
+        if (proxyConfiguration != null
+                && !proxyConfiguration.getHostName().isEmpty()
+                && !proxyConfiguration.getPort().isEmpty()) {
+            uri = uri.replace(request.getServerName(), proxyConfiguration.getHostName());
+            uri = uri.replace(String.valueOf(request.getServerPort()), proxyConfiguration.getPort());
+        }
+        return uri;
     }
 
     public boolean isAccessTokenExpiry() {
