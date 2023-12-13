@@ -69,10 +69,12 @@ import fish.payara.security.openid.domain.ClaimsConfiguration;
 import fish.payara.security.openid.domain.LogoutConfiguration;
 import fish.payara.security.openid.domain.OpenIdConfiguration;
 import fish.payara.security.openid.domain.OpenIdTokenEncryptionMetadata;
+import fish.payara.security.openid.domain.ProxyConfiguration;
 import org.eclipse.microprofile.config.Config;
 import org.eclipse.microprofile.config.ConfigProvider;
 
 import static java.util.stream.Collectors.joining;
+import fish.payara.security.annotations.ProxyDefinition;
 
 /**
  * Build and validate the OpenId Connect client configuration
@@ -207,6 +209,9 @@ public class ConfigurationController implements Serializable {
         String callerNameClaim = OpenIdUtil.getConfiguredValue(String.class, definition.claimsDefinition().callerNameClaim(), provider, ClaimsDefinition.OPENID_MP_CALLER_NAME_CLAIM);
         String callerGroupsClaim = OpenIdUtil.getConfiguredValue(String.class, definition.claimsDefinition().callerGroupsClaim(), provider, ClaimsDefinition.OPENID_MP_CALLER_GROUP_CLAIM);
 
+        String proxyHostName = OpenIdUtil.getConfiguredValue(String.class, definition.proxyDefinition().hostName(), provider, ProxyDefinition.OPENID_MP_PROXY_HOSTNAME);
+        String proxyPort = OpenIdUtil.getConfiguredValue(String.class, definition.proxyDefinition().port(), provider, ProxyDefinition.OPENID_MP_PROXY_PORT);
+
         Boolean notifyProvider = OpenIdUtil.getConfiguredValue(Boolean.class, definition.logout().notifyProvider(), provider,
                 LogoutDefinition.OPENID_MP_PROVIDER_NOTIFY_LOGOUT);
         String logoutRedirectURI = OpenIdUtil.getConfiguredValue(String.class, definition.logout().redirectURI(), provider,
@@ -256,6 +261,9 @@ public class ConfigurationController implements Serializable {
                         new ClaimsConfiguration()
                                 .setCallerNameClaim(callerNameClaim)
                                 .setCallerGroupsClaim(callerGroupsClaim)
+                ).setProxyConfiguration(new ProxyConfiguration()
+                                .setHostName(proxyHostName)
+                                .setPort(proxyPort)
                 ).setLogoutConfiguration(
                         new LogoutConfiguration()
                                 .setNotifyProvider(notifyProvider)
@@ -474,6 +482,7 @@ public class ConfigurationController implements Serializable {
                 definition.extraParameters(),
                 providerMetadataAttrs(definition.providerMetadata()),
                 claimsAttrs(definition.claimsDefinition()),
+                proxyAttrs(definition.proxyDefinition()),
                 logoutAttrs(definition.logout())
         };
 
@@ -494,6 +503,13 @@ public class ConfigurationController implements Serializable {
         return claimsDefinition != null ? new String[] {
                 claimsDefinition.callerGroupsClaim(),
                 claimsDefinition.callerNameClaim()
+        } : new String[2];
+    }
+    
+    private static String[] proxyAttrs(ProxyDefinition proxyDefinition) {
+        return proxyDefinition != null ? new String[]{
+            proxyDefinition.hostName(),
+            proxyDefinition.port()
         } : new String[2];
     }
 

@@ -52,6 +52,7 @@ import org.eclipse.microprofile.config.ConfigProvider;
 import static fish.payara.security.annotations.AzureAuthenticationDefinition.OPENID_MP_AZURE_TENANT_ID;
 import static fish.payara.security.openid.OpenIdUtil.getConfiguredValue;
 import static fish.payara.security.openid.OpenIdUtil.isEmpty;
+import fish.payara.security.annotations.ProxyDefinition;
 
 /**
  * Interpret {@link AzureAuthenticationDefinition}
@@ -83,6 +84,11 @@ public class AzureDefinitionConverter {
             @Override
             public ClaimsDefinition claimsDefinition() {
                 return azureDefinition.claimsDefinition();
+            }
+
+            @Override
+            public ProxyDefinition proxyDefinition() {
+                return azureDefinition.proxyDefinition();
             }
 
             @Override
