@@ -46,6 +46,7 @@ import fish.payara.security.annotations.OpenIdAuthenticationDefinition;
 import fish.payara.security.annotations.OpenIdProviderMetadata;
 import fish.payara.security.openid.api.DisplayType;
 import fish.payara.security.openid.api.PromptType;
+import fish.payara.security.annotations.ProxyDefinition;
 
 /**
  * Translates GoogleAuthenticationDefinition to OpenIdAuthenticationDefinition
@@ -71,6 +72,11 @@ public class GoogleDefinitionConverter {
             @Override
             public ClaimsDefinition claimsDefinition() {
                 return googleDefinition.claimsDefinition();
+            }
+
+            @Override
+            public ProxyDefinition proxyDefinition() {
+                return googleDefinition.proxyDefinition();
             }
 
             @Override

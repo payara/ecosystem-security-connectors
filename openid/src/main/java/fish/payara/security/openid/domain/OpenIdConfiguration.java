@@ -66,6 +66,7 @@ public class OpenIdConfiguration {
     private OpenIdProviderMetadata providerMetadata;
     private OpenIdTokenEncryptionMetadata encryptionMetadata;
     private ClaimsConfiguration claimsConfiguration;
+    private ProxyConfiguration proxyConfiguration;
     private LogoutConfiguration logoutConfiguration;
     private boolean tokenAutoRefresh;
     private int tokenMinValidity;
@@ -93,12 +94,20 @@ public class OpenIdConfiguration {
     }
 
     public String buildRedirectURI(HttpServletRequest request) {
+        String uri = redirectURI;
         if (redirectURI.contains(BASE_URL_EXPRESSION)) {
             String baseURL = request.getRequestURL().substring(0, request.getRequestURL().length() - request.getRequestURI().length())
                     + request.getContextPath();
-            return redirectURI.replace(BASE_URL_EXPRESSION, baseURL);
+            uri = redirectURI.replace(BASE_URL_EXPRESSION, baseURL);
         }
-        return redirectURI;
+        
+        if (proxyConfiguration != null
+                && !proxyConfiguration.getHostName().isEmpty()
+                && !proxyConfiguration.getPort().isEmpty()) {
+            uri = uri.replace(request.getServerName(), proxyConfiguration.getHostName());
+            uri = uri.replace(String.valueOf(request.getServerPort()), proxyConfiguration.getPort());
+        }
+        return uri;
     }
 
     public String getRedirectURI() {
@@ -215,6 +224,15 @@ public class OpenIdConfiguration {
 
     public OpenIdConfiguration setClaimsConfiguration(ClaimsConfiguration claimsConfiguration) {
         this.claimsConfiguration = claimsConfiguration;
+        return this;
+    }
+
+    public ProxyConfiguration getProxyConfiguration() {
+        return proxyConfiguration;
+    }
+
+    public OpenIdConfiguration setProxyConfiguration(ProxyConfiguration proxyConfiguration) {
+        this.proxyConfiguration = proxyConfiguration;
         return this;
     }
 

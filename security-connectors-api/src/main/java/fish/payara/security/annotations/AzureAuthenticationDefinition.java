@@ -93,6 +93,16 @@ public @interface AzureAuthenticationDefinition {
     ClaimsDefinition claimsDefinition() default @ClaimsDefinition;
 
     /**
+     * Defines the proxy mapping for requests passing through a reverse web
+     * proxy. This field specifies the details of how to handle requests when
+     * going through a proxy.
+     *
+     * @return Proxy mapping details for requests passing through a reverse web
+     * proxy.
+     */
+    ProxyDefinition proxyDefinition() default @ProxyDefinition(hostName = "", port = "");
+
+    /**
      * Optional. The Logout definition defines the logout and RP session
      * management configuration.
      *
