@@ -96,16 +96,19 @@ public class OpenIdConfiguration {
     public String buildRedirectURI(HttpServletRequest request) {
         String uri = redirectURI;
         if (redirectURI.contains(BASE_URL_EXPRESSION)) {
-            String baseURL = request.getRequestURL().substring(0, request.getRequestURL().length() - request.getRequestURI().length())
-                    + request.getContextPath();
+            String baseURL;
+            if (proxyConfiguration != null
+                    && !proxyConfiguration.getHostName().isEmpty()) {
+                baseURL = request.getScheme() + "://" + proxyConfiguration.getHostName();
+                if (!proxyConfiguration.getPort().isEmpty()) {
+                    baseURL = baseURL + ":" + proxyConfiguration.getPort();
+                }
+                baseURL = baseURL + request.getContextPath();
+            } else {
+                baseURL = request.getRequestURL().substring(0, request.getRequestURL().length() - request.getRequestURI().length())
+                        + request.getContextPath();
+            }
             uri = redirectURI.replace(BASE_URL_EXPRESSION, baseURL);
-        }
-        
-        if (proxyConfiguration != null
-                && !proxyConfiguration.getHostName().isEmpty()
-                && !proxyConfiguration.getPort().isEmpty()) {
-            uri = uri.replace(request.getServerName(), proxyConfiguration.getHostName());
-            uri = uri.replace(String.valueOf(request.getServerPort()), proxyConfiguration.getPort());
         }
         return uri;
     }
