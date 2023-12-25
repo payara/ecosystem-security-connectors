@@ -292,6 +292,29 @@ public class OpenIdAuthenticationMechanism implements HttpAuthenticationMechanis
             // this is OAuth callback
             String redirectURI = configuration.buildRedirectURI(request);
             if (!request.getRequestURL().toString().equals(redirectURI)) {
+                if (configuration.getProxyConfiguration() != null && !configuration.getProxyConfiguration().getHostName().isEmpty()) {
+                    // Check if request URL matches proxy host name and port
+                    String proxyHost = configuration.getProxyConfiguration().getHostName();
+                    String proxyPort = configuration.getProxyConfiguration().getPort();
+
+                    String requestURLWithProxy;
+                    if (!proxyPort.isEmpty()) {
+                        requestURLWithProxy = String.format("%s://%s:%s", request.getScheme(), proxyHost, proxyPort) + request.getRequestURI();
+                    } else {
+                        requestURLWithProxy = String.format("%s://%s", request.getScheme(), proxyHost) + request.getRequestURI();
+                    }
+                    if (!requestURLWithProxy.equals(request.getRequestURL().toString())) {
+                        LOGGER.log(INFO, "OpenID Redirect URL {0} does not match with the request URL {1} through proxy {2}:{3}",
+                                new Object[]{redirectURI, requestURLWithProxy, proxyHost, proxyPort});
+                        return httpContext.notifyContainerAboutLogin(NOT_VALIDATED_RESULT);
+                    }
+                } else {
+                    LOGGER.log(INFO, "OpenID Redirect URL {0} does not match with the request URL {1}",
+                            new Object[]{redirectURI, request.getRequestURL().toString()});
+                    return httpContext.notifyContainerAboutLogin(NOT_VALIDATED_RESULT);
+                }
+            }
+            if (!request.getRequestURL().toString().equals(redirectURI)) {
                 LOGGER.log(INFO, "OpenID Redirect URL {0} not matched with request URL {1}", new Object[]{redirectURI,
                         request.getRequestURL().toString()});
                 return httpContext.notifyContainerAboutLogin(NOT_VALIDATED_RESULT);
