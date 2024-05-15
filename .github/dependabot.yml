@@ -25,6 +25,8 @@ updates:
 - package-ecosystem: maven
   directory: /
   target-branch: Payara6
+  labels: 
+    - "dependencies Payara6"
   schedule:
       interval: weekly
   open-pull-requests-limit: 10
