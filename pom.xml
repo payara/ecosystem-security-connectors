@@ -89,7 +89,7 @@
         <jakarta.security.enterprise.version>3.0.3.payara-p1</jakarta.security.enterprise.version>
         <nimbus-jose-jwt.version>9.39</nimbus-jose-jwt.version>
         <accessors-smart.version>2.4.11</accessors-smart.version>
-        <microprofile.version>5.0</microprofile.version>
+        <microprofile.version>6.1</microprofile.version>
         <json-smart.version>2.5.1</json-smart.version>
 
         <maven.compiler.source>${javase.version}</maven.compiler.source>
