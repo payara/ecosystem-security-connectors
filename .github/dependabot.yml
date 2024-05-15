@@ -6,6 +6,7 @@ updates:
     interval: daily
     time: "03:00"
   open-pull-requests-limit: 10
+
   ignore:
   - dependency-name: net.minidev:accessors-smart
     versions:
@@ -21,3 +22,9 @@ updates:
   - dependency-name: org.apache.felix:maven-bundle-plugin
     versions:
     - 5.1.2
+- package-ecosystem: maven
+  directory: /
+  target-branch: Payara6
+  schedule:
+      interval: weekly
+  open-pull-requests-limit: 10
