@@ -86,11 +86,11 @@
     <properties>
         <javase.version>11</javase.version>
         <jakartaee.api.version>10.0.0</jakartaee.api.version>
-        <jakarta.security.enterprise.version>3.0.0</jakarta.security.enterprise.version>
-        <nimbus-jose-jwt.version>9.35</nimbus-jose-jwt.version>
+        <jakarta.security.enterprise.version>3.0.3.payara-p1</jakarta.security.enterprise.version>
+        <nimbus-jose-jwt.version>9.39</nimbus-jose-jwt.version>
         <accessors-smart.version>2.4.11</accessors-smart.version>
         <microprofile.version>5.0</microprofile.version>
-        <json-smart.version>2.4.11</json-smart.version>
+        <json-smart.version>2.5.1</json-smart.version>
 
         <maven.compiler.source>${javase.version}</maven.compiler.source>
         <maven.compiler.target>${javase.version}</maven.compiler.target>
@@ -130,7 +130,7 @@
             <dependency>
                 <groupId>org.junit</groupId>
                 <artifactId>junit-bom</artifactId>
-                <version>5.8.2</version>
+                <version>5.10.2</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -155,7 +155,7 @@
             <dependency>
                 <groupId>org.assertj</groupId>
                 <artifactId>assertj-core</artifactId>
-                <version>3.21.0</version>
+                <version>3.25.3</version>
                 <scope>test</scope>
             </dependency>
         </dependencies>
@@ -180,17 +180,17 @@
                     <source>${javase.version}</source>
                     <target>${javase.version}</target>
                 </configuration>
-                <version>3.8.1</version>
+                <version>3.13.0</version>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-deploy-plugin</artifactId>
-                <version>3.0.0-M1</version>
+                <version>3.1.2</version>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-source-plugin</artifactId>
-                <version>3.2.1</version>
+                <version>3.3.1</version>
                 <executions>
                     <execution>
                         <id>attach-sources</id>
