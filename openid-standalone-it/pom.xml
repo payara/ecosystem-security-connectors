@@ -54,7 +54,7 @@
     <artifactId>openid-standalone-it</artifactId>
 
     <properties>
-        <version.payara>5.2022.3</version.payara>
+        <version.payara>5.2022.5</version.payara>
         <version.arquillian>1.7.0.Alpha12</version.arquillian>
         <version.junit>5.9.1</version.junit>
     </properties>
@@ -123,7 +123,7 @@
         <dependency>
             <groupId>com.nimbusds</groupId>
             <artifactId>nimbus-jose-jwt</artifactId>
-            <version>9.23</version>
+            <version>9.39</version>
         </dependency>
         <dependency>
             <groupId>org.jboss.shrinkwrap.resolver</groupId>
