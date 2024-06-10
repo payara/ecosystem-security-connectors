@@ -87,7 +87,7 @@
         <javase.version>11</javase.version>
         <jakartaee.api.version>10.0.0</jakartaee.api.version>
         <jakarta.security.enterprise.version>3.0.3.payara-p1</jakarta.security.enterprise.version>
-        <nimbus-jose-jwt.version>9.39.1</nimbus-jose-jwt.version>
+        <nimbus-jose-jwt.version>9.40</nimbus-jose-jwt.version>
         <accessors-smart.version>2.4.11</accessors-smart.version>
         <microprofile.version>5.0</microprofile.version>
         <json-smart.version>2.5.1</json-smart.version>
