@@ -60,48 +60,48 @@ public class ConfigurationControllerTest {
     @Test
     public void createUrlNoParameter() {
         assertEquals("",
-                ConfigurationController.createUrlQuery("extraParameters", new String[]{}));
+                ConfigurationController.createUrlQuery(null, "extraParameters", new String[]{}));
     }
 
     @Test
     public void createUrlOneParameter() {
         assertEquals("a=b",
-                ConfigurationController.createUrlQuery("extraParameters", new String[]{"a=b"}));
+                ConfigurationController.createUrlQuery(null, "extraParameters", new String[]{"a=b"}));
     }
 
     @Test
     public void createUrlSimpleParameters() {
         assertEquals("a=b&c=d",
-                ConfigurationController.createUrlQuery("extraParameters", new String[]{"a=b", "c=d"}));
+                ConfigurationController.createUrlQuery(null, "extraParameters", new String[]{"a=b", "c=d"}));
     }
 
     @Test
     public void createUrlNoValueParameters() {
         assertEquals("a&c=d&e",
-                ConfigurationController.createUrlQuery("extraParameters", new String[]{"a", "c=d", "e"}));
+                ConfigurationController.createUrlQuery(null, "extraParameters", new String[]{"a", "c=d", "e"}));
     }
 
     @Test
     public void createUrlWithSpacesParameters() {
         assertEquals("a=b+b&c=++d++&e",
-                ConfigurationController.createUrlQuery("extraParameters", new String[]{"a=b b", "c=  d  ", "e="}));
+                ConfigurationController.createUrlQuery(null, "extraParameters", new String[]{"a=b b", "c=  d  ", "e="}));
     }
 
     @Test
     public void createUrlWithoutKeyNameParameters() {
         // these cases are cought by OpenIdExtension anyway, just defensive test:
         Assertions.assertThrows(OpenIdAuthenticationException.class,
-                () -> ConfigurationController.createUrlQuery("extraParameters", new String[]{""}));
+                () -> ConfigurationController.createUrlQuery(null, "extraParameters", new String[]{""}));
         Assertions.assertThrows(OpenIdAuthenticationException.class,
-                () -> ConfigurationController.createUrlQuery("extraParameters", new String[]{"="}));
+                () -> ConfigurationController.createUrlQuery(null, "extraParameters", new String[]{"="}));
         Assertions.assertThrows(OpenIdAuthenticationException.class,
-                () -> ConfigurationController.createUrlQuery("extraParameters", new String[]{"=a"}));
+                () -> ConfigurationController.createUrlQuery(null, "extraParameters", new String[]{"=a"}));
     }
 
     @Test
     public void createUrlWithBlankKeyNameParameters() {
         assertEquals("+=+",
-                ConfigurationController.createUrlQuery("extraParameters", new String[]{" = "}));
+                ConfigurationController.createUrlQuery(null, "extraParameters", new String[]{" = "}));
     }
 
     @Test

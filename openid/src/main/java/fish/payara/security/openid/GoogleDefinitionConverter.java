@@ -140,6 +140,11 @@ public class GoogleDefinitionConverter {
             }
 
             @Override
+            public String extraParametersExpression() {
+                return "";
+            }
+
+            @Override
             public Class<? extends Annotation> annotationType() {
                 return googleDefinition.annotationType();
             }

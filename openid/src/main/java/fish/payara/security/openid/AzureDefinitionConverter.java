@@ -152,6 +152,11 @@ public class AzureDefinitionConverter {
             }
 
             @Override
+            public String extraParametersExpression() {
+                return "";
+            }
+
+            @Override
             public Class<? extends Annotation> annotationType() {
                 return azureDefinition.annotationType();
             }
