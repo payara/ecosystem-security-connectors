@@ -216,6 +216,14 @@ public @interface AzureAuthenticationDefinition {
     String[] extraParameters() default {};
 
     /**
+     * Allows the extra parameters to be defined as a Jakarta Expression
+     * Language expression. If set, overrides the extraParameters value.
+     *
+     * @return
+     */
+    String extraParametersExpression() default "";
+
+    /**
      * Optional. Sets the connect timeout(in milliseconds) for Remote JWKS
      * retrieval. Value must not be negative and if value is zero then infinite
      * timeout.

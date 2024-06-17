@@ -153,7 +153,7 @@ public class AzureDefinitionConverter {
 
             @Override
             public String extraParametersExpression() {
-                return "";
+                return azureDefinition.extraParametersExpression();
             }
 
             @Override

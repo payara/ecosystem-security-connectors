@@ -141,7 +141,7 @@ public class GoogleDefinitionConverter {
 
             @Override
             public String extraParametersExpression() {
-                return "";
+                return googleDefinition.extraParametersExpression();
             }
 
             @Override
