@@ -1,5 +1,5 @@
 /*
- * Copyright (c) [2020-2021] Payara Foundation and/or its affiliates. All rights reserved.
+ * Copyright (c) [2020-2024] Payara Foundation and/or its affiliates. All rights reserved.
  *
  *  The contents of this file are subject to the terms of either the GNU
  *  General Public License Version 2 only ("GPL") or the Common Development
@@ -66,22 +66,22 @@ public final class OpenIdUtil {
     private OpenIdUtil() {
     }
 
-    public static String readConfiguredValueFromMetadataOrProvider(String metadataValue, JsonObject providerDocument, String openIdConstant, Config provider, String openIdProviderMetadataName) {
+    public static String readConfiguredValueFromMetadataOrProvider(ELProcessor elProcessor, String metadataValue, JsonObject providerDocument, String openIdConstant, Config provider, String openIdProviderMetadataName) {
         String value;
         if (isEmpty(metadataValue) && providerDocument.containsKey(openIdConstant)) {
-            value = getConfiguredValue(String.class, providerDocument.getString(openIdConstant), provider, openIdProviderMetadataName);
+            value = getConfiguredValue(elProcessor, String.class, providerDocument.getString(openIdConstant), provider, openIdProviderMetadataName);
         } else {
-            value = getConfiguredValue(String.class, metadataValue, provider, openIdProviderMetadataName);
+            value = getConfiguredValue(elProcessor, String.class, metadataValue, provider, openIdProviderMetadataName);
         }
         return value;
     }
 
-    public static Set<String> readConfiguredValueFromMetadataOrProvider(String[] metadataValue, JsonObject providerDocument, String openIdConstant, Config provider, String openIdProviderMetadataName) {
+    public static Set<String> readConfiguredValueFromMetadataOrProvider(ELProcessor elProcessor, String[] metadataValue, JsonObject providerDocument, String openIdConstant, Config provider, String openIdProviderMetadataName) {
         String[] valueArr;
         if (metadataValue.length == 0 && providerDocument.containsKey(openIdConstant)) {
-            valueArr = getConfiguredValue(String[].class, getValues(providerDocument, openIdConstant), provider, openIdProviderMetadataName);
+            valueArr = getConfiguredValue(elProcessor, String[].class, getValues(providerDocument, openIdConstant), provider, openIdProviderMetadataName);
         } else {
-            valueArr = getConfiguredValue(String[].class, metadataValue, provider, openIdProviderMetadataName);
+            valueArr = getConfiguredValue(elProcessor, String[].class, metadataValue, provider, openIdProviderMetadataName);
         }
         return new HashSet<>(Arrays.asList(valueArr));
     }
@@ -100,19 +100,31 @@ public final class OpenIdUtil {
         }
     }
 
+    public static ELProcessor createELProcessor() {
+        ELProcessor elProcessor = new ELProcessor();
+        BeanManager beanManager = getBeanManagerForCurrentModule();
+        elProcessor.getELManager().addELResolver(beanManager.getELResolver());
+        return elProcessor;
+    }
+
+    public static <T> T getConfiguredValue(ELProcessor elProcessor, Class<T> type, T value) {
+        if (value instanceof String && isELExpression((String) value)) {
+            return (T) elProcessor.getValue(toRawExpression((String) value), type);
+        }
+        return value;
+    }
+
     public static <T> T getConfiguredValue(Class<T> type, T value, Config provider, String mpConfigKey) {
-        T result = value;
+        ELProcessor elProcessor = createELProcessor();
+        return getConfiguredValue(elProcessor, type, value, provider, mpConfigKey);
+    }
+
+    public static <T> T getConfiguredValue(ELProcessor elProcessor, Class<T> type, T value, Config provider, String mpConfigKey) {
         Optional<T> configResult = provider.getOptionalValue(mpConfigKey, type);
         if (configResult.isPresent()) {
             return configResult.get();
         }
-        if (type == String.class && isELExpression((String) value)) {
-            ELProcessor elProcessor = new ELProcessor();
-            BeanManager beanManager = getBeanManagerForCurrentModule();
-            elProcessor.getELManager().addELResolver(beanManager.getELResolver());
-            result = (T) elProcessor.getValue(toRawExpression((String) result), type);
-        }
-        return result;
+        return getConfiguredValue(elProcessor, type, value);
     }
 
     private static BeanManager getBeanManagerForCurrentModule() {

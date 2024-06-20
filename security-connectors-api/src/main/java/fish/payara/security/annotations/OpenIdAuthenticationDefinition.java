@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Payara Foundation and/or its affiliates. All rights reserved.
+ * Copyright (c) 2021 - 2024 Payara Foundation and/or its affiliates. All rights reserved.
  *
  *  The contents of this file are subject to the terms of either the GNU
  *  General Public License Version 2 only ("GPL") or the Common Development
@@ -208,6 +208,14 @@ public @interface OpenIdAuthenticationDefinition {
      * @return
      */
     String[] extraParameters() default {};
+
+    /**
+     * Allows the extra parameters to be defined as a Jakarta Expression
+     * Language expression. If set, overrides the extraParameters value.
+     *
+     * @return
+     */
+    String extraParametersExpression() default "";
 
     /**
      * Optional. Sets the connect timeout(in milliseconds) for Remote JWKS
