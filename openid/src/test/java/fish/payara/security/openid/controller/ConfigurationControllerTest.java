@@ -135,6 +135,23 @@ public class ConfigurationControllerTest {
                     idTokenSigningAlgValuesSupported = ""
             ),
             clientId = "XYZ",
+            extraParameters = {"a=#{valueWithComma}", "b=#{comma}", "c=#{3}"}
+    )
+    public static class DefinitionExtraParametersValueExpressionWithComma {
+    }
+
+    @OpenIdAuthenticationDefinition(
+            providerURI = "https://example.com/openid",
+            providerMetadata = @OpenIdProviderMetadata(
+                    issuer = "https://example.com/issuer",
+                    jwksURI = "https://example.com/jwks",
+                    authorizationEndpoint = "https://example.com/auth",
+                    tokenEndpoint = "https://example.com/token",
+                    responseTypesSupported = "code",
+                    idTokenEncryptionAlgValuesSupported = "",
+                    idTokenSigningAlgValuesSupported = ""
+            ),
+            clientId = "XYZ",
             //securityBean.extraParametersArray returns array of strings in form of "a=1", "b=2", "c=3"
             extraParametersExpression = "#{securityBean.extraParametersArray}"
     )
@@ -171,7 +188,7 @@ public class ConfigurationControllerTest {
                     idTokenSigningAlgValuesSupported = ""
             ),
             clientId = "XYZ",
-            // it will be overriden by MP, OpenIdAuthenticationDefinition.OPENID_MP_DISABLE_SCOPE_VALIDATION
+            // it will be overriden by MP, OpenIdAuthenticationDefinition.OPENID_MP_EXTRA_PARAMS_RAW
             // format is URL parameters, e.g. a=1&b=2
             extraParameters = {"whatever"}
     )
@@ -234,6 +251,26 @@ public class ConfigurationControllerTest {
     }
 
     /**
+     * Test buildConfig, extra parameters with expressions in values.
+     */
+    @Test
+    public void testBuildConfigExtraParametersValueExpressionWithComma() {
+        when(config.getOptionalValue(anyString(), eq(String.class))).thenReturn(Optional.empty());
+        when(providerMetadataContoller.getDocument(anyString())).thenReturn(JsonObject.EMPTY_JSON_OBJECT);
+        when(elProcessor.getValue(eq("valueWithComma"), any())).thenReturn("1,2");
+        when(elProcessor.getValue(eq("comma"), any())).thenReturn(",");
+        when(elProcessor.getValue(eq("3"), any())).thenReturn("3");
+
+        OpenIdAuthenticationDefinition definition = DefinitionExtraParametersValueExpressionWithComma.class.getAnnotation(OpenIdAuthenticationDefinition.class);
+        OpenIdConfiguration configuration = controller.buildConfig(definition, config, elProcessor);
+        Map<Object, Object> correctExtraParametersWitComma = new HashMap<>();
+        correctExtraParametersWitComma.put("a", Arrays.asList("1,2"));
+        correctExtraParametersWitComma.put("b", Arrays.asList(","));
+        correctExtraParametersWitComma.put("c", Arrays.asList("3"));
+        assertEquals(correctExtraParametersWitComma, configuration.getExtraParameters());
+    }
+
+    /**
      * Test buildConfig, extra parameters using expression, which returns list
      * of strings.
      */
@@ -249,6 +286,28 @@ public class ConfigurationControllerTest {
         OpenIdAuthenticationDefinition definition = DefinitionExtraParametersExpressionArray.class.getAnnotation(OpenIdAuthenticationDefinition.class);
         OpenIdConfiguration configuration = controller.buildConfig(definition, config, elProcessor);
         assertEquals(correctExtraParameters, configuration.getExtraParameters());
+    }
+
+    /**
+     * Test buildConfig, extra parameters using expression, which returns list
+     * of strings.
+     */
+    @Test
+    public void testBuildConfigExtraParametersExpressionArrayWithComma() {
+        when(config.getOptionalValue(anyString(), eq(String.class))).thenReturn(Optional.empty());
+        when(providerMetadataContoller.getDocument(anyString())).thenReturn(JsonObject.EMPTY_JSON_OBJECT);
+        when(elProcessor.getValue(any(), any())).thenReturn(null);
+        when(elProcessor.getValue(eq("comma1"), any())).thenReturn("a,b");
+        when(elProcessor.getValue(eq("comma2"), any())).thenReturn(",");
+        when(elProcessor.getValue(eq("securityBean.extraParametersArray"), any())).thenReturn(new String[]{"a=#{comma1}", "b=#{comma2}", "c=3"});
+
+        OpenIdAuthenticationDefinition definition = DefinitionExtraParametersExpressionArray.class.getAnnotation(OpenIdAuthenticationDefinition.class);
+        OpenIdConfiguration configuration = controller.buildConfig(definition, config, elProcessor);
+        Map<Object, Object> correctExtraParametersWitComma = new HashMap<>();
+        correctExtraParametersWitComma.put("a", Arrays.asList("a,b"));
+        correctExtraParametersWitComma.put("b", Arrays.asList(","));
+        correctExtraParametersWitComma.put("c", Arrays.asList("3"));
+        assertEquals(correctExtraParametersWitComma, configuration.getExtraParameters());
     }
 
     /**
@@ -268,7 +327,7 @@ public class ConfigurationControllerTest {
 
     /**
      * Test buildConfig, extra parameters using MPConfig,
-     * OpenIdAuthenticationDefinition.OPENID_MP_DISABLE_SCOPE_VALIDATION
+     * OpenIdAuthenticationDefinition.OPENID_MP_EXTRA_PARAMS_RAW.
      */
     @Test
     public void testBuildConfigExtraParametersViaMPConfig() {
@@ -280,6 +339,24 @@ public class ConfigurationControllerTest {
         OpenIdAuthenticationDefinition definition = DefinitionExtraParametersMPOverriden.class.getAnnotation(OpenIdAuthenticationDefinition.class);
         OpenIdConfiguration configuration = controller.buildConfig(definition, config, elProcessor);
         assertEquals(correctExtraParameters, configuration.getExtraParameters());
+    }
+
+    /**
+     * Test buildConfig, extra parameters using MPConfig,
+     * OpenIdAuthenticationDefinition.OPENID_MP_EXTRA_PARAMS_RAW.
+     */
+    @Test
+    public void testBuildConfigExtraParametersViaMPConfigWitComma() {
+        when(config.getOptionalValue(anyString(), any())).thenReturn(Optional.empty());
+        when(providerMetadataContoller.getDocument(anyString())).thenReturn(JsonObject.EMPTY_JSON_OBJECT);
+        //when(elProcessor.getValue(any(), any())).thenReturn(null);
+        when(config.getOptionalValue(eq(OpenIdAuthenticationDefinition.OPENID_MP_EXTRA_PARAMS_RAW), eq(String.class))).thenReturn(Optional.of("a=1%2C2"));
+
+        OpenIdAuthenticationDefinition definition = DefinitionExtraParametersMPOverriden.class.getAnnotation(OpenIdAuthenticationDefinition.class);
+        OpenIdConfiguration configuration = controller.buildConfig(definition, config, elProcessor);
+        Map<Object, Object> correctExtraParametersWitComma = new HashMap<>();
+        correctExtraParametersWitComma.put("a", Arrays.asList("1,2"));
+        assertEquals(correctExtraParametersWitComma, configuration.getExtraParameters());
     }
 
     /**
