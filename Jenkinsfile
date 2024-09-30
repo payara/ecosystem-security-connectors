@@ -16,18 +16,6 @@ pipeline {
     }
     stages {
 
-        stage('Checkout Payara5 master') {
-            steps {
-                script {
-                    checkout changelog: false, poll: true, scm: [$class: 'GitSCM',
-                    branches: [[name: "master"]],
-                    doGenerateSubmoduleConfigurations: false,
-                    extensions: [], 
-                    submoduleCfg: [],
-                    userRemoteConfigs: [[credentialsId: 'payara-devops-github-personal-access-token-as-username-password', url:"https://github.com/payara/ecosystem-security-connectors.git"]]]
-                }
-            }
-        }
         stage('Build') {
             steps {
                 script {
