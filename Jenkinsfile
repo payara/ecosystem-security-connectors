@@ -20,8 +20,7 @@ pipeline {
             steps {
                 script {
                     echo '*#*#*#*#*#*#*#*#*#*#*#*#  Building SRC  *#*#*#*#*#*#*#*#*#*#*#*#*#*#*#'
-                    sh """mvn -B -V -ff -e clean install --strict-checksums \
-                        -Djavadoc.skip -Dsource.skip"""
+                    sh """mvn -B -V -ff -e clean install --strict-checksums"""
                     echo '*#*#*#*#*#*#*#*#*#*#*#*#    Built SRC   *#*#*#*#*#*#*#*#*#*#*#*#*#*#*#'
                 }
             }
