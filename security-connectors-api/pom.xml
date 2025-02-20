@@ -53,15 +53,10 @@
 
     <name>Payara Security Connnectors API</name>
 
-    <properties>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    </properties>
-
     <dependencies>
         <dependency>
             <groupId>jakarta.platform</groupId>
             <artifactId>jakarta.jakartaee-api</artifactId>
-            <version>${jakartaee.api.version}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
