@@ -276,8 +276,9 @@ public @interface OpenIdAuthenticationDefinition {
     /**
      * The Microprofile Config key for the scope is <code>{@value}</code>
      *
+     * <p>The property is interpreted as single string with scopes separated by space</p>
      * <p>
-     * The defined values are: profile, email, address, phone, and
+     * The standard defined values are: profile, email, address, phone, and
      * offline_access.
      * </p>
      */
@@ -286,9 +287,9 @@ public @interface OpenIdAuthenticationDefinition {
     /**
      * The Microprofile Config key for the scope is <code>{@value}</code>
      *
+     * <p>The property is interpreted as single string with response types separated by space</p>
      * <p>
-     * The defined values are: profile, email, address, phone, and
-     * offline_access.
+     * The standard defined values are: none, code, token, id_token
      * </p>
      */
     String OPENID_MP_RESPONSE_TYPE = "payara.security.openid.responseType";
