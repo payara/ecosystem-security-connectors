@@ -20,7 +20,7 @@ pipeline {
                 script {
                     echo '*#*#*#*#*#*#*#*#*#*#*#*#  Building SRC  *#*#*#*#*#*#*#*#*#*#*#*#*#*#*#'
                     sh """mvn -B -V -ff -e clean install --strict-checksums \
-                        -Djavadoc.skip -Dsource.skip"""
+                        -Dmaven.javadoc.skip=true -Djavadoc.skip -Dsource.skip"""
                     echo '*#*#*#*#*#*#*#*#*#*#*#*#    Built SRC   *#*#*#*#*#*#*#*#*#*#*#*#*#*#*#'
                 }
             }
