@@ -6,28 +6,15 @@ pipeline {
         label 'general-purpose'
     }
     tools {
-        jdk "zulu-11"
+        jdk "zulu-21"
         maven "maven-3.6.3"
     }
     environment {
-        JAVA_HOME = tool("zulu-11")
+        JAVA_HOME = tool("zulu-21")
         MAVEN_OPTS = '-Xmx2G -Djavax.net.ssl.trustStore=${JAVA_HOME}/jre/lib/security/cacerts'
         payaraBuildNumber = "${BUILD_NUMBER}"
     }
     stages {
-
-        stage('Checkout Payara5 master') {
-            steps {
-                script {
-                    checkout changelog: false, poll: true, scm: [$class: 'GitSCM',
-                    branches: [[name: "master"]],
-                    doGenerateSubmoduleConfigurations: false,
-                    extensions: [], 
-                    submoduleCfg: [],
-                    userRemoteConfigs: [[credentialsId: 'payara-devops-github-personal-access-token-as-username-password', url:"https://github.com/payara/ecosystem-security-connectors.git"]]]
-                }
-            }
-        }
         stage('Build') {
             steps {
                 script {
