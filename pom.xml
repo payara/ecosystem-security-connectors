@@ -90,7 +90,7 @@
         <nimbus-jose-jwt.version>9.39.1</nimbus-jose-jwt.version>
         <accessors-smart.version>2.4.11</accessors-smart.version>
         <microprofile.version>5.0</microprofile.version>
-        <json-smart.version>2.5.1</json-smart.version>
+        <json-smart.version>2.5.2</json-smart.version>
 
         <maven.compiler.source>${javase.version}</maven.compiler.source>
         <maven.compiler.target>${javase.version}</maven.compiler.target>
