@@ -44,7 +44,7 @@
 
     <groupId>fish.payara.security.connectors</groupId>
     <artifactId>security-connectors-parent</artifactId>
-    <version>3.1.1</version>
+    <version>3.1.2-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>Payara Security Connectors</name>
 
