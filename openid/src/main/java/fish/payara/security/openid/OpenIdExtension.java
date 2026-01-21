@@ -150,19 +150,6 @@ public class OpenIdExtension implements Extension {
                 .toOpenIdAuthDefinition(event.getAnnotatedType().getAnnotation(AzureAuthenticationDefinition.class));
         setDefinition(standardDefinition, beanClass, "Azure");
     }
-    
-    /**
-     * Loads and activates the {@link OpenIdAuthenticationDefinition} from
-     * MicroProfile Config if present.
-     */
-    protected void detectAndActivateMpConfigDefinition() {
-        Config config = ConfigProvider.getConfig();
-        OpenIdAuthenticationDefinition configDefinition = OpenIdDefinitionFactory.fromConfig(config);
-        if (configDefinition != null) {
-            setDefinition(configDefinition, this.getClass(), "MpConfig");
-            definitionActive = true;
-        }
-    }
 
     protected void validateExtraParametersFormat(OpenIdAuthenticationDefinition definition) {
         for (String extraParameter : definition.extraParameters()) {
@@ -170,8 +157,8 @@ public class OpenIdExtension implements Extension {
             if (parts.length != 2) {
                 throw new DefinitionException(
                         OpenIdAuthenticationDefinition.class.getSimpleName()
-                        + ".extraParameters() value '" + extraParameter
-                        + "' is not of the format key=value"
+                                + ".extraParameters() value '" + extraParameter
+                                + "' is not of the format key=value"
                 );
             }
         }
@@ -183,7 +170,7 @@ public class OpenIdExtension implements Extension {
         }
     }
 
-    protected void watchForInjectionWorkaround(@Observes @Any ProcessProducer<?, IdentityStoreHandler> workedAroundBean) {
+    protected void watchForInjectionWorkaround(@Observes @Any ProcessProducer<?,IdentityStoreHandler> workedAroundBean) {
         if (!workedAroundBean.getAnnotatedMember().isAnnotationPresent(InjectionWorkaround.class)) {
             return;
         }
@@ -206,35 +193,33 @@ public class OpenIdExtension implements Extension {
     }
 
     protected void registerDefinition(@Observes AfterBeanDiscovery afterBeanDiscovery, BeanManager beanManager) {
-        if (!definitionActive) {
-            detectAndActivateMpConfigDefinition();
-        }
+
         if (definitionActive) {
             // if definition is active we broaden the type of OpenIdAuthenticationMechanism back to
             // HttpAuthenticationMechanism, so it would be picked up by Jakarta Security.
             afterBeanDiscovery.addBean()
                     .beanClass(HttpAuthenticationMechanism.class)
                     .addType(HttpAuthenticationMechanism.class)
-                    .id(OpenIdExtension.class.getName() + "/OpenIdAuthenticationMechanism")
+                    .id(OpenIdExtension.class.getName()+"/OpenIdAuthenticationMechanism")
                     .scope(ApplicationScoped.class)
                     .produceWith(in -> in.select(OpenIdAuthenticationMechanism.class).get())
-                    .disposeWith((inst, callback) -> callback.destroy(inst));
+                    .disposeWith((inst,callback) -> callback.destroy(inst));
 
             afterBeanDiscovery.addBean()
                     .beanClass(IdentityStore.class)
                     .addType(IdentityStore.class)
-                    .id(OpenIdExtension.class.getName() + "/OpenIdIdentityStore")
+                    .id(OpenIdExtension.class.getName()+"/OpenIdIdentityStore")
                     .scope(ApplicationScoped.class)
                     .produceWith(in -> in.select(OpenIdIdentityStore.class).get())
-                    .disposeWith((inst, callback) -> callback.destroy(inst));
+                    .disposeWith((inst,callback) -> callback.destroy(inst));
 
             afterBeanDiscovery.addBean()
                     .beanClass(IdentityStore.class)
                     .addType(IdentityStore.class)
-                    .id(OpenIdExtension.class.getName() + "/AccessTokenIdentityStore")
+                    .id(OpenIdExtension.class.getName()+"/AccessTokenIdentityStore")
                     .scope(ApplicationScoped.class)
                     .produceWith(in -> in.select(AccessTokenIdentityStore.class).get())
-                    .disposeWith((inst, callback) -> callback.destroy(inst));
+                    .disposeWith((inst,callback) -> callback.destroy(inst));
 
             afterBeanDiscovery.addBean()
                     .beanClass(OpenIdAuthenticationDefinition.class)
@@ -268,5 +253,5 @@ public class OpenIdExtension implements Extension {
                     .createWith(cc -> null);
         }
     }
-  
+
 }
