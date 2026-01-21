@@ -56,12 +56,16 @@ public class OpenIdDeployment {
     }
 
     public static WebArchive withAbstractProvider(WebArchive webArchive) {
+        return withStandaloneConnector(webArchive).addPackage(AbstractIdProvider.class.getPackage());
+    }
+
+    public static WebArchive withStandaloneConnector(WebArchive webArchive) {
         File[] libs = Maven.resolver().loadPomFromFile("pom.xml")
                 .resolve("com.nimbusds:nimbus-jose-jwt")
                 .withTransitivity().asFile();
         // maven resolver resolves version from bom, not the current snapshot, so we'll use this trick:
         String openidStandaloneJar = OpenIdExtension.class.getProtectionDomain().getCodeSource().getLocation().getFile();
-        return webArchive.addPackage(AbstractIdProvider.class.getPackage())
+        return webArchive
                 .addAsLibraries(libs)
                 .addAsLibraries(new File(openidStandaloneJar));
     }

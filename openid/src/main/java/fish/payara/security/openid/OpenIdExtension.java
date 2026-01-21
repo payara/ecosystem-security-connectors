@@ -62,10 +62,15 @@ import jakarta.security.enterprise.authentication.mechanism.http.HttpAuthenticat
 import jakarta.security.enterprise.identitystore.IdentityStore;
 import jakarta.security.enterprise.identitystore.IdentityStoreHandler;
 
+import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
 
 import static java.util.logging.Level.INFO;
+import static java.util.logging.Level.WARNING;
 
 /**
  * Activates {@link OpenIdAuthenticationMechanism} with the
@@ -78,9 +83,24 @@ public class OpenIdExtension implements Extension {
 
     private static final Logger LOGGER = Logger.getLogger(OpenIdExtension.class.getName());
 
-    private OpenIdAuthenticationDefinition definition;
-    private Class<?> definitionSource;
-    private boolean definitionActive;
+    private static class Definition {
+        private final Class<?> definitionSource;
+        private boolean active;
+        private final OpenIdAuthenticationDefinition definition;
+        private final String definitionKind;
+
+        public Definition(Class<?> definitionSource, OpenIdAuthenticationDefinition definition, String definitionKind) {
+            this.definitionSource = definitionSource;
+            this.definition = definition;
+            this.definitionKind = definitionKind;
+        }
+
+        public void checkActive(Type baseType) {
+            this.active = this.active || baseType.equals(definitionSource);
+        }
+    }
+
+    private final List<Definition> definitions = Collections.synchronizedList(new ArrayList<>(3));
     private Producer<IdentityStoreHandler> storeHandlerWorkaroundProducer;
 
     protected void registerTypes(@Observes BeforeBeanDiscovery before) {
@@ -116,15 +136,8 @@ public class OpenIdExtension implements Extension {
     }
 
     private void setDefinition(OpenIdAuthenticationDefinition definition, Class<?> sourceClass, String definitionKind) {
-        if (this.definition != null) {
-            LOGGER.warning("Multiple authentication definition found. Will ignore the definition in " + sourceClass);
-            return;
-        }
+        definitions.add(new Definition(sourceClass, definition, definitionKind));
         validateExtraParametersFormat(definition);
-        this.definitionSource = sourceClass;
-        this.definition = definition;
-        LOGGER.log(INFO, "Activating {0} OpenID Connect authentication definition from class {1}",
-                new Object[]{definitionKind, sourceClass.getName()});
     }
 
     /**
@@ -165,9 +178,7 @@ public class OpenIdExtension implements Extension {
     }
 
     protected void watchActiveBeans(@Observes ProcessBean<?> processBean) {
-        if (definitionSource != null && definitionSource.equals(processBean.getAnnotated().getBaseType())) {
-            definitionActive = true;
-        }
+        definitions.forEach(d -> d.checkActive(processBean.getAnnotated().getBaseType()));
     }
 
     protected void watchForInjectionWorkaround(@Observes @Any ProcessProducer<?,IdentityStoreHandler> workedAroundBean) {
@@ -193,9 +204,11 @@ public class OpenIdExtension implements Extension {
     }
 
     protected void registerDefinition(@Observes AfterBeanDiscovery afterBeanDiscovery, BeanManager beanManager) {
-
-        if (definitionActive) {
-            // if definition is active we broaden the type of OpenIdAuthenticationMechanism back to
+        Definition active = findSingleActiveDefinition(null);
+        if (active != null) {
+            LOGGER.log(INFO, "Activating {0} OpenID Connect authentication definition from class {1}",
+                    new Object[]{active.definitionKind, active.definitionSource.getName()});
+                    // if definition is active we broaden the type of OpenIdAuthenticationMechanism back to
             // HttpAuthenticationMechanism, so it would be picked up by Jakarta Security.
             afterBeanDiscovery.addBean()
                     .beanClass(HttpAuthenticationMechanism.class)
@@ -226,7 +239,7 @@ public class OpenIdExtension implements Extension {
                     .types(OpenIdAuthenticationDefinition.class)
                     .scope(ApplicationScoped.class)
                     .id("OpenId Definition")
-                    .createWith(cc -> this.definition);
+                    .createWith(cc -> active.definition);
 
             if (storeHandlerWorkaroundProducer != null) {
                 // the fact that it is here means that we are likely to have an injection problem and need to add the
@@ -242,6 +255,9 @@ public class OpenIdExtension implements Extension {
                 }
             }
         } else {
+            if (!definitions.isEmpty()) {
+                LOGGER.log(INFO, "No active OpenIdAuthenticationDefinition found, OpenIdAuthenticationMechanism will not be available.");
+            }
             // Publish empty definition to prevent injection errors. The helper components will not work, but
             // will not cause definition error. This is quite unlucky situation, but when definition is on an
             // alternative bean we don't know before this moment whether the bean is enabled or not.
@@ -252,6 +268,22 @@ public class OpenIdExtension implements Extension {
                     .id("Null OpenId Definition")
                     .createWith(cc -> null);
         }
+        definitions.clear(); // clear definitions to prevent memory leak
+    }
+
+    private Definition findSingleActiveDefinition(Definition active) {
+        for (Definition definition : definitions) {
+            if (definition.active) {
+                if (active != null) {
+                    LOGGER.log(WARNING, "Multiple active OpenIdAuthenticationDefinition annotations found on "
+                            + active.definitionSource.getName() + " and " + definition.definitionSource.getName()
+                            + " will use " + active.definitionSource.getName());
+                    continue;
+                }
+                active = definition;
+            }
+        }
+        return active;
     }
 
 }
