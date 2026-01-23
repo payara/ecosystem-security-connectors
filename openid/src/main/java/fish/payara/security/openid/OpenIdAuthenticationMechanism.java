@@ -294,7 +294,8 @@ public class OpenIdAuthenticationMechanism implements HttpAuthenticationMechanis
         if (receivedState.isPresent() && request.getParameter(CODE) != null) {
             // this is OAuth callback
             String redirectURI = configuration.buildRedirectURI(request);
-            if (!request.getRequestURL().toString().equals(redirectURI)) {
+            String requestURL = request.getRequestURL().toString();
+            if (!requestURL.equals(redirectURI)) {
                 if (configuration.getProxyConfiguration() != null && !configuration.getProxyConfiguration().getHostName().isEmpty()) {
                     // Check if request URL matches proxy host name and port
                     String proxyHost = configuration.getProxyConfiguration().getHostName();
@@ -306,20 +307,20 @@ public class OpenIdAuthenticationMechanism implements HttpAuthenticationMechanis
                     } else {
                         requestURLWithProxy = String.format("%s://%s", request.getScheme(), proxyHost) + request.getRequestURI();
                     }
-                    if (!requestURLWithProxy.equals(request.getRequestURL().toString())) {
-                        LOGGER.log(INFO, "OpenID Redirect URL {0} does not match with the request URL {1} through proxy {2}:{3}",
-                                new Object[]{redirectURI, requestURLWithProxy, proxyHost, proxyPort});
+                    if (!requestURLWithProxy.equals(requestURL)) {
+                        LOGGER.log(INFO, "OpenID Redirect URL {0} does not match with the request URL {1} through proxy {2}:{3} and constructed proxy URL: {4}",
+                                new Object[]{redirectURI, requestURL, proxyHost, proxyPort, requestURLWithProxy});
                         return httpContext.notifyContainerAboutLogin(NOT_VALIDATED_RESULT);
                     }
                 } else {
                     LOGGER.log(INFO, "OpenID Redirect URL {0} does not match with the request URL {1}",
-                            new Object[]{redirectURI, request.getRequestURL().toString()});
+                            new Object[]{redirectURI, requestURL});
                     return httpContext.notifyContainerAboutLogin(NOT_VALIDATED_RESULT);
                 }
             }
             if (!request.getRequestURL().toString().equals(redirectURI)) {
                 LOGGER.log(INFO, "OpenID Redirect URL {0} not matched with request URL {1}", new Object[]{redirectURI,
-                        request.getRequestURL().toString()});
+                        requestURL});
                 return httpContext.notifyContainerAboutLogin(NOT_VALIDATED_RESULT);
             }
             Optional<OpenIdState> expectedState = stateController.get(request, response);
