@@ -295,32 +295,34 @@ public class OpenIdAuthenticationMechanism implements HttpAuthenticationMechanis
             // this is OAuth callback
             String redirectURI = configuration.buildRedirectURI(request);
             String requestURL = request.getRequestURL().toString();
-            if (!requestURL.equals(redirectURI)) {
-                if (configuration.getProxyConfiguration() != null && !configuration.getProxyConfiguration().getHostName().isEmpty()) {
-                    // Check if request URL matches proxy host name and port
-                    String proxyHost = configuration.getProxyConfiguration().getHostName();
-                    String proxyPort = configuration.getProxyConfiguration().getPort();
+            boolean matches = requestURL.equals(redirectURI);
 
-                    String requestURLWithProxy;
-                    if (!proxyPort.isEmpty()) {
-                        requestURLWithProxy = String.format("%s://%s:%s", request.getScheme(), proxyHost, proxyPort) + request.getRequestURI();
-                    } else {
-                        requestURLWithProxy = String.format("%s://%s", request.getScheme(), proxyHost) + request.getRequestURI();
-                    }
-                    if (!requestURLWithProxy.equals(requestURL)) {
-                        LOGGER.log(INFO, "OpenID Redirect URL {0} does not match with the request URL {1} through proxy {2}:{3} and constructed proxy URL: {4}",
-                                new Object[]{redirectURI, requestURL, proxyHost, proxyPort, requestURLWithProxy});
-                        return httpContext.notifyContainerAboutLogin(NOT_VALIDATED_RESULT);
-                    }
+            if (!matches && configuration.getProxyConfiguration() != null
+                    && !configuration.getProxyConfiguration().getHostName().isEmpty()) {
+
+                String proxyHost = configuration.getProxyConfiguration().getHostName();
+                String proxyPort = configuration.getProxyConfiguration().getPort();
+
+                String requestURLWithProxy;
+                if (!proxyPort.isEmpty()) {
+                    requestURLWithProxy = String.format("%s://%s:%s", request.getScheme(), proxyHost, proxyPort)
+                            + request.getRequestURI();
                 } else {
-                    LOGGER.log(INFO, "OpenID Redirect URL {0} does not match with the request URL {1}",
-                            new Object[]{redirectURI, requestURL});
+                    requestURLWithProxy = String.format("%s://%s", request.getScheme(), proxyHost)
+                            + request.getRequestURI();
+                }
+
+                matches = requestURLWithProxy.equals(redirectURI);
+
+                if (!matches) {
+                    LOGGER.log(INFO, "OpenID Redirect URL {0} does not match with constructed proxy URL {1}. Actual request URL: {2}, proxy: {3}:{4}",
+                            new Object[]{redirectURI, requestURLWithProxy, request.getRequestURL().toString(), proxyHost, proxyPort});
                     return httpContext.notifyContainerAboutLogin(NOT_VALIDATED_RESULT);
                 }
-            }
-            if (!request.getRequestURL().toString().equals(redirectURI)) {
-                LOGGER.log(INFO, "OpenID Redirect URL {0} not matched with request URL {1}", new Object[]{redirectURI,
-                        requestURL});
+            } else if (!matches) {
+                LOGGER.log(INFO,
+                        "OpenID Redirect URL {0} does not match with the request URL {1}",
+                        new Object[]{redirectURI, requestURL});
                 return httpContext.notifyContainerAboutLogin(NOT_VALIDATED_RESULT);
             }
             Optional<OpenIdState> expectedState = stateController.get(request, response);
