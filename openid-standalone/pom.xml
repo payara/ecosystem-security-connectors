@@ -48,6 +48,8 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>openid-standalone</artifactId>
+    <name>Security Connector - OpenID Connect Standalone Client</name>
+    <description>Standalone shaded distribution of the OpenID Connect client</description>
 
     <licenses>
         <license>
