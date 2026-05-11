@@ -37,15 +37,15 @@
   ~  holder.
   -->
 
-<project xmlns="http://maven.apache.org/POM/4.0.0"
+<project xmlns="http://maven.apache.org/POM/4.1.0-SNAPSHOT"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+         xsi:schemaLocation="http://maven.apache.org/POM/4.1.0-SNAPSHOT http://maven.apache.org/xsd/maven-4.1.0-SNAPSHOT.xsd">
     <parent>
         <artifactId>security-connectors-parent</artifactId>
         <groupId>fish.payara.security.connectors</groupId>
-        <version>4.0.0</version>
+        <version>4.1.0-SNAPSHOT</version>
     </parent>
-    <modelVersion>4.0.0</modelVersion>
+    <modelVersion>4.1.0-SNAPSHOT</modelVersion>
 
     <artifactId>openid-standalone</artifactId>
     <name>Security Connector - OpenID Connect Standalone Client</name>
