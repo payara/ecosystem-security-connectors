@@ -52,6 +52,8 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>openid-standalone-it</artifactId>
+    <name>Security Connector - OpenID Connect Standalone Integration Tests</name>
+    <description>Integration tests for the standalone OpenID Connect client</description>
 
     <dependencyManagement>
         <dependencies>
