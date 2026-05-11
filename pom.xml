@@ -110,7 +110,7 @@
         <mockito-junit-jupiter.version>5.12.0</mockito-junit-jupiter.version>
         <maven-shade-plugin.version>3.5.3</maven-shade-plugin.version>
         <flatten-maven-plugin.version>1.6.0</flatten-maven-plugin.version>
-        <payara.version>7.2025.1.Alpha1-SNAPSHOT</payara.version>
+        <payara.version>7.2026.4</payara.version>
         <arquillian-bom.version>1.9.3.Final</arquillian-bom.version>
         <maven-failsafe-plugin.version>3.5.2</maven-failsafe-plugin.version>
         <payara-micro-maven-plugin.version>2.3</payara-micro-maven-plugin.version>
